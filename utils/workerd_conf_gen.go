@@ -1,4 +1,4 @@
-package workerd
+package utils
 
 import (
 	"bytes"
@@ -10,20 +10,20 @@ var capfileTemplate = `using Workerd = import "/workerd/workerd.capnp";
 
 const config :Workerd.Config = (
   services = [
-{{range $i, $worker := .Workers}}    (name = "{{$worker.UID}}", worker = .{{$worker.UID}}Worker),
+{{range $i, $worker := .Workers}}    (name = "{{$worker.UID}}", worker = .v{{$worker.UID}}Worker),
 {{end}}  ],
 
   sockets = [{{range $i, $worker := .Workers}}
     (
       name = "{{$worker.UID}}",
-      address = "localhost:{{$worker.Port}}",
+      address = "{{$worker.HostName}}:{{$worker.Port}}",
       http=(),
       service="{{$worker.UID}}"
     ),{{end}}
   ]
 );
 {{range $i, $worker := .Workers}}
-const {{$worker.UID}}Worker :Workerd.Worker = (
+const v{{$worker.UID}}Worker :Workerd.Worker = (
   serviceWorkerScript = embed "workers/{{$worker.UID}}/{{$worker.Entry}}",
   compatibilityDate = "2023-04-03",
 );{{end}}

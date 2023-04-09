@@ -1,13 +1,14 @@
-package workerd
+package services
 
 import (
 	"os"
 	"testing"
 	"voker/entities"
+	"voker/utils"
 )
 
 func TestRun(t *testing.T) {
-	c := BuildCapfile(
+	c := utils.BuildCapfile(
 		&entities.WorkerList{
 			Workers: []*entities.Worker{
 				{
@@ -26,7 +27,7 @@ func TestRun(t *testing.T) {
 		panic(err)
 	}
 	f.WriteString(c)
-	Run("/workspaces/vorker/workerd/", []string{})
+	WorkerdRun("/workspaces/vorker/workerd/", []string{})
 	ch := make(chan struct{})
 	<-ch
 }

@@ -1,4 +1,4 @@
-package workerd
+package utils
 
 import (
 	"fmt"

@@ -1,5 +1,7 @@
 package main
 
-func main() {
+import "voker/services"
 
+func main() {
+	services.Run()
 }

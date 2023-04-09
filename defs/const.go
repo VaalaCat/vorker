@@ -1,10 +1,15 @@
 package defs
 
 const (
-	CapFileName  = "workerd.capnp"
-	DBTypeSqlite = "sqlite"
+	CapFileName    = "workerd.capnp"
+	WorkerCodePath = "workers"
+	DBTypeSqlite   = "sqlite"
 
-	DefaultCode = `addEventListener("fetch", event => {
+	DefaultHostName     = "localhost"
+	DefaultNodeName     = "default"
+	DefaultExternalPath = "/"
+	DefaultEntry        = "entry.js"
+	DefaultCode         = `addEventListener("fetch", event => {
 	event.respondWith(new Response("Hello World"));
 });`
 )

@@ -7,7 +7,6 @@ import (
 	"voker/entities"
 	"voker/models"
 	"voker/utils"
-	"voker/utils/workerd"
 
 	"github.com/sirupsen/logrus"
 )
@@ -22,10 +21,13 @@ func GenCapnpConfig() error {
 		Workers: models.Trans2Entities(workerRecords),
 	}
 
+	proxyMap := entities.GetProxy()
+	go proxyMap.InitProxyMap(workerList)
+
 	return utils.WriteFile(
 		filepath.Join(
 			conf.AppConfigInstance.WorkerdDir,
 			defs.CapFileName,
 		),
-		workerd.BuildCapfile(workerList))
+		utils.BuildCapfile(workerList))
 }

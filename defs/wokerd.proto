@@ -10,7 +10,7 @@ message Worker {
 	int32 Port = 5;
 	string Entry = 6;
 	bytes Code = 7;
-	string name = 8;
+	string Name = 8;
 }
 
 message WorkerList {
