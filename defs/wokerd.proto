@@ -9,6 +9,8 @@ message Worker {
 	string NodeName = 4;
 	int32 Port = 5;
 	string Entry = 6;
+	bytes Code = 7;
+	string name = 8;
 }
 
 message WorkerList {
