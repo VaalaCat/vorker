@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  voker:
+    build: ./
+    volumes:
+      - ./data:/data
+  wokerd:
+    build: ubuntu:22.10
+    volumes:
+      - ./data:/data
+    command: /data/workerd

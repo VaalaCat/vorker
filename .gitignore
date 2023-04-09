@@ -1,0 +1,3 @@
+workerd/workerd.capnp
+workerd/workers
+workerd/db.sqlite

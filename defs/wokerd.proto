@@ -1,0 +1,18 @@
+syntax = "proto3";
+package defs;
+option go_package = "../entities";
+
+message Worker {
+	string UID = 1;
+	string ExternalPath = 2;
+	string HostName = 3;
+	string NodeName = 4;
+	int32 Port = 5;
+	string Entry = 6;
+}
+
+message WorkerList {
+	string ConfName = 1;
+	repeated Worker Workers = 2;
+	string NodeName = 3;
+}
