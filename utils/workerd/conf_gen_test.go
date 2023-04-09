@@ -64,11 +64,11 @@ const config :Workerd.Config = (
 );
 
 const testWorker :Workerd.Worker = (
-  serviceWorkerScript = embed "workers/test/entry.js",
+  serviceWorkerScript = embed "workers/test/test/entry.js",
   compatibilityDate = "2023-04-03",
 );
 const test1Worker :Workerd.Worker = (
-  serviceWorkerScript = embed "workers/test1/entry.js",
+  serviceWorkerScript = embed "workers/test1/test1/entry.js",
   compatibilityDate = "2023-04-03",
 );
 `,

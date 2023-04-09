@@ -24,7 +24,7 @@ const config :Workerd.Config = (
 );
 {{range $i, $worker := .Workers}}
 const {{$worker.UID}}Worker :Workerd.Worker = (
-  serviceWorkerScript = embed "workers/{{$worker.Entry}}",
+  serviceWorkerScript = embed "workers/{{$worker.UID}}/{{$worker.Entry}}",
   compatibilityDate = "2023-04-03",
 );{{end}}
 `
