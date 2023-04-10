@@ -1,12 +1,11 @@
 import { Inter } from 'next/font/google'
-import { Navbar } from "flowbite-react";
+import { MonacoEditor } from '../components/editor';
+import { Layout } from '../components/layout';
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
   return (
-    <main>
-      <div></div>
-    </main>
+    <Layout><MonacoEditor /></Layout>
   )
 }

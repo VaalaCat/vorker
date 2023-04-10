@@ -9,12 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.5.0",
+    "@mui/base": "^5.0.0-alpha.124",
     "@types/node": "18.15.11",
     "@types/react": "18.0.33",
     "@types/react-dom": "18.0.11",
     "autoprefixer": "10.4.14",
-    "flowbite": "^1.6.4",
-    "flowbite-react": "^0.4.3",
+    "jotai": "^2.0.4",
     "next": "13.3.0",
     "postcss": "8.4.21",
     "react": "18.2.0",
