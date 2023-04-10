@@ -50,3 +50,19 @@ func GetAllWorkersEndpoint(c *gin.Context) {
 	c.JSON(200, gin.H{"code": 0, "message": "success", "data": models.Trans2Entities(workers)})
 	logrus.Infof("get all workers success, ctx: %v", c)
 }
+
+func GetWorkerEndpoint(c *gin.Context) {
+	uid := c.Param("uid")
+	if len(uid) == 0 {
+		c.JSON(400, gin.H{"code": 1, "error": "uid is empty"})
+		return
+	}
+	worker, err := models.GetWorkerByUID(uid)
+	if err != nil {
+		c.JSON(500, gin.H{"code": 3, "error": err.Error()})
+		logrus.Errorf("failed to get worker, err: %v, ctx: %v", err, c)
+		return
+	}
+	c.JSON(200, gin.H{"code": 0, "message": "success", "data": models.Trans2Entities([]*models.Worker{worker})})
+	logrus.Infof("get worker success, ctx: %v", c)
+}
