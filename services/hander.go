@@ -5,6 +5,7 @@ import (
 	"voker/conf"
 	proxyService "voker/services/proxy"
 	"voker/services/workerd"
+	"voker/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +18,7 @@ var (
 func init() {
 	router = gin.Default()
 	proxy = gin.Default()
+	router.Use(utils.GinMiddleware("http://localhost:3000"))
 	api := router.Group("/api")
 	{
 		api.GET("/worker/:uid", workerd.GetWorkerEndpoint)

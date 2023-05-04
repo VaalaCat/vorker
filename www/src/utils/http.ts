@@ -25,7 +25,7 @@ axios.interceptors.response.use(
 		}
 	},
 	error => {
-		if (error.response.status) {
+		if (error?.status) {
 			return Promise.reject(error.response);
 		}
 	}
@@ -55,7 +55,7 @@ export function getReq(url: string, params: any | undefined): Promise<AxiosRespo
  */
 export function postReq(url: string, params: any | undefined): Promise<AxiosResponse<any, any>> {
 	return new Promise((resolve, reject) => {
-		axios.post(url, QS.stringify(params))
+		axios.post(url, params)
 			.then(res => {
 				resolve(res);
 			})

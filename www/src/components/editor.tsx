@@ -1,14 +1,13 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-
 import Editor from '@monaco-editor/react';
 import { useAtom } from 'jotai';
-import { usernameAtom } from '../store/userState';
+import { CodeAtom } from '@/store/workers';
+import { WorkerEditorProperties } from '@/types/workers';
 
 export function MonacoEditor() {
-	const [username, setUsername] = useAtom(usernameAtom)
+	const [codeAtom, setCodeAtom] = useAtom(CodeAtom)
 	return <div className='flex-1'>
-		<Editor height="100vh" onChange={(v) => setUsername(v || '')}
-			defaultLanguage="javascript" defaultValue={username} />
+		<Editor height="80vh" onChange={(v) => setCodeAtom(v || '')}
+			defaultLanguage="javascript" />
 	</div>
 }

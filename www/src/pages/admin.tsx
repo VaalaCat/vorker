@@ -3,6 +3,8 @@ import { Layout } from "@/components/layout";
 import { Avatar, Box, Button, ButtonGroup, IconButton, Stack } from "@mui/material";
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import SettingsIcon from '@mui/icons-material/Settings';
+import { WorkerItemComponent, WorkerComponent } from "@/components/workers";
+import { DEFAUTL_WORKER_ITEM, WorkerItem } from "@/types/workers";
 
 const sideButtons = [
 	<Button key="Workers" startIcon={<EngineeringIcon />}>Workers</Button>,
@@ -31,6 +33,11 @@ const HeaderComponent = () => {
 
 export default function Admin() {
 	return (
-		<Layout header={<HeaderComponent />} side={<SideBarComponent />} main={<MonacoEditor />} />
+		<Layout
+			header={<HeaderComponent />}
+			side={<SideBarComponent />}
+			main={
+				<WorkerComponent />}
+		/>
 	)
 }
