@@ -1,21 +1,16 @@
 import { useAtom } from "jotai"
 import { usernameAtom } from "@/store/userState"
-import { useState } from "react"
+import React, { useState } from "react"
+import { Button } from "@mui/material"
 
 
-export const Layout = ({ children }: React.PropsWithChildren<{}>) => {
-	const [username, setUsername] = useAtom(usernameAtom)
-	const [show, setShow] = useState(false)
+export const Layout = ({ header, side, main }: { header: React.ReactNode, side: React.ReactNode, main: React.ReactNode }) => {
 	return (
-		<main>
-			<div className='flex flex-row'>
-				<div className='w-32 h-full flex-none' style={{ animation: 'test 1s ease-in-out' }}>
-					<p>
-						<span>{username}</span>
-					</p>
-					{show && <div>111</div>}
-				</div>
-				{children}
+		<main className="flex flex-col">
+			<div className="flex flex-row fixed h-7 mt-0">{header}</div>
+			<div className='flex flex-row mt-7'>
+				<div className='w-32 h-full flex-none'>{side}</div>
+				{main}
 			</div>
 		</main>
 	)

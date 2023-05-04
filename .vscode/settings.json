@@ -1,3 +1,12 @@
 {
-	"go.testEnvFile": "/workspaces/vorker/.env"
+	"go.testEnvFile": "/workspaces/vorker/.env",
+	"sqltools.useNodeRuntime": true,
+	"sqltools.connections": [
+		{
+			"previewLimit": 50,
+			"driver": "SQLite",
+			"name": "vorker",
+			"database": "${workspaceFolder:vorker}/workerd/db.sqlite"
+		}
+	]
 }

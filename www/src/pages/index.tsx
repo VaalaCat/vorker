@@ -6,6 +6,6 @@ const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
   return (
-    <Layout><MonacoEditor /></Layout>
+    <div></div>
   )
 }

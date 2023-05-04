@@ -21,7 +21,7 @@ func FlushEndpoint(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"code": 0, "message": "success"})
-	logrus.Error("flush worker success, ctx: %v", c)
+	logrus.Errorf("flush worker success, ctx: %v", c)
 }
 
 func FlushAllEndpoint(c *gin.Context) {
