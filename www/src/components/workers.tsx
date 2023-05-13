@@ -14,7 +14,6 @@ export function WorkerComponent() {
 	const [alertTitle, setAlertTitle] = useState("")
 	const [editItemUID, setEditItemUID] = useState("")
 	const [editItem, setEditItem] = useState(DEFAUTL_WORKER_ITEM)
-	const [codeAtom, setCodeAtom] = useAtom(CodeAtom)
 
 	const getWorker = (UID: string) => {
 		GetWorker(UID)
