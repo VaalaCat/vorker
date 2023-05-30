@@ -1,43 +1,59 @@
-import { MonacoEditor } from "@/components/editor";
-import { Layout } from "@/components/layout";
-import { Avatar, Box, Button, ButtonGroup, IconButton, Stack } from "@mui/material";
-import EngineeringIcon from '@mui/icons-material/Engineering';
-import SettingsIcon from '@mui/icons-material/Settings';
-import { WorkerItemComponent, WorkerComponent } from "@/components/workers";
-import { DEFAUTL_WORKER_ITEM, WorkerItem } from "@/types/workers";
+import { Layout } from '@/components/layout'
+import { Avatar, Button, ButtonGroup, Nav, TabPane } from '@douyinfe/semi-ui'
+import EngineeringIcon from '@mui/icons-material/Engineering'
+import SettingsIcon from '@mui/icons-material/Settings'
+import { WorkerComponent } from '@/components/workers'
+import { LuFunctionSquare } from 'react-icons/lu'
 
 const sideButtons = [
-	<Button key="Workers" startIcon={<EngineeringIcon />}>Workers</Button>,
-	<Button key="Settings" startIcon={<SettingsIcon />} >Settings</ Button>,
-];
+  <Button key="Settings" icon={<SettingsIcon />}>
+    Settings
+  </Button>,
+]
 
 const SideBarComponent = () => {
-	return <Stack marginTop={2}>
-		<Box margin="auto" marginBottom={2}>
-			<Avatar alt="Vorker" src="https://oss.vaala.tech/vaalacat/oss/img/avatar.png" />
-		</Box>
-		<ButtonGroup fullWidth
-			variant="text" orientation="vertical"
-			size="small" aria-label="admin sidebar">
-			{sideButtons}
-		</ButtonGroup>
-	</Stack>
+  return (
+    <Nav
+      style={{ height: '90vh' }}
+      items={[
+        { itemKey: 'workers', text: 'Workers', icon: <EngineeringIcon /> },
+        { itemKey: 'settings', text: 'Settings', icon: <SettingsIcon /> },
+      ]}
+      onSelect={(data) => console.log('trigger onSelect: ', data)}
+      onClick={(data) => console.log('trigger onClick: ', data)}
+    />
+  )
 }
 
 const HeaderComponent = () => {
-	return <ButtonGroup variant="outlined" aria-label="header button">
-		<Button >Home</Button>
-		<Button >Admin</ Button>
-	</ButtonGroup>
+  return (
+    <Nav mode="horizontal" defaultSelectedKeys={['Home']}>
+      <Nav.Header>
+        <LuFunctionSquare color="#7f7f7f" style={{ fontSize: 36 }} />
+        <span className="text-xl ml-2" style={{ fontFamily: 'trebuchet ms' }}>
+          Vorker
+        </span>
+      </Nav.Header>
+      <Nav.Footer>
+        <ButtonGroup aria-label="header button">
+          <Button type="primary" theme="borderless">
+            Home
+          </Button>
+          <Button type="primary" theme="borderless">
+            Admin
+          </Button>
+        </ButtonGroup>
+      </Nav.Footer>
+    </Nav>
+  )
 }
 
 export default function Admin() {
-	return (
-		<Layout
-			header={<HeaderComponent />}
-			side={<SideBarComponent />}
-			main={
-				<WorkerComponent />}
-		/>
-	)
+  return (
+    <Layout
+      header={<HeaderComponent />}
+      side={<SideBarComponent />}
+      main={<WorkerComponent />}
+    />
+  )
 }
