@@ -1,3 +1,4 @@
 workerd/workerd.capnp
 workerd/workers
 workerd/*.sqlite
+.env
