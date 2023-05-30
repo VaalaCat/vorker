@@ -31,7 +31,7 @@ func UpdateEndpoint(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"code": 0, "message": "success"})
-	logrus.Error("update worker success, ctx: %v", c)
+	logrus.Errorf("update worker success, ctx: %v", c)
 }
 
 func Update(UID string, worker *entities.Worker) error {
