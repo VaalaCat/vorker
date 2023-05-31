@@ -19,7 +19,7 @@ import ColorHash from 'color-hash'
 
 const CH = new ColorHash()
 
-export function WorkerComponent() {
+export function WorkersComponent() {
   // get workerlist list
   const [code, setCodeAtom] = useAtom(CodeAtom)
   const [workerUID, setWorkerUID] = useState('')
@@ -67,7 +67,7 @@ export function WorkerComponent() {
   }, [code])
 
   return (
-    <div className="w-full m-4">
+    <div className="w-full m-4 h-full">
       <Button onClick={() => reloadWorkers()}>刷新</Button>
       <Button onClick={() => createWorker.mutate()}>创建</Button>
       <Button onClick={() => setWorkerUID('')}>返回</Button>
@@ -119,7 +119,7 @@ export function WorkerComponent() {
         <div className="flex flex-col w-full m-4 h-full">
           <Typography>Worker Editor</Typography>
           <div></div>
-          <div>
+          <div className='h-full'>
             <MonacoEditor uid={workerUID} />
           </div>
         </div>
