@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"fmt"
-	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strings"
@@ -36,17 +35,10 @@ func Endpoint(c *gin.Context) {
 
 	remote, err := url.Parse(fmt.Sprintf("http://localhost:%v", port))
 	if err != nil {
-		panic(err)
+		logrus.Panic(err)
 	}
 
+	c.Request.URL.Path = c.Copy().Param("name")
 	proxy := httputil.NewSingleHostReverseProxy(remote)
-	proxy.Director = func(req *http.Request) {
-		req.Header = c.Request.Header
-		req.Host = remote.Host
-		req.URL.Scheme = remote.Scheme
-		req.URL.Host = remote.Host
-		req.URL.Path = c.Param("proxyPath")
-	}
-
 	proxy.ServeHTTP(c.Writer, c.Request)
 }
