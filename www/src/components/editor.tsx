@@ -9,7 +9,7 @@ export function MonacoEditor({ uid }: { uid: string }) {
   return (
     <div className="flex-1">
       <Editor
-        height="80vh"
+        height="100vh"
         onChange={(v) => setCodeAtom(v || '')}
         value={codeAtom}
         defaultLanguage="javascript"

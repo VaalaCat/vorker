@@ -37,7 +37,7 @@ func GetWorkersEndpoint(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"code": 0, "message": "success", "data": models.Trans2Entities(workers)})
-	logrus.Infof("get worker success, ctx: %v", c)
+	logrus.WithContext(c).Infof("get worker success")
 }
 
 func GetAllWorkersEndpoint(c *gin.Context) {
@@ -48,7 +48,7 @@ func GetAllWorkersEndpoint(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"code": 0, "message": "success", "data": models.Trans2Entities(workers)})
-	logrus.Infof("get all workers success, ctx: %v", c)
+	logrus.WithContext(c).Infof("get all workers success")
 }
 
 func GetWorkerEndpoint(c *gin.Context) {
@@ -64,5 +64,5 @@ func GetWorkerEndpoint(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"code": 0, "message": "success", "data": models.Trans2Entities([]*models.Worker{worker})})
-	logrus.Infof("get worker success, ctx: %v", c)
+	logrus.WithContext(c).Infof("get worker success")
 }
