@@ -8,10 +8,13 @@ import (
 	"time"
 	"voker/conf"
 	"voker/defs"
+
+	"github.com/sirupsen/logrus"
 )
 
 func WorkerdRun(workerdDir string, argv []string) {
 	go func() {
+		logrus.Info("workerd running!")
 		for {
 			args := []string{"serve",
 				filepath.Join(workerdDir, defs.CapFileName),
