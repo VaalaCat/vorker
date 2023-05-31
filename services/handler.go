@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"voker/conf"
+	"voker/services/appconf"
 	proxyService "voker/services/proxy"
 	"voker/services/workerd"
 	"voker/utils"
@@ -29,6 +30,7 @@ func init() {
 		api.GET("/workers/flush", workerd.FlushAllEndpoint)
 		api.GET("/workers", workerd.GetAllWorkersEndpoint)
 		api.GET("/workers/:offset/:limit", workerd.GetWorkersEndpoint)
+		api.GET("/vorker/config", appconf.GetEndpoint)
 	}
 
 	proxy.Any("/*proxyPath", proxyService.Endpoint)
@@ -36,6 +38,6 @@ func init() {
 
 func Run() {
 	WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
-	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.ProxyPort))
+	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
 	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
 }

@@ -1,6 +1,4 @@
-import { useAtom } from 'jotai'
-import { usernameAtom } from '@/store/userState'
-import React, { useState } from 'react'
+import React from 'react'
 import { Layout as SemiLayout } from '@douyinfe/semi-ui'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
@@ -17,14 +15,14 @@ export const Layout = ({
   main: React.ReactNode
 }) => {
   return (
-    <QueryClientProvider client={queryClient}>
+    < QueryClientProvider client={queryClient} >
       <SemiLayout>
         <Header>{header}</Header>
         <SemiLayout>
           <Sider>{side}</Sider>
-          <Content>{main}</Content>
+          <Content className='overflow-scroll' style={{ height: '93vh' }}>{main}</Content>
         </SemiLayout>
       </SemiLayout>
-    </QueryClientProvider>
+    </QueryClientProvider >
   )
 }

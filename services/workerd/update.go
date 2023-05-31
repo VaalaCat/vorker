@@ -35,7 +35,7 @@ func UpdateEndpoint(c *gin.Context) {
 }
 
 func Update(UID string, worker *entities.Worker) error {
-	FillWorkerValue(worker, true, true)
+	FillWorkerValue(worker, true, UID)
 
 	workerRecord, err := models.GetWorkerByUID(UID)
 	if err != nil {

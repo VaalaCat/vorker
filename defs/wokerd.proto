@@ -3,18 +3,19 @@ package defs;
 option go_package = "../entities";
 
 message Worker {
-	string UID = 1;
-	string ExternalPath = 2;
-	string HostName = 3;
-	string NodeName = 4;
-	int32 Port = 5;
-	string Entry = 6;
-	bytes Code = 7;
-	string Name = 8;
+	string UID = 1; // Unique id of the worker
+	string ExternalPath = 2; // External path of the worker, default is '/'
+	string HostName = 3; // the workerd runner host name, default is 'localhost'
+	string NodeName = 4; // for future HA feature, default is 'default'
+	int32 Port = 5; // worker's port, platfrom will obtain free port while init worker
+	string Entry = 6; // worker's entry file, default is 'entry.js'
+	bytes Code = 7; // worker's code
+	string Name = 8; // worker's name, also use at worker routing, must be unique, default is UID
 }
 
-message WorkerList {
-	string ConfName = 1;
+// one WorkerList for one workerd instance
+message WorkerList { 
+	string ConfName = 1; // the name of the workerd instance
 	repeated Worker Workers = 2;
-	string NodeName = 3;
+	string NodeName = 3; // workerd runner host name, for HA
 }

@@ -35,7 +35,7 @@ func CreateEndpoint(c *gin.Context) {
 
 // Create creates a new worker in the database and update the workerd capnp config file
 func Create(worker *entities.Worker) error {
-	FillWorkerValue(worker, false, false)
+	FillWorkerValue(worker, false, "")
 
 	if err := (&models.Worker{Worker: worker}).Create(); err != nil {
 		logrus.Errorf("failed to create worker, err: %v", err)

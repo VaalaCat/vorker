@@ -1,11 +1,10 @@
 import * as api from '@/api/workers'
 import { DEFAUTL_WORKER_ITEM } from '@/types/workers'
-import { WorkerItem, WorkerItemProperties } from '@/types/workers'
+import { Base64 } from 'js-base64';
 import {
   Avatar,
   Button,
   ButtonGroup,
-  Card,
   List,
   Typography,
 } from '@douyinfe/semi-ui'
@@ -13,9 +12,10 @@ import { useEffect, useState } from 'react'
 import { MonacoEditor } from './editor'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useAtom } from 'jotai'
-import { CodeAtom } from '@/store/workers'
+import { CodeAtom, VorkerSettingsAtom } from '@/store/workers'
 // @ts-ignore
 import ColorHash from 'color-hash'
+import { Router, useRouter } from 'next/router'
 
 const CH = new ColorHash()
 
@@ -24,14 +24,19 @@ export function WorkersComponent() {
   const [code, setCodeAtom] = useAtom(CodeAtom)
   const [workerUID, setWorkerUID] = useState('')
   const [editItem, setEditItem] = useState(DEFAUTL_WORKER_ITEM)
+  const [appConfAtom] = useAtom(VorkerSettingsAtom)
+
+  const router = useRouter();
 
   const { data: workers, refetch: reloadWorkers } = useQuery(
     ['getWorkers'],
     () => api.GetAllWorkers()
   )
+
   const { data: worker } = useQuery(['getWorker', workerUID], () => {
     return workerUID ? api.GetWorker(workerUID) : null
   })
+
   const createWorker = useMutation(async () => {
     await api.CreateWorker(DEFAUTL_WORKER_ITEM)
     await reloadWorkers()
@@ -54,24 +59,26 @@ export function WorkersComponent() {
     console.log('reload workers')
     reloadWorkers()
   }, [workerUID])
+
   useEffect(() => {
     if (worker) {
-      console.log('update item and code', atob(worker.Code))
+      console.log('update item and code', Base64.decode(worker.Code))
       setEditItem(worker)
-      setCodeAtom(atob(worker.Code))
+      setCodeAtom(Base64.decode(worker.Code))
     }
   }, [worker])
+
   useEffect(() => {
     console.log('update item code', code)
-    if (code && editItem) setEditItem((item) => ({ ...item, Code: btoa(code) }))
+    if (code && editItem) setEditItem((item) => ({ ...item, Code: Base64.encode(code) }))
   }, [code])
 
   return (
-    <div className="w-full m-4 h-full">
+    <div className="w-full m-4">
       <Button onClick={() => reloadWorkers()}>刷新</Button>
       <Button onClick={() => createWorker.mutate()}>创建</Button>
-      <Button onClick={() => setWorkerUID('')}>返回</Button>
-      <Button onClick={() => updateWorker.mutate()}>保存</Button>
+      {/* <Button onClick={() => setWorkerUID('')}>返回</Button> */}
+      {/* <Button onClick={() => updateWorker.mutate()}>保存</Button> */}
       <List
         dataSource={workers}
         renderItem={(item) => (
@@ -100,15 +107,20 @@ export function WorkersComponent() {
                 <ButtonGroup theme="borderless">
                   <Button
                     onClick={() => {
-                      setWorkerUID(item.UID)
+                      // setWorkerUID(item.UID)
+                      router.push({
+                        pathname: "/worker"
+                        , query: { UID: item.UID }
+                      })
                     }}
                   >
-                    Edit
+                    编辑
                   </Button>
                   <Button onClick={() => deleteWorker.mutate(item.UID)}>
-                    Delete
+                    删除
                   </Button>
-                  <Button onClick={() => flushWorker.mutate}>Flush</Button>
+                  <Button onClick={() => flushWorker.mutate}>刷新</Button>
+                  <Button onClick={() => { window.open(`${appConfAtom?.Scheme}://${editItem.Name}${appConfAtom?.WorkerURLSuffix}`, "_blank") }}>运行</Button>
                 </ButtonGroup>
               </ButtonGroup>
             }
@@ -116,10 +128,10 @@ export function WorkersComponent() {
         )}
       />
       {workerUID ? (
-        <div className="flex flex-col w-full m-4 h-full">
+        <div className="flex flex-col w-full m-4">
           <Typography>Worker Editor</Typography>
           <div></div>
-          <div className='h-full'>
+          <div>
             <MonacoEditor uid={workerUID} />
           </div>
         </div>
