@@ -1,12 +1,29 @@
 version: '3'
 
 services:
-  voker:
-    build: ./
+  vorker:
+    image: vaalcat/vorker
     volumes:
-      - ./data:/data
-  wokerd:
-    build: ubuntu:22.10
-    volumes:
-      - ./data:/data
-    command: /data/workerd
+      - ./workerd:/workerd
+      - ./workerd-linux-64:/bin/workerd
+    environment:
+      - DB_PATH=/workerd/db.sqlite
+      - WORKERD_DIR=/workerd
+      - WORKERD_BIN_PATH=/bin/workerd
+      - DB_TYPE=sqlite
+      - WORKER_LIMIT=10000
+      - WORKER_PORT=8080
+      - API_PORT=8888
+      - LISTEN_ADDR=0.0.0.0
+      - WORKER_DOMAIN_SUFFIX="" # worker url = SCHEME://WORKERNAME+WORKER_DOMAIN_SUFFIX
+      - SCHEME=http
+      - ENABLE_REGISTER=false # only allow admin to register
+      - COOKIE_NAME=authorization
+      - COOKIE_AGE=21600 # sec
+      - COOKIE_DOMAIN=localhost
+      - JWT_SECRET=123123
+      - JWT_EXPIRETIME=6 # hour
+    ports:
+      - 8080:8080
+      - 8888:8888
+    restart: unless-stopped
