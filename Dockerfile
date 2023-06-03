@@ -7,4 +7,4 @@ COPY vorker /app/
 EXPOSE 8888
 EXPOSE 8080
 
-CMD [ "vorker" ]
+CMD [ "/app/vorker" ]
