@@ -12,7 +12,7 @@ import (
 )
 
 func GenCapnpConfig() error {
-	workerRecords, err := models.GetAllWorkers()
+	workerRecords, err := models.AdminGetAllWorkers()
 	if err != nil {
 		logrus.Errorf("failed to get all workers, err: %v", err)
 	}

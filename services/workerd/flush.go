@@ -1,6 +1,7 @@
 package workerd
 
 import (
+	"voker/common"
 	"voker/models"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,9 @@ func FlushEndpoint(c *gin.Context) {
 		return
 	}
 
-	if err := Flush(UID); err != nil {
+	userID := c.GetUint(common.UIDKey)
+
+	if err := Flush(userID, UID); err != nil {
 		c.JSON(500, gin.H{"code": 3, "error": err.Error()})
 		logrus.Errorf("failed to flush worker, err: %v, ctx: %v", err, c)
 		return
@@ -25,7 +28,8 @@ func FlushEndpoint(c *gin.Context) {
 }
 
 func FlushAllEndpoint(c *gin.Context) {
-	workers, err := models.GetAllWorkers()
+	userID := c.GetUint(common.UIDKey)
+	workers, err := models.GetAllWorkers(userID)
 	if err != nil {
 		c.JSON(500, gin.H{"code": 3, "error": err.Error()})
 		logrus.Errorf("failed to get all workers, err: %v, ctx: %v", err, c)
@@ -48,8 +52,8 @@ func FlushAllEndpoint(c *gin.Context) {
 	logrus.Infof("flush all workers success, ctx: %v", c)
 }
 
-func Flush(UID string) error {
-	worker, err := models.GetWorkerByUID(UID)
+func Flush(userID uint, UID string) error {
+	worker, err := models.GetWorkerByUID(userID, UID)
 	if err != nil {
 		return err
 	}

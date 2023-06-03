@@ -2,6 +2,7 @@ package workerd
 
 import (
 	"fmt"
+	"voker/common"
 	"voker/entities"
 	"voker/models"
 
@@ -24,7 +25,9 @@ func UpdateEndpoint(c *gin.Context) {
 		return
 	}
 
-	if err := Update(UID, worker); err != nil {
+	userID := c.GetUint(common.UIDKey)
+
+	if err := Update(userID, UID, worker); err != nil {
 		c.JSON(500, gin.H{"code": 3, "error": err.Error()})
 		logrus.Errorf("failed to update worker, err: %v, ctx: %v", err, c)
 		return
@@ -34,10 +37,10 @@ func UpdateEndpoint(c *gin.Context) {
 	logrus.Errorf("update worker success, ctx: %v", c)
 }
 
-func Update(UID string, worker *entities.Worker) error {
+func Update(userID uint, UID string, worker *entities.Worker) error {
 	FillWorkerValue(worker, true, UID)
 
-	workerRecord, err := models.GetWorkerByUID(UID)
+	workerRecord, err := models.GetWorkerByUID(userID, UID)
 	if err != nil {
 		return err
 	}
