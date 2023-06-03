@@ -1,7 +1,10 @@
 package services
 
 import (
+	"embed"
 	"fmt"
+	"io/fs"
+	"net/http"
 	"voker/authz"
 	"voker/conf"
 	"voker/services/appconf"
@@ -11,6 +14,7 @@ import (
 	"voker/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -51,8 +55,23 @@ func init() {
 	proxy.Any("/*proxyPath", proxyService.Endpoint)
 }
 
-func Run() {
+func Run(f embed.FS) {
 	WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
 	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
+	{
+		fp, err := fs.Sub(f, "www/out")
+		if err != nil {
+			logrus.Panic(err)
+		}
+		router.StaticFileFS("/404", "404.html", http.FS(fp))
+		router.StaticFileFS("/login", "login.html", http.FS(fp))
+		router.StaticFileFS("/admin", "admin.html", http.FS(fp))
+		router.StaticFileFS("/register", "register.html", http.FS(fp))
+		router.StaticFileFS("/worker", "worker.html", http.FS(fp))
+		router.StaticFileFS("/index", "index.html", http.FS(fp))
+		router.NoRoute(func(c *gin.Context) {
+			c.FileFromFS(c.Request.URL.Path, http.FS(fp))
+		})
+	}
 	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
 }
