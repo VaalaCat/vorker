@@ -3,3 +3,5 @@ workerd/workers
 workerd/*.sqlite
 .env
 bin/workerd*
+vorker
+.vscode
