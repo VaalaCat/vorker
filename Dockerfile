@@ -1,4 +1,4 @@
-FROM alpine
+FROM m.daocloud.io/docker.io/alpine
 
 WORKDIR /app
 
