@@ -1,0 +1,45 @@
+---
+name: build
+kind: pipeline
+type: docker
+
+steps:
+  - name: build frontend
+    image: git.vaala.cloud/vaalacat/node:18-alpine
+    commands:
+      - cd www
+      - npm install
+      - npm run build
+      - npx next export
+  - name: build backend
+    image: git.vaala.cloud/vaalacat/golang:1.20
+    commands:
+      - CGO_ENABLED=0 GOPROXY=https://goproxy.cn,direct go build -o vorker
+  - name: build image
+    image: docker:dind
+    environment:
+      DOCKER_PASSWORD:
+        from_secret: docker_password
+      DOCKER_USERNAME:
+        from_secret: docker_username
+    volumes:
+      - name: dockersock
+        path: /var/run
+    commands:
+      - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
+      - docker info
+      - docker build -t vaalacat/vorker
+      - docker push vaalacat/vorker
+    depends_on:
+      - build frontend
+      - build backend
+
+services:
+  - name: docker
+    image: docker:dind
+    privileged: true
+    commands:
+      - dockerd --host=unix:///var/run/docker.sock
+    volumes:
+      - name: dockersock
+        path: /var/run

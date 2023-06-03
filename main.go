@@ -1,7 +1,13 @@
 package main
 
-import "voker/services"
+import (
+	"embed"
+	"voker/services"
+)
+
+//go:embed all:www/out/*
+var fs embed.FS
 
 func main() {
-	services.Run()
+	services.Run(fs)
 }

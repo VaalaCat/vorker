@@ -8,5 +8,6 @@
 			"name": "vorker",
 			"database": "${workspaceFolder:vorker}/workerd/db.sqlite"
 		}
-	]
+	],
+	"ansible.python.interpreterPath": "/opt/homebrew/anaconda3/bin/python"
 }
