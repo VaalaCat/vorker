@@ -24,3 +24,9 @@ export const DEFAUTL_WORKER_ITEM: WorkerItem = {
 export interface WorkerEditorProperties {
 	item: string;
 }
+
+export interface VorkerSettingsProperties {
+	WorkerURLSuffix: string;
+	Scheme: string;
+	EnableRegister: boolean;
+}

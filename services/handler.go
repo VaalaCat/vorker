@@ -2,7 +2,10 @@ package services
 
 import (
 	"fmt"
+	"voker/authz"
 	"voker/conf"
+	"voker/services/appconf"
+	"voker/services/auth"
 	proxyService "voker/services/proxy"
 	"voker/services/workerd"
 	"voker/utils"
@@ -21,14 +24,28 @@ func init() {
 	router.Use(utils.GinMiddleware("http://localhost:3000"))
 	api := router.Group("/api")
 	{
-		api.GET("/worker/:uid", workerd.GetWorkerEndpoint)
-		api.POST("/worker/create", workerd.CreateEndpoint)
-		api.PATCH("/worker/:uid", workerd.UpdateEndpoint)
-		api.DELETE("/worker/:uid", workerd.DeleteEndpoint)
-		api.GET("/worker/flush/:uid", workerd.FlushEndpoint)
-		api.GET("/workers/flush", workerd.FlushAllEndpoint)
-		api.GET("/workers", workerd.GetAllWorkersEndpoint)
-		api.GET("/workers/:offset/:limit", workerd.GetWorkersEndpoint)
+		workerApi := api.Group("/worker", authz.JWTMiddleware())
+		{
+			workerApi.GET("/:uid", workerd.GetWorkerEndpoint)
+			workerApi.GET("/flush/:uid", workerd.FlushEndpoint)
+			workerApi.POST("/create", workerd.CreateEndpoint)
+			workerApi.PATCH("/:uid", workerd.UpdateEndpoint)
+			workerApi.DELETE("/:uid", workerd.DeleteEndpoint)
+		}
+		workersApi := api.Group("/workers", authz.JWTMiddleware())
+		{
+			workersApi.GET("/flush", workerd.FlushAllEndpoint)
+			workersApi.GET("/:offset/:limit", workerd.GetWorkersEndpoint)
+		}
+		userApi := api.Group("/user", authz.JWTMiddleware())
+		{
+			userApi.GET("/info", auth.GetUserEndpoint)
+		}
+		api.GET("/allworkers", authz.JWTMiddleware(), workerd.GetAllWorkersEndpoint)
+		api.GET("/vorker/config", appconf.GetEndpoint)
+		api.POST("/auth/register", auth.RegisterEndpoint)
+		api.POST("/auth/login", auth.LoginEndpoint)
+		api.GET("/auth/logout", authz.JWTMiddleware(), auth.LogoutEndpoint)
 	}
 
 	proxy.Any("/*proxyPath", proxyService.Endpoint)
@@ -36,6 +53,6 @@ func init() {
 
 func Run() {
 	WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
-	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.ProxyPort))
+	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
 	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
 }

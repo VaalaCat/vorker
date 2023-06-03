@@ -2,6 +2,7 @@ package workerd
 
 import (
 	"fmt"
+	"voker/common"
 	"voker/models"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +16,8 @@ func DeleteEndpoint(c *gin.Context) {
 		return
 	}
 
-	if err := Delete(UID); err != nil {
+	userID := c.GetUint(common.UIDKey)
+	if err := Delete(userID, UID); err != nil {
 		c.JSON(500, gin.H{"code": 3, "error": err.Error()})
 		logrus.Errorf("failed to delete worker, err: %v, ctx: %v", err, c)
 		return
@@ -24,8 +26,8 @@ func DeleteEndpoint(c *gin.Context) {
 	c.JSON(200, gin.H{"code": 0, "message": "success"})
 }
 
-func Delete(UID string) error {
-	worker, err := models.GetWorkerByUID(UID)
+func Delete(userID uint, UID string) error {
+	worker, err := models.GetWorkerByUID(userID, UID)
 	if err != nil {
 		return err
 	}

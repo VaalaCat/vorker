@@ -1,5 +1,5 @@
 import api from './http'
-import { WorkerItem } from '@/types/workers'
+import { VorkerSettingsProperties, WorkerItem } from '@/types/workers'
 
 export const GetWorker = (uid: string) => {
   return api
@@ -15,7 +15,7 @@ export const GetWorkers = (offset: number, limit: number) => {
 
 export const GetAllWorkers = () => {
   return api
-    .get<{ data: WorkerItem[] }>('/api/workers')
+    .get<{ data: WorkerItem[] }>('/api/allworkers')
     .then((res) => res.data.data)
 }
 
@@ -37,4 +37,9 @@ export const FlushWorker = (uid: string) => {
 
 export const FlushAllWorkers = () => {
   return api.get(`/api/workers/flush`, {}).then((res) => res.data)
+}
+
+export const GetAppConfig = () => {
+  return api.get<{ data: VorkerSettingsProperties }>
+    (`/api/vorker/config`, {}).then((res) => res.data.data)
 }

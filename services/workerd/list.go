@@ -2,6 +2,7 @@ package workerd
 
 import (
 	"strconv"
+	"voker/common"
 	"voker/models"
 
 	"github.com/gin-gonic/gin"
@@ -29,8 +30,9 @@ func GetWorkersEndpoint(c *gin.Context) {
 		c.JSON(400, gin.H{"code": 1, "error": "limit is invalid"})
 		return
 	}
+	userID := c.GetUint(common.UIDKey)
 
-	workers, err := models.GetWorkers(offset, limit)
+	workers, err := models.GetWorkers(userID, offset, limit)
 	if err != nil {
 		c.JSON(500, gin.H{"code": 3, "error": err.Error()})
 		logrus.Errorf("failed to get worker, err: %v, ctx: %v", err, c)
@@ -41,7 +43,8 @@ func GetWorkersEndpoint(c *gin.Context) {
 }
 
 func GetAllWorkersEndpoint(c *gin.Context) {
-	workers, err := models.GetAllWorkers()
+	userID := c.GetUint(common.UIDKey)
+	workers, err := models.GetAllWorkers(userID)
 	if err != nil {
 		c.JSON(500, gin.H{"code": 3, "error": err.Error()})
 		logrus.Errorf("failed to get all workers, err: %v, ctx: %v", err, c)
@@ -52,12 +55,13 @@ func GetAllWorkersEndpoint(c *gin.Context) {
 }
 
 func GetWorkerEndpoint(c *gin.Context) {
+	userID := c.GetUint(common.UIDKey)
 	uid := c.Param("uid")
 	if len(uid) == 0 {
 		c.JSON(400, gin.H{"code": 1, "error": "uid is empty"})
 		return
 	}
-	worker, err := models.GetWorkerByUID(uid)
+	worker, err := models.GetWorkerByUID(userID, uid)
 	if err != nil {
 		c.JSON(500, gin.H{"code": 3, "error": err.Error()})
 		logrus.Errorf("failed to get worker, err: %v, ctx: %v", err, c)
