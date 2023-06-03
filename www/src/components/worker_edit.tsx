@@ -40,6 +40,10 @@ export const WorkerEditComponent = () => {
 		if (code && editItem) setEditItem((item) => ({ ...item, Code: Base64.encode(code) }))
 	}, [code])
 
+	useEffect(() => {
+		worker?.Code
+	})
+
 	return <div className="m-4 flex flex-col">
 		<Title heading={5}>ID</Title>
 		<Paragraph copyable spacing="extended">{editItem.UID}</Paragraph>

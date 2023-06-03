@@ -15,7 +15,7 @@ export const GetWorkers = (offset: number, limit: number) => {
 
 export const GetAllWorkers = () => {
   return api
-    .get<{ data: WorkerItem[] }>('/api/workers')
+    .get<{ data: WorkerItem[] }>('/api/allworkers')
     .then((res) => res.data.data)
 }
 

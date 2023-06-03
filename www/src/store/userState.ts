@@ -1,4 +1,6 @@
+import { UserInfo } from '@/types/body'
 import { atom, useAtom } from 'jotai'
+import { userInfo } from 'os'
 
 // Create your atoms and derivatives
-export const usernameAtom = atom('hello')
+export const UserAtom = atom<UserInfo | undefined>({} as UserInfo)

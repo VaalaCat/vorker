@@ -30,7 +30,7 @@ func FillWorkerValue(worker *entities.Worker, keepUID bool, UID string) {
 	}
 	// if the worker name is not unique, use the uid as the name
 	if wl, err :=
-		models.GetWorkersByNames([]string{worker.Name}); len(wl) > 0 ||
+		models.AdminGetWorkersByNames([]string{worker.Name}); len(wl) > 0 ||
 		err != nil ||
 		len(worker.Name) == 0 {
 		if len(wl) == 1 {

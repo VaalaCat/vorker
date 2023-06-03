@@ -36,7 +36,7 @@ func GenTestRecord() {
 	}
 
 	for _, worker := range testWorkers {
-		_, err := GetWorkerByUID(worker.UID)
+		_, err := GetWorkerByUID(1, worker.UID)
 		if err != nil {
 			worker.Create()
 		}
@@ -78,7 +78,7 @@ func TestGetWorkerByUID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetWorkerByUID(tt.args.uid)
+			got, err := GetWorkerByUID(1, tt.args.uid)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetByUID() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -113,7 +113,7 @@ func TestGetWorkersByNames(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetWorkersByNames(tt.args.names)
+			got, err := GetWorkersByNames(1, tt.args.names)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetByNames() error = %v, wantErr %v", err, tt.wantErr)
 				return

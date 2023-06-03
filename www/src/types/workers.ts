@@ -28,4 +28,5 @@ export interface WorkerEditorProperties {
 export interface VorkerSettingsProperties {
 	WorkerURLSuffix: string;
 	Scheme: string;
+	EnableRegister: boolean;
 }

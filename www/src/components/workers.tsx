@@ -56,20 +56,20 @@ export function WorkersComponent() {
   })
 
   useEffect(() => {
-    console.log('reload workers')
+    // console.log('reload workers')
     reloadWorkers()
   }, [workerUID])
 
   useEffect(() => {
     if (worker) {
-      console.log('update item and code', Base64.decode(worker.Code))
+      // console.log('update item and code', Base64.decode(worker.Code))
       setEditItem(worker)
       setCodeAtom(Base64.decode(worker.Code))
     }
   }, [worker])
 
   useEffect(() => {
-    console.log('update item code', code)
+    // console.log('update item code', code)
     if (code && editItem) setEditItem((item) => ({ ...item, Code: Base64.encode(code) }))
   }, [code])
 
@@ -107,7 +107,6 @@ export function WorkersComponent() {
                 <ButtonGroup theme="borderless">
                   <Button
                     onClick={() => {
-                      // setWorkerUID(item.UID)
                       router.push({
                         pathname: "/worker"
                         , query: { UID: item.UID }
