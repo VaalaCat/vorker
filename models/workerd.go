@@ -16,6 +16,7 @@ import (
 type Worker struct {
 	gorm.Model
 	*entities.Worker
+	UserID uint
 }
 
 func init() {
@@ -28,17 +29,31 @@ func (w *Worker) TableName() string {
 	return "workers"
 }
 
-func GetWorkerByUID(uid string) (*Worker, error) {
+func GetWorkerByUID(userID uint, uid string) (*Worker, error) {
 	var worker Worker
 	db := database.GetDB()
 	defer database.CloseDB(db)
-	if err := db.Where("uid = ?", uid).First(&worker).Error; err != nil {
+	if err := db.Where(&Worker{
+		UserID: userID,
+	}).Where("uid = ?", uid).First(&worker).Error; err != nil {
 		return nil, err
 	}
 	return &worker, nil
 }
 
-func GetWorkersByNames(names []string) ([]*Worker, error) {
+func GetWorkersByNames(userID uint, names []string) ([]*Worker, error) {
+	var workers []*Worker
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	if err := db.Where(&Worker{
+		UserID: userID,
+	}).Where("name in (?)", names).Find(&workers).Error; err != nil {
+		return nil, err
+	}
+	return workers, nil
+}
+
+func AdminGetWorkersByNames(names []string) ([]*Worker, error) {
 	var workers []*Worker
 	db := database.GetDB()
 	defer database.CloseDB(db)
@@ -48,7 +63,19 @@ func GetWorkersByNames(names []string) ([]*Worker, error) {
 	return workers, nil
 }
 
-func GetAllWorkers() ([]*Worker, error) {
+func GetAllWorkers(userID uint) ([]*Worker, error) {
+	var workers []*Worker
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	if err := db.Where(&Worker{
+		UserID: userID,
+	}).Find(&workers).Error; err != nil {
+		return nil, err
+	}
+	return workers, nil
+}
+
+func AdminGetAllWorkers() ([]*Worker, error) {
 	var workers []*Worker
 	db := database.GetDB()
 	defer database.CloseDB(db)
@@ -58,11 +85,13 @@ func GetAllWorkers() ([]*Worker, error) {
 	return workers, nil
 }
 
-func GetWorkers(offset, limit int) ([]*Worker, error) {
+func GetWorkers(userID uint, offset, limit int) ([]*Worker, error) {
 	var workers []*Worker
 	db := database.GetDB()
 	defer database.CloseDB(db)
-	if err := db.Offset(offset).Limit(limit).Find(&workers).Error; err != nil {
+	if err := db.Where(&Worker{
+		UserID: userID,
+	}).Offset(offset).Limit(limit).Find(&workers).Error; err != nil {
 		return nil, err
 	}
 	return workers, nil

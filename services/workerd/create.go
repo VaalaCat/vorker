@@ -1,6 +1,7 @@
 package workerd
 
 import (
+	"voker/common"
 	"voker/entities"
 	"voker/models"
 
@@ -22,8 +23,9 @@ func CreateEndpoint(c *gin.Context) {
 		logrus.Errorf("create endpoint params is not validate, ctx: %v", c)
 		return
 	}
+	userID := c.GetUint(common.UIDKey)
 
-	if err := Create(worker); err != nil {
+	if err := Create(userID, worker); err != nil {
 		c.JSON(500, gin.H{"code": 3, "error": err.Error()})
 		logrus.Errorf("failed to create worker, err: %v, ctx: %v", err, c)
 		return
@@ -34,10 +36,10 @@ func CreateEndpoint(c *gin.Context) {
 }
 
 // Create creates a new worker in the database and update the workerd capnp config file
-func Create(worker *entities.Worker) error {
-	FillWorkerValue(worker, false, false)
+func Create(userID uint, worker *entities.Worker) error {
+	FillWorkerValue(worker, false, "")
 
-	if err := (&models.Worker{Worker: worker}).Create(); err != nil {
+	if err := (&models.Worker{Worker: worker, UserID: userID}).Create(); err != nil {
 		logrus.Errorf("failed to create worker, err: %v", err)
 		return err
 	}

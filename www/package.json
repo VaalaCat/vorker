@@ -21,9 +21,11 @@
     "axios": "^1.4.0",
     "color-hash": "^2.0.2",
     "jotai": "^2.1.0",
+    "js-base64": "^3.7.5",
     "next": "13.4.2",
     "qs": "^6.11.1",
     "react": "18.2.0",
+    "react-cookie": "^4.1.1",
     "react-dom": "18.2.0",
     "react-icons": "^4.9.0",
     "tailwind": "^4.0.0"
