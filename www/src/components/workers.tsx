@@ -6,6 +6,7 @@ import {
   Button,
   ButtonGroup,
   List,
+  Toast,
   Typography,
 } from '@douyinfe/semi-ui'
 import { useEffect, useState } from 'react'
@@ -40,36 +41,32 @@ export function WorkersComponent() {
   const createWorker = useMutation(async () => {
     await api.CreateWorker(DEFAUTL_WORKER_ITEM)
     await reloadWorkers()
+    Toast.info('创建成功！')
   })
 
   const deleteWorker = useMutation(async (uid: string) => {
     await api.DeleteWorker(uid)
     await reloadWorkers()
+    Toast.warning('删除成功！')
   })
 
   const flushWorker = useMutation(async () => {
     await api.FlushWorker(workerUID)
-  })
-
-  const updateWorker = useMutation(async () => {
-    await api.UpdateWorker(workerUID, editItem)
+    Toast.info('刷新成功！')
   })
 
   useEffect(() => {
-    // console.log('reload workers')
     reloadWorkers()
   }, [workerUID])
 
   useEffect(() => {
     if (worker) {
-      // console.log('update item and code', Base64.decode(worker.Code))
       setEditItem(worker)
       setCodeAtom(Base64.decode(worker.Code))
     }
   }, [worker])
 
   useEffect(() => {
-    // console.log('update item code', code)
     if (code && editItem) setEditItem((item) => ({ ...item, Code: Base64.encode(code) }))
   }, [code])
 
@@ -77,8 +74,6 @@ export function WorkersComponent() {
     <div className="w-full m-4">
       <Button onClick={() => reloadWorkers()}>刷新</Button>
       <Button onClick={() => createWorker.mutate()}>创建</Button>
-      {/* <Button onClick={() => setWorkerUID('')}>返回</Button> */}
-      {/* <Button onClick={() => updateWorker.mutate()}>保存</Button> */}
       <List
         dataSource={workers}
         renderItem={(item) => (
@@ -119,7 +114,10 @@ export function WorkersComponent() {
                     删除
                   </Button>
                   <Button onClick={() => flushWorker.mutate}>刷新</Button>
-                  <Button onClick={() => { window.open(`${appConfAtom?.Scheme}://${editItem.Name}${appConfAtom?.WorkerURLSuffix}`, "_blank") }}>运行</Button>
+                  <Button onClick={() => {
+                    window.open(`${appConfAtom?.Scheme}://${item.Name}${appConfAtom?.WorkerURLSuffix}`, "_blank")
+                  }}>
+                    运行</Button>
                 </ButtonGroup>
               </ButtonGroup>
             }

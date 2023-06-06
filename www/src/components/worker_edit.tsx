@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, Divider, Input, TabPane, Tabs, Typography } from "@douyinfe/semi-ui"
+import { Button, ButtonGroup, Divider, Input, TabPane, Tabs, Toast, Typography } from "@douyinfe/semi-ui"
 import { MonacoEditor } from "./editor"
 import { DEFAUTL_WORKER_ITEM, WorkerItem } from "@/types/workers"
 import * as api from '@/api/workers'
@@ -23,6 +23,7 @@ export const WorkerEditComponent = () => {
 
 	const updateWorker = useMutation(async () => {
 		await api.UpdateWorker(UID as string, editItem)
+		Toast.info('保存成功！')
 	})
 
 	useEffect(() => {
