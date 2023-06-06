@@ -4,7 +4,7 @@ RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list &
 	sed -i s@/security.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
 
 RUN apt-get update && \
-	DEBIAN_FRONTEND=noninteractive apt-get install -qy libc++1
+	DEBIAN_FRONTEND=noninteractive apt-get install -qy libc++1 ca-certificates
 
 WORKDIR /app
 
