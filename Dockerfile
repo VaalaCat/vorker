@@ -1,4 +1,4 @@
-FROM m.daocloud.io/docker.io/alpine
+FROM m.daocloud.io/docker.io/ubuntu:22.04
 
 WORKDIR /app
 
