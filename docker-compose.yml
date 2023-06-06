@@ -2,7 +2,7 @@ version: '3'
 
 services:
   vorker:
-    image: vaalcat/vorker
+    image: vaalacat/vorker
     volumes:
       - ./workerd:/workerd
       - ./workerd-linux-64:/bin/workerd
