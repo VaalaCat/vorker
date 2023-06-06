@@ -1,17 +1,8 @@
 {
   "root": true,
-  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  "extends": "next",
   "parser": "@typescript-eslint/parser",
-  "parserOptions": { "project": ["./tsconfig.json"] },
   "plugins": ["@typescript-eslint"],
-  "rules": {
-    "@typescript-eslint/strict-boolean-expressions": [
-      2,
-      {
-        "allowString": false,
-        "allowNumber": false
-      }
-    ]
-  },
+  "rules": {},
   "ignorePatterns": ["src/**/*.test.ts", "src/frontend/generated/*"]
 }

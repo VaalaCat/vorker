@@ -1,6 +1,5 @@
 import * as api from '@/api/workers'
-import { DEFAUTL_WORKER_ITEM } from '@/types/workers'
-import { Base64 } from 'js-base64';
+import { DEFAUTL_WORKER_ITEM as DEFAULT_WORKER_ITEM } from '@/types/workers'
 import {
   Avatar,
   Button,
@@ -14,20 +13,19 @@ import { MonacoEditor } from './editor'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useAtom } from 'jotai'
 import { CodeAtom, VorkerSettingsAtom } from '@/store/workers'
-// @ts-ignore
 import ColorHash from 'color-hash'
 import { Router, useRouter } from 'next/router'
 
 const CH = new ColorHash()
 
 export function WorkersComponent() {
-  // get workerlist list
+  // get worker list
   const [code, setCodeAtom] = useAtom(CodeAtom)
   const [workerUID, setWorkerUID] = useState('')
-  const [editItem, setEditItem] = useState(DEFAUTL_WORKER_ITEM)
+  const [editItem, setEditItem] = useState(DEFAULT_WORKER_ITEM)
   const [appConfAtom] = useAtom(VorkerSettingsAtom)
 
-  const router = useRouter();
+  const router = useRouter()
 
   const { data: workers, refetch: reloadWorkers } = useQuery(
     ['getWorkers'],
@@ -39,7 +37,7 @@ export function WorkersComponent() {
   })
 
   const createWorker = useMutation(async () => {
-    await api.CreateWorker(DEFAUTL_WORKER_ITEM)
+    await api.CreateWorker(DEFAULT_WORKER_ITEM)
     await reloadWorkers()
     Toast.info('创建成功！')
   })
@@ -57,18 +55,22 @@ export function WorkersComponent() {
 
   useEffect(() => {
     reloadWorkers()
-  }, [workerUID])
+  }, [reloadWorkers, workerUID])
 
   useEffect(() => {
     if (worker) {
       setEditItem(worker)
-      setCodeAtom(Base64.decode(worker.Code))
+      setCodeAtom(Buffer.from(worker.Code, 'base64').toString('utf8'))
     }
-  }, [worker])
+  }, [setCodeAtom, worker])
 
   useEffect(() => {
-    if (code && editItem) setEditItem((item) => ({ ...item, Code: Base64.encode(code) }))
-  }, [code])
+    if (code && editItem)
+      setEditItem((item) => ({
+        ...item,
+        Code: Buffer.from(code).toString('base64'),
+      }))
+  }, [code, editItem])
 
   return (
     <div className="w-full m-4">
@@ -103,8 +105,8 @@ export function WorkersComponent() {
                   <Button
                     onClick={() => {
                       router.push({
-                        pathname: "/worker"
-                        , query: { UID: item.UID }
+                        pathname: '/worker',
+                        query: { UID: item.UID },
                       })
                     }}
                   >
@@ -114,10 +116,16 @@ export function WorkersComponent() {
                     删除
                   </Button>
                   <Button onClick={() => flushWorker.mutate}>刷新</Button>
-                  <Button onClick={() => {
-                    window.open(`${appConfAtom?.Scheme}://${item.Name}${appConfAtom?.WorkerURLSuffix}`, "_blank")
-                  }}>
-                    运行</Button>
+                  <Button
+                    onClick={() => {
+                      window.open(
+                        `${appConfAtom?.Scheme}://${item.Name}${appConfAtom?.WorkerURLSuffix}`,
+                        '_blank'
+                      )
+                    }}
+                  >
+                    运行
+                  </Button>
                 </ButtonGroup>
               </ButtonGroup>
             }

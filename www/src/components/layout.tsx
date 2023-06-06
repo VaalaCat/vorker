@@ -15,14 +15,16 @@ export const Layout = ({
   main: React.ReactNode
 }) => {
   return (
-    < QueryClientProvider client={queryClient} >
+    <QueryClientProvider client={queryClient}>
       <SemiLayout>
         <Header>{header}</Header>
         <SemiLayout>
           <Sider>{side}</Sider>
-          <Content className='overflow-scroll' style={{ height: '93vh' }}>{main}</Content>
+          <Content className="overflow-scroll" style={{ height: '93vh' }}>
+            {main}
+          </Content>
         </SemiLayout>
       </SemiLayout>
-    </QueryClientProvider >
+    </QueryClientProvider>
   )
 }
