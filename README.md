@@ -43,7 +43,7 @@ docker run -dit --name=vorker \
 	-e WORKER_PORT=8080 \
 	-e API_PORT=8888 \
 	-e LISTEN_ADDR=0.0.0.0 \
-	-e WORKER_DOMAIN_SUFFIX=example.com \ # concat with worker name and scheme
+	-e WORKER_URL_SUFFIX=.example.com \ # concat with worker name and scheme
 	-e SCHEME=http \ # external scheme
 	-e ENABLE_REGISTER=false \
 	-e COOKIE_NAME=authorization \
@@ -56,6 +56,9 @@ docker run -dit --name=vorker \
 	-v $PWD/workerd:/path/to/workerd \
 	-v $PWD/workerd-linux-64:/bin/workerd \
 	vaalacat/vorker:latest
+# this is a example, you can change the env to fit your need
+# for this example, you can visit http://localhost:8888/admin to access the web ui
+# and the worker URL will be: SCHEME://WORKER_NAME.example.com
 ```
 
 3. test your workerd, if your vorker is running on localhost, you can use curl to test it.
