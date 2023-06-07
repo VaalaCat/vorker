@@ -2,6 +2,8 @@
 
 Vorker is a simple self host cloudflare worker alternative which built with cloudflare's [workerd](https://github.com/cloudflare/workerd).
 
+Fearues and Issues are welcome!
+
 ![](./arch.png)
 
 ## Features
