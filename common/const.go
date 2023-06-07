@@ -36,6 +36,7 @@ const (
 )
 
 const (
-	UIDKey           = "uid"
-	AuthorizationKey = "authorization"
+	UIDKey                 = "uid"
+	AuthorizationKey       = "authorization"
+	AuthorizationHeaderKey = "X-Authorization-Token"
 )
