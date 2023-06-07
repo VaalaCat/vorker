@@ -25,7 +25,9 @@ var (
 func init() {
 	router = gin.Default()
 	proxy = gin.Default()
-	router.Use(utils.GinMiddleware("http://localhost:3000"))
+	router.Use(utils.CORSMiddlewaire(
+		fmt.Sprintf("%v://%v", conf.AppConfigInstance.Scheme, conf.AppConfigInstance.CookieDomain),
+	))
 	api := router.Group("/api")
 	{
 		workerApi := api.Group("/worker", authz.JWTMiddleware())
