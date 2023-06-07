@@ -45,6 +45,7 @@ example:
 mkdir vorker && cd vorker
 curl -fSL -O https://github.com/cloudflare/workerd/releases/download/v1.20230518.0/workerd-linux-64.gz
 gzip -d workerd-linux-64.gz
+chmod +x workerd-linux-64
 ```
 
 2. Run by docker command or download the docker-compose.yml from repo and execute `docker-compose up -d`.
