@@ -43,6 +43,8 @@ func LoginEndpoint(c *gin.Context) {
 	}
 
 	authz.SetToken(c, token)
+
+	c.Header(common.AuthorizationHeaderKey, token)
 	common.RespOK(c, common.RespMsgOK, defs.LoginResponse{
 		Status: common.RespCodeOK,
 		Token:  token})

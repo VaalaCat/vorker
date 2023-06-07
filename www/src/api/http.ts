@@ -7,9 +7,10 @@ instance.interceptors.request.use((request) => {
   return request
 })
 
-axios.interceptors.response.use((response) => {
-  if (response.headers?.['X-Authorization-Token'] && !localStorage['token']) {
-    localStorage['token'] = response.headers['X-Authorization-Token']
+instance.interceptors.response.use((response) => {
+  console.log(response.headers?.["x-authorization-token"])
+  if (response.headers?.["x-authorization-token"]) {
+    localStorage['token'] = response.headers['x-authorization-token']
   }
   return response
 })
