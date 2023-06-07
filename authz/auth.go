@@ -1,6 +1,7 @@
 package authz
 
 import (
+	"strings"
 	"time"
 	"voker/common"
 	"voker/conf"
@@ -22,7 +23,15 @@ func JWTMiddleware() func(c *gin.Context) {
 			}
 		}
 
-		tokenStr := c.Request.Header.Get(common.AuthorizationKey)
+		tokenOrigin := c.Request.Header.Get(common.AuthorizationKey)
+		tokenList := strings.Split(tokenOrigin, " ")
+		if len(tokenList) != 2 {
+			common.RespErr(c, common.RespCodeNotAuthed, common.RespMsgNotAuthed, nil)
+			c.Abort()
+			return
+		}
+		tokenStr := tokenList[1]
+
 		if tokenStr == "" {
 			common.RespErr(c, common.RespCodeNotAuthed, common.RespMsgNotAuthed, nil)
 			c.Abort()
