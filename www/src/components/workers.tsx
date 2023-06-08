@@ -10,6 +10,7 @@ import {
   ButtonGroup,
   Dropdown,
   List,
+  Modal,
   Toast,
   Typography,
 } from '@douyinfe/semi-ui'
@@ -48,7 +49,7 @@ export function WorkersComponent() {
   })
 
   const createWorker = useMutation(async () => {
-    await api.createWorker(DEFAULT_WORKER_ITEM)
+    await api.createWorker({ ...DEFAULT_WORKER_ITEM })
     await reloadWorkers()
     Toast.info('创建成功！')
   })
@@ -72,6 +73,22 @@ export function WorkersComponent() {
       )
     },
     [appConfAtom?.Scheme, appConfAtom?.WorkerURLSuffix]
+  )
+
+  const handleDeleteWorker = useCallback(
+    (item: WorkerItem) => {
+      Modal.confirm({
+        title: `删除 worker`,
+        content: (
+          <span className="break-all">
+            确定要删除 {item.Name} (ID: <code>{item.UID}</code>) 吗
+          </span>
+        ),
+        centered: true,
+        onOk: () => deleteWorker.mutate(item.UID),
+      })
+    },
+    [deleteWorker]
   )
 
   useEffect(() => {
@@ -158,7 +175,7 @@ export function WorkersComponent() {
                       {
                         node: 'item',
                         name: '删除',
-                        onClick: () => deleteWorker.mutate(item.UID),
+                        onClick: () => handleDeleteWorker(item),
                       },
                       {
                         node: 'item',
