@@ -59,6 +59,8 @@ export const WorkerEditComponent = () => {
     worker?.Code
   })
 
+  const workerURL = `${appConfAtom?.Scheme}://${editItem.Name}${appConfAtom?.WorkerURLSuffix}`
+
   return (
     <div className="m-4 flex flex-col">
       <div className="flex justify-between">
@@ -74,12 +76,12 @@ export const WorkerEditComponent = () => {
             </Breadcrumb.Item>
           </Breadcrumb>
           <Title heading={5}>ID</Title>
-          <Paragraph copyable spacing="extended">
+          <Paragraph copyable={{ content: editItem.UID }} spacing="extended">
             <code>{editItem.UID}</code>
           </Paragraph>
           <Title heading={5}>URL</Title>
-          <Paragraph copyable spacing="extended">
-            <code>{`${appConfAtom?.Scheme}://${editItem.Name}${appConfAtom?.WorkerURLSuffix}`}</code>
+          <Paragraph copyable={{ content: workerURL }} spacing="extended">
+            <code>{workerURL}</code>
           </Paragraph>
         </div>
         <div>
