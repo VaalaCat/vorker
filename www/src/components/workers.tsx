@@ -77,7 +77,7 @@ export function WorkersComponent() {
 
   const handleDeleteWorker = useCallback(
     (item: WorkerItem) => {
-      Modal.confirm({
+      Modal.warning({
         title: `删除 worker`,
         content: (
           <span className="break-all">

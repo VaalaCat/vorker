@@ -6,6 +6,7 @@ import (
 	"voker/models"
 	"voker/utils"
 
+	"github.com/lucasepe/codename"
 	"github.com/sirupsen/logrus"
 )
 
@@ -38,6 +39,7 @@ func FillWorkerValue(worker *entities.Worker, keepUID bool, UID string) {
 				return
 			}
 		}
-		worker.Name = worker.UID
+		rng, _ := codename.DefaultRNG()
+		worker.Name = codename.Generate(rng, 0)
 	}
 }
