@@ -1,22 +1,33 @@
 import * as api from '@/api/workers'
-import { DEFAUTL_WORKER_ITEM as DEFAULT_WORKER_ITEM } from '@/types/workers'
+import {
+  DEFAUTL_WORKER_ITEM as DEFAULT_WORKER_ITEM,
+  WorkerItem,
+} from '@/types/workers'
 import {
   Avatar,
+  Breadcrumb,
   Button,
   ButtonGroup,
+  Dropdown,
   List,
   Toast,
   Typography,
 } from '@douyinfe/semi-ui'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { MonacoEditor } from './editor'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useAtom } from 'jotai'
 import { CodeAtom, VorkerSettingsAtom } from '@/store/workers'
 import ColorHash from 'color-hash'
 import { Router, useRouter } from 'next/router'
-
-const CH = new ColorHash()
+import {
+  IconEdit,
+  IconHome,
+  IconMore,
+  IconTreeTriangleDown,
+  IconTreeTriangleRight,
+} from '@douyinfe/semi-icons'
+import { CH } from '@/lib/color'
 
 export function WorkersComponent() {
   // get worker list
@@ -29,29 +40,39 @@ export function WorkersComponent() {
 
   const { data: workers, refetch: reloadWorkers } = useQuery(
     ['getWorkers'],
-    () => api.GetAllWorkers()
+    () => api.getAllWorkers()
   )
 
   const { data: worker } = useQuery(['getWorker', workerUID], () => {
-    return workerUID ? api.GetWorker(workerUID) : null
+    return workerUID ? api.getWorker(workerUID) : null
   })
 
   const createWorker = useMutation(async () => {
-    await api.CreateWorker(DEFAULT_WORKER_ITEM)
+    await api.createWorker(DEFAULT_WORKER_ITEM)
     await reloadWorkers()
     Toast.info('创建成功！')
   })
 
   const deleteWorker = useMutation(async (uid: string) => {
-    await api.DeleteWorker(uid)
+    await api.deleteWorker(uid)
     await reloadWorkers()
     Toast.warning('删除成功！')
   })
 
   const flushWorker = useMutation(async () => {
-    await api.FlushWorker(workerUID)
-    Toast.info('刷新成功！')
+    await api.flushWorker(workerUID)
+    Toast.info('同步成功！')
   })
+
+  const handleOpenWorker = useCallback(
+    (item: WorkerItem) => {
+      window.open(
+        `${appConfAtom?.Scheme}://${item.Name}${appConfAtom?.WorkerURLSuffix}`,
+        '_blank'
+      )
+    },
+    [appConfAtom?.Scheme, appConfAtom?.WorkerURLSuffix]
+  )
 
   useEffect(() => {
     reloadWorkers()
@@ -73,9 +94,20 @@ export function WorkersComponent() {
   }, [code, editItem])
 
   return (
-    <div className="w-full m-4">
-      <Button onClick={() => reloadWorkers()}>刷新</Button>
-      <Button onClick={() => createWorker.mutate()}>创建</Button>
+    <div className="m-4">
+      <div className="flex justify-between">
+        <Breadcrumb>
+          <Breadcrumb.Item
+            href="/admin"
+            icon={<IconHome size="small" />}
+          ></Breadcrumb.Item>
+          <Breadcrumb.Item href="/admin">Workers</Breadcrumb.Item>
+        </Breadcrumb>
+        <ButtonGroup>
+          <Button onClick={() => reloadWorkers()}>同步</Button>
+          <Button onClick={() => createWorker.mutate()}>创建</Button>
+        </ButtonGroup>
+      </div>
       <List
         dataSource={workers}
         renderItem={(item) => (
@@ -90,9 +122,10 @@ export function WorkersComponent() {
               </Avatar>
             }
             main={
-              <div>
+              <div className="flex flex-col justify-between h-12">
                 <span
-                  style={{ color: 'var(--semi-color-text-0)', fontWeight: 500 }}
+                  className="text-base"
+                  style={{ color: 'var(--semi-color-text-0)' }}
                 >
                   {item.Name}
                 </span>
@@ -103,6 +136,7 @@ export function WorkersComponent() {
               <ButtonGroup theme="borderless">
                 <ButtonGroup theme="borderless">
                   <Button
+                    icon={<IconEdit />}
                     onClick={() => {
                       router.push({
                         pathname: '/worker',
@@ -112,20 +146,31 @@ export function WorkersComponent() {
                   >
                     编辑
                   </Button>
-                  <Button onClick={() => deleteWorker.mutate(item.UID)}>
-                    删除
-                  </Button>
-                  <Button onClick={() => flushWorker.mutate}>刷新</Button>
                   <Button
-                    onClick={() => {
-                      window.open(
-                        `${appConfAtom?.Scheme}://${item.Name}${appConfAtom?.WorkerURLSuffix}`,
-                        '_blank'
-                      )
-                    }}
+                    icon={<IconTreeTriangleRight />}
+                    onClick={() => handleOpenWorker(item)}
                   >
                     运行
                   </Button>
+                  <Dropdown
+                    // onVisibleChange={(v) => handleVisibleChange(1, v)}
+                    menu={[
+                      {
+                        node: 'item',
+                        name: '删除',
+                        onClick: () => deleteWorker.mutate(item.UID),
+                      },
+                      {
+                        node: 'item',
+                        name: '同步',
+                        onClick: () => flushWorker.mutate(),
+                      },
+                    ]}
+                    trigger="click"
+                    position="bottomRight"
+                  >
+                    <Button theme="borderless" icon={<IconMore />}></Button>
+                  </Dropdown>
                 </ButtonGroup>
               </ButtonGroup>
             }

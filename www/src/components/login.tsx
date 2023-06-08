@@ -6,7 +6,7 @@ export function LoginComponent() {
   const handleSubmit = (values: LoginRequest) => {
     Toast.info('正在登录，请稍等...')
     api
-      .Login(values)
+      .login(values)
       .then((res) => {
         if (res.status === 0) {
           Toast.success('登录成功')
@@ -40,6 +40,7 @@ export function LoginComponent() {
         <Form.Input
           field="Password"
           labelPosition="inset"
+          mode="password"
           label={{ text: '密码' }}
           style={{ width: 200 }}
         />

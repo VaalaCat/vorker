@@ -20,7 +20,10 @@ export const Layout = ({
         <Header>{header}</Header>
         <SemiLayout>
           <Sider>{side}</Sider>
-          <Content className="overflow-scroll" style={{ height: '93vh' }}>
+          <Content
+            className="flex-1 overflow-scroll"
+            style={{ height: '93vh' }}
+          >
             {main}
           </Content>
         </SemiLayout>

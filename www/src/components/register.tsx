@@ -6,7 +6,7 @@ export function RegisterComponent() {
   const handleSubmit = (values: RegisterRequest) => {
     Toast.info('正在注册，请稍等...')
     api
-      .Reg(values)
+      .register(values)
       .then((res) => {
         if (res.status === 0) {
           Toast.success('注册成功，跳转中...')
@@ -40,6 +40,7 @@ export function RegisterComponent() {
         <Form.Input
           field="Password"
           labelPosition="inset"
+          mode="password"
           label={{ text: '密码' }}
           style={{ width: 200 }}
         />
