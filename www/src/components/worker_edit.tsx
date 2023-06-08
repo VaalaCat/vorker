@@ -1,4 +1,5 @@
 import {
+  Breadcrumb,
   Button,
   ButtonGroup,
   Divider,
@@ -16,6 +17,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { CodeAtom, VorkerSettingsAtom } from '@/store/workers'
 import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
+import { IconArticle, IconHome } from '@douyinfe/semi-icons'
 
 export const WorkerEditComponent = () => {
   const router = useRouter()
@@ -26,11 +28,11 @@ export const WorkerEditComponent = () => {
   const { Paragraph, Text, Numeral, Title } = Typography
 
   const { data: worker } = useQuery(['getWorker', UID], () => {
-    return UID ? api.GetWorker(UID as string) : null
+    return UID ? api.getWorker(UID as string) : null
   })
 
   const updateWorker = useMutation(async () => {
-    await api.UpdateWorker(UID as string, editItem)
+    await api.updateWorker(UID as string, editItem)
     Toast.info('保存成功！')
   })
 
@@ -59,41 +61,40 @@ export const WorkerEditComponent = () => {
 
   return (
     <div className="m-4 flex flex-col">
-      <Title heading={5}>ID</Title>
-      <Paragraph copyable spacing="extended">
-        {editItem.UID}
-      </Paragraph>
-      <Title heading={5}>URL</Title>
-      <Paragraph
-        copyable
-        spacing="extended"
-      >{`${appConfAtom?.Scheme}://${editItem.Name}${appConfAtom?.WorkerURLSuffix}`}</Paragraph>
-      <Divider margin={4}></Divider>
-      <Tabs
-        tabBarExtraContent={
+      <div className="flex justify-between">
+        <div className="flex flex-col gap-1">
+          <Breadcrumb compact={false}>
+            <Breadcrumb.Item
+              href="/admin"
+              icon={<IconHome size="small" />}
+            ></Breadcrumb.Item>
+            <Breadcrumb.Item href="/admin">Workers</Breadcrumb.Item>
+            <Breadcrumb.Item href={`/worker?UID=${editItem.UID}`}>
+              {editItem.Name}
+            </Breadcrumb.Item>
+          </Breadcrumb>
+          <Title heading={5}>ID</Title>
+          <Paragraph copyable spacing="extended">
+            <code>{editItem.UID}</code>
+          </Paragraph>
+          <Title heading={5}>URL</Title>
+          <Paragraph copyable spacing="extended">
+            <code>{`${appConfAtom?.Scheme}://${editItem.Name}${appConfAtom?.WorkerURLSuffix}`}</code>
+          </Paragraph>
+        </div>
+        <div>
           <ButtonGroup>
-            <Button
-              onClick={() => updateWorker.mutate()}
-              style={{
-                justifySelf: 'flex-end',
-              }}
-            >
-              保存
-            </Button>
-            <Button
-              onClick={() => {
-                router.push('/admin')
-              }}
-            >
-              返回列表
-            </Button>
+            <Button onClick={() => updateWorker.mutate()}>保存</Button>
+            <Button onClick={() => router.push('/admin')}>返回列表</Button>
           </ButtonGroup>
-        }
-      >
+        </div>
+      </div>
+
+      <Divider margin={4}></Divider>
+      <Tabs>
         <TabPane itemKey="code" tab={<span>代码</span>}>
           {worker ? (
             <div className="flex flex-col m-4">
-              <div></div>
               <div>
                 <MonacoEditor uid={worker.UID} />
               </div>

@@ -8,9 +8,7 @@ import * as auth from '@/api/auth'
 import { useEffect } from 'react'
 import { UserAtom } from '@/store/userState'
 import { useRouter } from 'next/router'
-import ColorHash from 'color-hash'
-
-const CH = new ColorHash()
+import { CH } from '@/lib/color'
 
 export const HeaderComponent = () => {
   const [appConf, setAppConf] = useAtom(VorkerSettingsAtom)
@@ -18,10 +16,10 @@ export const HeaderComponent = () => {
   const router = useRouter()
 
   const { data: appconf } = useQuery(['getAppConf'], () => {
-    return api.GetAppConfig()
+    return api.getAppConfig()
   })
   const { data: userinfo } = useQuery(['getUserInfo'], () => {
-    return auth.GetUser()
+    return auth.getUserInfo()
   })
 
   useEffect(() => {
@@ -97,7 +95,7 @@ export const HeaderComponent = () => {
               type="primary"
               theme="borderless"
               onClick={() => {
-                auth.Logout()
+                auth.logout()
                 window.location.reload()
               }}
               className="pointer-events-auto"
