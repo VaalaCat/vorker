@@ -15,7 +15,9 @@ func FillWorkerValue(worker *entities.Worker, keepUID bool, UID string) {
 		worker.UID = utils.GenerateUID()
 	}
 	worker.HostName = defs.DefaultHostName
-	worker.NodeName = defs.DefaultNodeName
+	if len(worker.NodeName) == 0 {
+		worker.NodeName = defs.DefaultNodeName
+	}
 	worker.ExternalPath = defs.DefaultExternalPath
 	port, err := utils.GetAvailablePort(defs.DefaultHostName)
 	if err != nil {

@@ -35,7 +35,13 @@ func GetWorkerByUID(userID uint, uid string) (*Worker, error) {
 	defer database.CloseDB(db)
 	if err := db.Where(&Worker{
 		UserID: userID,
-	}).Where("uid = ?", uid).First(&worker).Error; err != nil {
+	}).Where(
+		&Worker{
+			Worker: &entities.Worker{
+				UID: uid,
+			},
+		},
+	).First(&worker).Error; err != nil {
 		return nil, err
 	}
 	return &worker, nil
@@ -80,6 +86,20 @@ func AdminGetAllWorkers() ([]*Worker, error) {
 	db := database.GetDB()
 	defer database.CloseDB(db)
 	if err := db.Find(&workers).Error; err != nil {
+		return nil, err
+	}
+	return workers, nil
+}
+
+func AdminGetWorkersByNodeName(nodeName string) ([]*Worker, error) {
+	var workers []*Worker
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	if err := db.Where(&Worker{
+		Worker: &entities.Worker{
+			NodeName: nodeName,
+		},
+	}).Find(&workers).Error; err != nil {
 		return nil, err
 	}
 	return workers, nil
@@ -142,12 +162,21 @@ func (w *Worker) Delete() error {
 }
 
 func (w *Worker) Flush() error {
-	err := w.DeleteFile()
+	port, err := utils.GetAvailablePort(defs.DefaultHostName)
 	if err != nil {
 		return err
 	}
-	err = w.UpdateFile()
-	if err != nil {
+
+	if err = w.DeleteFile(); err != nil {
+		return err
+	}
+
+	w.Port = int32(port)
+	if err = w.Update(); err != nil {
+		return err
+	}
+
+	if err = w.UpdateFile(); err != nil {
 		return err
 	}
 	return nil

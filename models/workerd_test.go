@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 	"voker/defs"
@@ -121,6 +122,33 @@ func TestGetWorkersByNames(t *testing.T) {
 			if len(got) != len(tt.want) {
 				t.Errorf("GetByNames() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestAdminGetWorkersByNodeName(t *testing.T) {
+	GenTestRecord()
+	type args struct {
+		nodeName string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "test common",
+			args: args{nodeName: "default"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := AdminGetWorkersByNodeName(tt.args.nodeName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AdminGetWorkersByNodeName() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			fmt.Println(got)
 		})
 	}
 }

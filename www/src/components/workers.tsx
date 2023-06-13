@@ -29,6 +29,7 @@ import {
   IconTreeTriangleRight,
 } from '@douyinfe/semi-icons'
 import { CH } from '@/lib/color'
+import { it } from 'node:test'
 
 export function WorkersComponent() {
   // get worker list
@@ -60,8 +61,8 @@ export function WorkersComponent() {
     Toast.warning('删除成功！')
   })
 
-  const flushWorker = useMutation(async () => {
-    await api.flushWorker(workerUID)
+  const flushWorker = useMutation(async (uid: string) => {
+    await api.flushWorker(uid)
     Toast.info('同步成功！')
   })
 
@@ -180,7 +181,7 @@ export function WorkersComponent() {
                       {
                         node: 'item',
                         name: '同步',
-                        onClick: () => flushWorker.mutate(),
+                        onClick: () => flushWorker.mutate(item.UID),
                       },
                     ]}
                     trigger="click"
