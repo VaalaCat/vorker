@@ -38,7 +38,6 @@ func Endpoint(c *gin.Context) {
 		logrus.Panic(err)
 	}
 
-	c.Request.URL.Path = c.Copy().Param("name")
 	proxy := httputil.NewSingleHostReverseProxy(remote)
 	proxy.ServeHTTP(c.Writer, c.Request)
 }
