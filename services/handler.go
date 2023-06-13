@@ -10,6 +10,7 @@ import (
 	"voker/services/appconf"
 	"voker/services/auth"
 	proxyService "voker/services/proxy"
+	"voker/services/tunnel"
 	"voker/services/workerd"
 	"voker/utils"
 
@@ -52,6 +53,9 @@ func init() {
 		api.POST("/auth/register", auth.RegisterEndpoint)
 		api.POST("/auth/login", auth.LoginEndpoint)
 		api.GET("/auth/logout", authz.JWTMiddleware(), auth.LogoutEndpoint)
+		{
+			api.GET("/ingress", tunnel.GetIngressConf)
+		}
 	}
 
 	proxy.Any("/*proxyPath", proxyService.Endpoint)

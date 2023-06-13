@@ -22,9 +22,11 @@ type User struct {
 }
 
 func init() {
-	if err := database.GetDB().AutoMigrate(&User{}); err != nil {
+	db := database.GetDB()
+	if err := db.AutoMigrate(&User{}); err != nil {
 		logrus.Panic(err)
 	}
+	database.CloseDB(db)
 }
 
 func (u *User) TableName() string {
