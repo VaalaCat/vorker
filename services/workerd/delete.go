@@ -6,7 +6,6 @@ import (
 	"voker/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 func DeleteEndpoint(c *gin.Context) {
@@ -18,12 +17,11 @@ func DeleteEndpoint(c *gin.Context) {
 
 	userID := c.GetUint(common.UIDKey)
 	if err := Delete(userID, UID); err != nil {
-		c.JSON(500, gin.H{"code": 3, "error": err.Error()})
-		logrus.Errorf("failed to delete worker, err: %v, ctx: %v", err, c)
+		common.RespErr(c, common.RespCodeInternalError, err.Error(), nil)
 		return
 	}
 
-	c.JSON(200, gin.H{"code": 0, "message": "success"})
+	common.RespOK(c, "delete worker success", nil)
 }
 
 func Delete(userID uint, UID string) error {

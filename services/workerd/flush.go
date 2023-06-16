@@ -31,8 +31,7 @@ func FlushAllEndpoint(c *gin.Context) {
 	userID := c.GetUint(common.UIDKey)
 	workers, err := models.GetAllWorkers(userID)
 	if err != nil {
-		c.JSON(500, gin.H{"code": 3, "error": err.Error()})
-		logrus.Errorf("failed to get all workers, err: %v, ctx: %v", err, c)
+		common.RespErr(c, common.RespCodeInternalError, err.Error(), nil)
 		return
 	}
 
@@ -44,12 +43,12 @@ func FlushAllEndpoint(c *gin.Context) {
 		}
 	}
 	if err != nil {
-		c.JSON(200, gin.H{"code": 10, "message": "partial failure"})
+		common.RespErr(c, common.RespCodeInternalError, err.Error(), nil)
 		logrus.Warnf("partial failure, ctx: %v", c)
 		return
 	}
-	c.JSON(200, gin.H{"code": 0, "message": "success"})
-	logrus.Infof("flush all workers success, ctx: %v", c)
+
+	common.RespOK(c, "flush worker success", nil)
 }
 
 func Flush(userID uint, UID string) error {
