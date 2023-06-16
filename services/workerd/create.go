@@ -13,26 +13,22 @@ func CreateEndpoint(c *gin.Context) {
 	worker := &entities.Worker{}
 
 	if err := c.BindJSON(worker); err != nil {
-		c.JSON(400, gin.H{"code": 1, "error": err.Error()})
-		logrus.Errorf("failed to bind json, err: %v, ctx: %v", err, c)
+		common.RespErr(c, common.RespCodeInvalidRequest, err.Error(), nil)
 		return
 	}
 
 	if !isCreateParamValidate() {
-		c.JSON(400, gin.H{"code": 1, "error": "create endpoint params is not validate"})
-		logrus.Errorf("create endpoint params is not validate, ctx: %v", c)
+		common.RespErr(c, common.RespCodeInvalidRequest, common.RespMsgInvalidRequest, nil)
 		return
 	}
 	userID := c.GetUint(common.UIDKey)
 
 	if err := Create(userID, worker); err != nil {
-		c.JSON(500, gin.H{"code": 3, "error": err.Error()})
-		logrus.Errorf("failed to create worker, err: %v, ctx: %v", err, c)
+		common.RespErr(c, common.RespCodeInternalError, err.Error(), nil)
 		return
 	}
 
-	c.JSON(200, gin.H{"code": 0, "message": "create worker success", "uid": worker.UID})
-	logrus.Infof("create worker success, ctx: %v", c)
+	common.RespOK(c, "create worker success", nil)
 }
 
 // Create creates a new worker in the database and update the workerd capnp config file

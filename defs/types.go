@@ -51,3 +51,20 @@ type GetUserResponse struct {
 	Role     string `json:"role"`
 	Email    string `json:"email"`
 }
+
+type DeleteWorkerRequest struct {
+	UID string `json:"uid"`
+}
+
+func (d *DeleteWorkerRequest) Validate() bool {
+	if d == nil {
+		return false
+	}
+	if d.UID == "" {
+		return false
+	}
+	if len(d.UID) > 64 {
+		return false
+	}
+	return true
+}

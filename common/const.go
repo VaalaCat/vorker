@@ -40,3 +40,14 @@ const (
 	AuthorizationKey       = "authorization"
 	AuthorizationHeaderKey = "X-Authorization-Token"
 )
+
+const (
+	ErrMsgNotAuthed         = "not authed"
+	ErrMsgInvalidRequest    = "invalid request"
+	ErrMsgUserNotAdmin      = "user not admin"
+	ErrMsgInternalError     = "internal error"
+	ErrMsgUserAlreadyExists = "user already exists"
+	ErrMsgAuthErr           = "auth err"
+	ErrMsgDBErr             = "db err"
+	ErrMsgMethodNotAllowed  = "method not allowed"
+)
