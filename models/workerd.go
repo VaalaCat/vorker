@@ -10,6 +10,7 @@ import (
 
 	"voker/utils/database"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -165,6 +166,9 @@ func (w *Worker) Flush() error {
 	port, err := utils.GetAvailablePort(defs.DefaultHostName)
 	if err != nil {
 		return err
+	}
+	if len(w.TunnelID) == 0 {
+		w.TunnelID = uuid.New().String()
 	}
 
 	if err = w.DeleteFile(); err != nil {

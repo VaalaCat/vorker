@@ -5,6 +5,7 @@ import (
 	"voker/common"
 	"voker/entities"
 	"voker/models"
+	"voker/utils/gost"
 
 	"github.com/gin-gonic/gin"
 )
@@ -49,5 +50,7 @@ func Update(userID uint, UID string, worker *entities.Worker) error {
 		return err
 	}
 
+	gost.DeleteGost(worker.Name)
+	gost.AddGost(worker.TunnelID, worker.Name, worker.Port)
 	return GenCapnpConfig()
 }

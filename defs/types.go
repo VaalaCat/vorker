@@ -1,5 +1,7 @@
 package defs
 
+import "voker/entities"
+
 type RegisterRequest struct {
 	UserName string `json:"userName"`
 	Email    string `json:"email"`
@@ -67,4 +69,12 @@ func (d *DeleteWorkerRequest) Validate() bool {
 		return false
 	}
 	return true
+}
+
+type AgentSyncWorkersReq struct {
+	WorkerNames []string `json:"worker_names"`
+}
+
+type AgentSyncWorkersResp struct {
+	WorkerList *entities.WorkerList `json:"worker_list"`
 }

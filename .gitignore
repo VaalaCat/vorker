@@ -5,3 +5,4 @@ workerd/*.sqlite
 bin/workerd*
 vorker
 .vscode
+bin/gost

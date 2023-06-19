@@ -6,6 +6,7 @@ import (
 	"voker/models"
 	"voker/utils"
 
+	"github.com/google/uuid"
 	"github.com/lucasepe/codename"
 	"github.com/sirupsen/logrus"
 )
@@ -13,7 +14,12 @@ import (
 func FillWorkerValue(worker *entities.Worker, keepUID bool, UID string) {
 	if !keepUID {
 		worker.UID = utils.GenerateUID()
+
 	}
+	if len(worker.TunnelID) == 0 || !keepUID {
+		worker.TunnelID = uuid.New().String()
+	}
+
 	worker.HostName = defs.DefaultHostName
 	if len(worker.NodeName) == 0 {
 		worker.NodeName = defs.DefaultNodeName

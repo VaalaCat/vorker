@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"voker/authz"
 	"voker/conf"
+	"voker/services/agent"
 	"voker/services/appconf"
 	"voker/services/auth"
 	proxyService "voker/services/proxy"
 	"voker/services/tunnel"
 	"voker/services/workerd"
 	"voker/utils"
+	"voker/utils/gost"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -48,14 +50,17 @@ func init() {
 		{
 			userApi.GET("/info", auth.GetUserEndpoint)
 		}
+		agentAPI := api.Group("/agent")
+		{
+			agentAPI.POST("/sync", authz.AgentAuthz(), workerd.AgentSyncWorkers)
+			agentAPI.GET("/ingress", tunnel.GetIngressConf)
+			agentAPI.GET("/notify", authz.AgentAuthz(), agent.SyncNotifyEndpoint)
+		}
 		api.GET("/allworkers", authz.JWTMiddleware(), workerd.GetAllWorkersEndpoint)
 		api.GET("/vorker/config", appconf.GetEndpoint)
 		api.POST("/auth/register", auth.RegisterEndpoint)
 		api.POST("/auth/login", auth.LoginEndpoint)
 		api.GET("/auth/logout", authz.JWTMiddleware(), auth.LogoutEndpoint)
-		{
-			api.GET("/ingress", tunnel.GetIngressConf)
-		}
 	}
 
 	proxy.Any("/*proxyPath", proxyService.Endpoint)
@@ -79,5 +84,6 @@ func Run(f embed.FS) {
 			c.FileFromFS(c.Request.URL.Path, http.FS(fp))
 		})
 	}
+	go gost.Run()
 	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
 }

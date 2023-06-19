@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"voker/common"
 	"voker/models"
+	"voker/utils/gost"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,6 +37,7 @@ func Delete(userID uint, UID string) error {
 	if err != nil {
 		return err
 	}
+	gost.DeleteGost(worker.Name)
 
 	return GenCapnpConfig()
 }

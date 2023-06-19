@@ -15,5 +15,5 @@ cd to defs directory and run the following command to generate go files from pro
 
 ```bash
 cd defs
-protoc *.proto --go_out=.
+protoc *.proto --go_out=. ; cd ..
 ```

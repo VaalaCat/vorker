@@ -2,12 +2,10 @@ package entities
 
 import (
 	sync "sync"
-
-	"github.com/sirupsen/logrus"
 )
 
 type Tunnel struct {
-	tunnelMap *sync.Map // key is worker's name, value is endpoint uuid
+	tunnelMap *sync.Map // key is worker's name, value is tunnel uuid
 }
 
 var (
@@ -22,17 +20,9 @@ func GetTunnel() *Tunnel {
 
 func (t *Tunnel) InitTunnelMap(
 	workerList *WorkerList,
-	nodesMap map[string]string,
-) { // value of nodesMap is node's uuid, key is node's name
-	if len(nodesMap) == 0 {
-		logrus.Warn("no nodes found, please add nodes to enable tunnel service")
-		return
-	}
-
+) {
 	for _, worker := range workerList.Workers {
-		if nodeId, ok := nodesMap[worker.NodeName]; ok {
-			t.tunnelMap.Store(worker.Name, nodeId)
-		}
+		t.tunnelMap.Store(worker.Name, worker.TunnelID)
 	}
 }
 
@@ -48,6 +38,7 @@ func (t *Tunnel) DeleteTunnel(worker *Worker) {
 	t.tunnelMap.Delete(worker.Name)
 }
 
+// GetAll returns a map, key is worker's name, value is tunnel uuid
 func (t *Tunnel) GetAll() map[string]string {
 	ans := make(map[string]string)
 	t.tunnelMap.Range(func(key, value interface{}) bool {
@@ -55,4 +46,9 @@ func (t *Tunnel) GetAll() map[string]string {
 		return true
 	})
 	return ans
+}
+
+func CheckTunnel(workerName string) bool {
+	_, ok := tunnelMap.tunnelMap.Load(workerName)
+	return ok
 }

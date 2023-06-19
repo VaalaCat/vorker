@@ -11,6 +11,7 @@ message Worker {
 	string Entry = 6; // worker's entry file, default is 'entry.js'
 	bytes Code = 7; // worker's code
 	string Name = 8; // worker's name, also use at worker routing, must be unique, default is UID
+	string TunnelID = 9; // worker's tunnel id
 }
 
 // one WorkerList for one workerd instance

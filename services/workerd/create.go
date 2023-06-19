@@ -4,6 +4,7 @@ import (
 	"voker/common"
 	"voker/entities"
 	"voker/models"
+	"voker/utils/gost"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -40,6 +41,7 @@ func Create(userID uint, worker *entities.Worker) error {
 		return err
 	}
 
+	gost.AddGost(worker.TunnelID, worker.Name, worker.Port)
 	return GenCapnpConfig()
 }
 
