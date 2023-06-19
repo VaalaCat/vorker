@@ -13,3 +13,21 @@ const (
 	event.respondWith(new Response("Hello World"));
 });`
 )
+
+const (
+	KeyNodeName   = "node_name"
+	KeyNodeSecret = "node_secret"
+)
+
+const (
+	HeaderNodeName   = "x-node-name"
+	HeaderNodeSecret = "x-secret"
+)
+
+const (
+	CodeInvalidRequest = 400
+	CodeUnAuthorized   = 401
+	CodeNotFound       = 404
+	CodeInternalError  = 500
+	CodeSuccess        = 200
+)

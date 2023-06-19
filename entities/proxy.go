@@ -37,3 +37,13 @@ func (p *Proxy) AddProxyPort(name string, port int32) {
 func (p *Proxy) DeleteProxyPort(name string) {
 	p.proxyMap.Delete(name)
 }
+
+// GetAll returns a map, key is worker's name, value is worker's port
+func (p *Proxy) GetAll() map[string]int32 {
+	ans := make(map[string]int32)
+	p.proxyMap.Range(func(key, value interface{}) bool {
+		ans[key.(string)] = value.(int32)
+		return true
+	})
+	return ans
+}

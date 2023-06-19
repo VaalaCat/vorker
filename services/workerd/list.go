@@ -3,6 +3,8 @@ package workerd
 import (
 	"strconv"
 	"voker/common"
+	"voker/defs"
+	"voker/entities"
 	"voker/models"
 
 	"github.com/gin-gonic/gin"
@@ -65,4 +67,30 @@ func GetWorkerEndpoint(c *gin.Context) {
 		return
 	}
 	common.RespOK(c, "get workers success", models.Trans2Entities([]*models.Worker{worker}))
+}
+
+func AgentSyncWorkers(c *gin.Context) {
+	req := &defs.AgentSyncWorkersReq{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		common.RespErr(c, defs.CodeInvalidRequest, err.Error(), nil)
+		return
+	}
+
+	nodeName := c.GetString(defs.KeyNodeName)
+	// get node's workerlist
+	workers, err := models.AdminGetWorkersByNodeName(nodeName)
+	if err != nil {
+		common.RespErr(c, defs.CodeInternalError, err.Error(), nil)
+		return
+	}
+
+	// build response
+	// TODO: chunk loading
+	resp := &defs.AgentSyncWorkersResp{
+		WorkerList: &entities.WorkerList{
+			NodeName: nodeName,
+			Workers:  models.Trans2Entities(workers),
+		},
+	}
+	common.RespOK(c, "sync workers success", resp)
 }

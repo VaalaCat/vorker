@@ -1,6 +1,7 @@
 package models
 
 import (
+	"voker/conf"
 	"voker/defs"
 	"voker/utils/database"
 
@@ -10,20 +11,25 @@ import (
 
 type Node struct {
 	gorm.Model
-	UID     string `gorm:"unique;not null"`
-	Name    string `gorm:"unique;not null"`
-	Secrect string `gorm:"not null"`
+	UID  string `gorm:"unique;not null" json:"uid"`
+	Name string `gorm:"unique;not null" json:"name"`
 }
 
 func init() {
 	db := database.GetDB()
-	defer database.CloseDB(db)
 	db.AutoMigrate(&Node{})
 	if err := db.FirstOrCreate(&Node{
 		UID:  uuid.New().String(),
 		Name: defs.DefaultNodeName,
 	}).Error; err != nil {
 		panic(err)
+	}
+	database.CloseDB(db)
+
+	if self, err := GetNodeByNodeName(defs.DefaultNodeName); err != nil {
+		panic(err)
+	} else {
+		conf.AppConfigInstance.NodeID = self.UID
 	}
 }
 
@@ -46,9 +52,8 @@ func (n *Node) Update(uid string) error {
 		},
 	).Updates(
 		&Node{
-			UID:     n.UID,
-			Name:    n.Name,
-			Secrect: n.Secrect,
+			UID:  n.UID,
+			Name: n.Name,
 		},
 	).Error
 }
@@ -71,6 +76,7 @@ func AdminGetAllNodes() ([]*Node, error) {
 	return nodes, nil
 }
 
+// AdminGetAllNodesMap return a map with key is node name and value is node uid
 func AdminGetAllNodesMap() (map[string]string, error) {
 	nodes, err := AdminGetAllNodes()
 	if err != nil {
@@ -81,4 +87,16 @@ func AdminGetAllNodesMap() (map[string]string, error) {
 		ans[node.Name] = node.UID
 	}
 	return ans, nil
+}
+
+func GetNodeByNodeName(nodeName string) (*Node, error) {
+	node := Node{}
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	if err := db.Where(
+		&Node{Name: nodeName},
+	).First(&node).Error; err != nil {
+		return nil, err
+	}
+	return &node, nil
 }
