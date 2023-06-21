@@ -1,8 +1,8 @@
 package database
 
 import (
-	"voker/conf"
-	"voker/defs"
+	"vorker/conf"
+	"vorker/defs"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"

@@ -3,7 +3,7 @@ package utils
 import (
 	"errors"
 	"time"
-	"voker/conf"
+	"vorker/conf"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/ilyakaznacheev/cleanenv"

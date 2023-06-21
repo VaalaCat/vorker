@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
-	"voker/defs"
-	"voker/entities"
+	"vorker/defs"
+	"vorker/entities"
 )
 
 func GenTestRecord() {

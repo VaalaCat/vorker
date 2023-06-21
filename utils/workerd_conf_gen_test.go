@@ -3,7 +3,7 @@ package utils
 import (
 	"fmt"
 	"testing"
-	"voker/entities"
+	"vorker/entities"
 )
 
 func TestBuildCapfile(t *testing.T) {

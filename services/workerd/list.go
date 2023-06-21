@@ -2,10 +2,10 @@ package workerd
 
 import (
 	"strconv"
-	"voker/common"
-	"voker/defs"
-	"voker/entities"
-	"voker/models"
+	"vorker/common"
+	"vorker/defs"
+	"vorker/entities"
+	"vorker/models"
 
 	"github.com/gin-gonic/gin"
 )

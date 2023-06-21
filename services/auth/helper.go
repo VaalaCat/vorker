@@ -2,7 +2,7 @@ package auth
 
 import (
 	"errors"
-	"voker/defs"
+	"vorker/defs"
 
 	"github.com/gin-gonic/gin"
 )

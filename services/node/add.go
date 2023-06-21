@@ -1,8 +1,8 @@
 package node
 
 import (
-	"voker/defs"
-	"voker/models"
+	"vorker/defs"
+	"vorker/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

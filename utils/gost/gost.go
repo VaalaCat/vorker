@@ -8,9 +8,9 @@ import (
 	"os"
 	"os/exec"
 	"sync"
-	"voker/conf"
-	"voker/entities"
-	"voker/utils/idgen"
+	"vorker/conf"
+	"vorker/entities"
+	"vorker/utils/idgen"
 
 	"github.com/judwhite/go-svc"
 )

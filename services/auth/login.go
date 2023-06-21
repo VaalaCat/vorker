@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"voker/authz"
-	"voker/common"
-	"voker/defs"
-	"voker/models"
-	"voker/utils"
+	"vorker/authz"
+	"vorker/common"
+	"vorker/defs"
+	"vorker/models"
+	"vorker/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

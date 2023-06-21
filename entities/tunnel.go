@@ -30,8 +30,8 @@ func (t *Tunnel) GetTunnelMap() *sync.Map {
 	return t.tunnelMap
 }
 
-func (t *Tunnel) AddTunnel(worker *Worker, nodeId string) {
-	t.tunnelMap.Store(worker.Name, nodeId)
+func (t *Tunnel) AddTunnel(worker *Worker) {
+	t.tunnelMap.Store(worker.Name, worker.TunnelID)
 }
 
 func (t *Tunnel) DeleteTunnel(worker *Worker) {

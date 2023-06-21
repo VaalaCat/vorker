@@ -3,7 +3,7 @@ package utils
 import (
 	"bytes"
 	"html/template"
-	"voker/entities"
+	"vorker/entities"
 )
 
 var capfileTemplate = `using Workerd = import "/workerd/workerd.capnp";

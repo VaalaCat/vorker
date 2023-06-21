@@ -1,8 +1,8 @@
 package workerd
 
 import (
-	"voker/common"
-	"voker/models"
+	"vorker/common"
+	"vorker/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

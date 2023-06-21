@@ -1,10 +1,10 @@
 package workerd
 
 import (
-	"voker/common"
-	"voker/entities"
-	"voker/models"
-	"voker/utils/gost"
+	"vorker/common"
+	"vorker/entities"
+	"vorker/models"
+	"vorker/utils/gost"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -34,9 +34,9 @@ func CreateEndpoint(c *gin.Context) {
 
 // Create creates a new worker in the database and update the workerd capnp config file
 func Create(userID uint, worker *entities.Worker) error {
-	FillWorkerValue(worker, false, "")
+	FillWorkerValue(worker, false, "", userID)
 
-	if err := (&models.Worker{Worker: worker, UserID: userID}).Create(); err != nil {
+	if err := (&models.Worker{Worker: worker}).Create(); err != nil {
 		logrus.Errorf("failed to create worker, err: %v", err)
 		return err
 	}

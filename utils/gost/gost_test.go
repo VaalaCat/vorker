@@ -4,8 +4,8 @@ import (
 	_ "net/http/pprof"
 	"testing"
 
-	_ "voker/models"
-	_ "voker/services/proxy"
+	_ "vorker/models"
+	_ "vorker/services/proxy"
 )
 
 func TestInitGost(t *testing.T) {

@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"voker/common"
-	"voker/conf"
+	"vorker/common"
+	"vorker/conf"
 
 	"github.com/gin-gonic/gin"
 )

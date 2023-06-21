@@ -2,11 +2,11 @@ package workerd
 
 import (
 	"path/filepath"
-	"voker/conf"
-	"voker/defs"
-	"voker/entities"
-	"voker/models"
-	"voker/utils"
+	"vorker/conf"
+	"vorker/defs"
+	"vorker/entities"
+	"vorker/models"
+	"vorker/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -52,7 +52,9 @@ func GenCapnpConfig() error {
 	}
 
 	proxyMap := entities.GetProxy()
+	tunnelMap := entities.GetTunnel()
 	go proxyMap.InitProxyMap(workerList)
+	go tunnelMap.InitTunnelMap(workerList)
 
 	return utils.WriteFile(
 		filepath.Join(

@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
-	"voker/authz"
-	"voker/conf"
-	"voker/services/agent"
-	"voker/services/appconf"
-	"voker/services/auth"
-	proxyService "voker/services/proxy"
-	"voker/services/tunnel"
-	"voker/services/workerd"
-	"voker/utils"
-	"voker/utils/gost"
+	"vorker/authz"
+	"vorker/conf"
+	"vorker/services/agent"
+	"vorker/services/appconf"
+	"vorker/services/auth"
+	proxyService "vorker/services/proxy"
+	"vorker/services/tunnel"
+	"vorker/services/workerd"
+	"vorker/utils"
+	"vorker/utils/gost"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -52,9 +52,12 @@ func init() {
 		}
 		agentAPI := api.Group("/agent")
 		{
-			agentAPI.POST("/sync", authz.AgentAuthz(), workerd.AgentSyncWorkers)
-			agentAPI.GET("/ingress", tunnel.GetIngressConf)
-			agentAPI.GET("/notify", authz.AgentAuthz(), agent.SyncNotifyEndpoint)
+			if conf.AppConfigInstance.RunMode == "master" {
+				agentAPI.POST("/sync", authz.AgentAuthz(), workerd.AgentSyncWorkers)
+				agentAPI.GET("/ingress", tunnel.GetIngressConf)
+			} else {
+				agentAPI.GET("/notify", authz.AgentAuthz(), agent.NotifyEndpoint)
+			}
 		}
 		api.GET("/allworkers", authz.JWTMiddleware(), workerd.GetAllWorkersEndpoint)
 		api.GET("/vorker/config", appconf.GetEndpoint)

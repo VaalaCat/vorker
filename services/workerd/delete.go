@@ -2,9 +2,9 @@ package workerd
 
 import (
 	"fmt"
-	"voker/common"
-	"voker/models"
-	"voker/utils/gost"
+	"vorker/common"
+	"vorker/models"
+	"vorker/utils/gost"
 
 	"github.com/gin-gonic/gin"
 )

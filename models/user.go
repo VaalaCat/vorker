@@ -1,8 +1,8 @@
 package models
 
 import (
-	"voker/utils"
-	"voker/utils/database"
+	"vorker/utils"
+	"vorker/utils/database"
 
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"

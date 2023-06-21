@@ -1,9 +1,9 @@
 package models
 
 import (
-	"voker/conf"
-	"voker/defs"
-	"voker/utils/database"
+	"vorker/conf"
+	"vorker/defs"
+	"vorker/utils/database"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
