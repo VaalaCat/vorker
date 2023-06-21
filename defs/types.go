@@ -1,6 +1,6 @@
 package defs
 
-import "voker/entities"
+import "vorker/entities"
 
 type RegisterRequest struct {
 	UserName string `json:"userName"`

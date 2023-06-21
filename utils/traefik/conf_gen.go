@@ -1,7 +1,7 @@
 package traefik
 
 import (
-	"voker/entities"
+	"vorker/entities"
 )
 
 // generate a traefik.yaml file as a dynamic file provider

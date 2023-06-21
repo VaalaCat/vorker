@@ -3,12 +3,12 @@ package models
 import (
 	"os"
 	"path/filepath"
-	"voker/conf"
-	"voker/defs"
-	"voker/entities"
-	"voker/utils"
+	"vorker/conf"
+	"vorker/defs"
+	"vorker/entities"
+	"vorker/utils"
 
-	"voker/utils/database"
+	"vorker/utils/database"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -17,7 +17,6 @@ import (
 type Worker struct {
 	gorm.Model
 	*entities.Worker
-	UserID uint
 }
 
 func init() {
@@ -35,7 +34,9 @@ func GetWorkerByUID(userID uint, uid string) (*Worker, error) {
 	db := database.GetDB()
 	defer database.CloseDB(db)
 	if err := db.Where(&Worker{
-		UserID: userID,
+		Worker: &entities.Worker{
+			UserID: uint64(userID),
+		},
 	}).Where(
 		&Worker{
 			Worker: &entities.Worker{
@@ -53,7 +54,9 @@ func GetWorkersByNames(userID uint, names []string) ([]*Worker, error) {
 	db := database.GetDB()
 	defer database.CloseDB(db)
 	if err := db.Where(&Worker{
-		UserID: userID,
+		Worker: &entities.Worker{
+			UserID: uint64(userID),
+		},
 	}).Where("name in (?)", names).Find(&workers).Error; err != nil {
 		return nil, err
 	}
@@ -75,7 +78,9 @@ func GetAllWorkers(userID uint) ([]*Worker, error) {
 	db := database.GetDB()
 	defer database.CloseDB(db)
 	if err := db.Where(&Worker{
-		UserID: userID,
+		Worker: &entities.Worker{
+			UserID: uint64(userID),
+		},
 	}).Find(&workers).Error; err != nil {
 		return nil, err
 	}
@@ -111,7 +116,9 @@ func GetWorkers(userID uint, offset, limit int) ([]*Worker, error) {
 	db := database.GetDB()
 	defer database.CloseDB(db)
 	if err := db.Where(&Worker{
-		UserID: userID,
+		Worker: &entities.Worker{
+			UserID: uint64(userID),
+		},
 	}).Offset(offset).Limit(limit).Find(&workers).Error; err != nil {
 		return nil, err
 	}
@@ -204,4 +211,58 @@ func (w *Worker) UpdateFile() error {
 			w.UID,
 			w.Entry),
 		string(w.Code))
+}
+
+func SyncWorkers(workerList *entities.WorkerList) error {
+	var workers []*Worker
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	// write all workers to db
+
+	UIDs := []string{}
+	for _, worker := range workerList.Workers {
+		UIDs = append(UIDs, worker.UID)
+		workers = append(workers, &Worker{
+			Worker: worker,
+		})
+	}
+
+	if err := db.Create(workers).Error; err != nil {
+		return err
+	}
+
+	// delete workers not in workerList
+	if err := db.Where("uid not in (?)", UIDs).Delete(&Worker{}).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SyncAddWorker(worker *entities.Worker) error {
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	return db.Create(&Worker{
+		Worker: worker,
+	}).Error
+}
+
+func SyncDeleteWorker(worker *entities.Worker) error {
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	return db.Where(&Worker{
+		Worker: worker,
+	}).Delete(&Worker{}).Error
+}
+
+func SyncUpdateWorker(workerName string, worker *entities.Worker) error {
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	return db.Model(&Worker{}).Where(&Worker{
+		Worker: &entities.Worker{
+			Name: workerName,
+		},
+	}).Updates(&Worker{
+		Worker: worker,
+	}).Error
 }

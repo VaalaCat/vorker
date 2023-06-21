@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http/httputil"
 	"net/url"
-	"voker/conf"
-	"voker/entities"
-	"voker/models"
+	"vorker/conf"
+	"vorker/entities"
+	"vorker/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

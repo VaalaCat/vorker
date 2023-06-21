@@ -2,7 +2,7 @@ package main
 
 import (
 	"embed"
-	"voker/services"
+	"vorker/services"
 )
 
 //go:embed all:www/out/*

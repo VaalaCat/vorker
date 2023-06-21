@@ -2,7 +2,7 @@ package gost
 
 import (
 	"fmt"
-	"voker/conf"
+	"vorker/conf"
 )
 
 func buildGostArgs(scheme, ip string, port int32, rhost string, tunnelID string) stringList {

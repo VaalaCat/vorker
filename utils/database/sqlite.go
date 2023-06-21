@@ -1,8 +1,8 @@
 package database
 
 import (
-	"voker/conf"
-	"voker/defs"
+	"vorker/conf"
+	"vorker/defs"
 
 	"github.com/glebarez/sqlite"
 	"github.com/joho/godotenv"

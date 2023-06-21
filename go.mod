@@ -1,4 +1,4 @@
-module voker
+module vorker
 
 go 1.19
 

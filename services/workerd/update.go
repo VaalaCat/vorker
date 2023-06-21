@@ -2,10 +2,10 @@ package workerd
 
 import (
 	"fmt"
-	"voker/common"
-	"voker/entities"
-	"voker/models"
-	"voker/utils/gost"
+	"vorker/common"
+	"vorker/entities"
+	"vorker/models"
+	"vorker/utils/gost"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,7 +34,7 @@ func UpdateEndpoint(c *gin.Context) {
 }
 
 func Update(userID uint, UID string, worker *entities.Worker) error {
-	FillWorkerValue(worker, true, UID)
+	FillWorkerValue(worker, true, UID, userID)
 
 	workerRecord, err := models.GetWorkerByUID(userID, UID)
 	if err != nil {

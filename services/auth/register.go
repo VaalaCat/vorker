@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"voker/common"
-	"voker/conf"
-	"voker/defs"
-	"voker/models"
+	"vorker/common"
+	"vorker/conf"
+	"vorker/defs"
+	"vorker/models"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

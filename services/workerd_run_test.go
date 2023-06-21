@@ -3,8 +3,8 @@ package services
 import (
 	"os"
 	"testing"
-	"voker/entities"
-	"voker/utils"
+	"vorker/entities"
+	"vorker/utils"
 )
 
 func TestRun(t *testing.T) {

@@ -3,7 +3,7 @@ package gost
 import (
 	"net/http"
 	"os"
-	"voker/conf"
+	"vorker/conf"
 
 	"github.com/go-gost/core/logger"
 	"github.com/go-gost/x/config"

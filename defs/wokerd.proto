@@ -12,6 +12,7 @@ message Worker {
 	bytes Code = 7; // worker's code
 	string Name = 8; // worker's name, also use at worker routing, must be unique, default is UID
 	string TunnelID = 9; // worker's tunnel id
+	uint64 UserID = 10; // worker's user id
 }
 
 // one WorkerList for one workerd instance

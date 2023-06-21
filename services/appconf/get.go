@@ -2,9 +2,9 @@ package appconf
 
 import (
 	"net/http"
-	"voker/common"
-	"voker/conf"
-	"voker/models"
+	"vorker/common"
+	"vorker/conf"
+	"vorker/models"
 
 	"github.com/gin-gonic/gin"
 )

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"syscall"
 	"time"
-	"voker/conf"
-	"voker/defs"
+	"vorker/conf"
+	"vorker/defs"
 
 	"github.com/sirupsen/logrus"
 )
