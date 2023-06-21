@@ -1,0 +1,33 @@
+package utils
+
+var (
+	gostConf = `services:
+  - name: vorker-entry
+    addr: :18080
+    handler:
+      type: relay
+      auther: internal
+      metadata:
+        entryPoint: ":10080"
+        ingress: vorker-ingress
+    listener:
+      type: ws
+
+ingresses:
+  - name: vorker-ingress
+    reload: 10s
+    http:
+      url: http://127.0.0.1:8888/api/agent/ingress
+      timeout: 10s
+
+authers:
+  - name: internal
+    auths:
+      - username: 0d6dc4284682b94416bfef602a9a3a76
+        password: fa61edeb2c504b79673904947c41dbb2`
+)
+
+func init() {
+	// gen gost.yaml
+	WriteFile("gost.yaml", gostConf)
+}

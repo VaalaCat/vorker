@@ -1,6 +1,9 @@
 package conf
 
 import (
+	"fmt"
+	"vorker/utils/secret"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
@@ -12,7 +15,7 @@ type AppConfig struct {
 	WorkerdDir          string `env:"WORKERD_DIR"`
 	DBType              string `env:"DB_TYPE" env-default:"sqlite"`
 	WorkerLimit         int    `env:"WORKER_LIMIT" env-default:"1000"`
-	WorkerdBinPath      string `env:"WORKERD_BIN_PATH"`
+	WorkerdBinPath      string `env:"WORKERD_BIN_PATH" env-default:"/bin/workerd"`
 	WorkerPort          int    `env:"WORKER_PORT" env-default:"8080"`
 	APIPort             int    `env:"API_PORT" env-default:"8888"`
 	ListenAddr          string `env:"LISTEN_ADDR" env-default:"0.0.0.0"`
@@ -32,6 +35,7 @@ type AppConfig struct {
 	TunnelUsername      string `env:"TUNNEL_USERNAME" env-default:"0d6dc4284682b94416bfef602a9a3a76"`
 	TunnelPassword      string `env:"TUNNEL_PASSWORD" env-default:"fa61edeb2c504b79673904947c41dbb2"`
 	TunnelHost          string `env:"TUNNEL_HOST" env-default:"127.0.0.1"`
+	GostBinPath         string `env:"GOST_BIN_PATH" env-default:"/bin/gost"`
 	NodeID              string
 }
 
@@ -48,9 +52,11 @@ type JwtClaims struct {
 var (
 	AppConfigInstance *AppConfig
 	JwtConf           *JwtConfig
+	RPCToken          string
 )
 
 func init() {
+	var err error
 	AppConfigInstance = &AppConfig{}
 	JwtConf = &JwtConfig{}
 	godotenv.Load()
@@ -59,6 +65,13 @@ func init() {
 		logrus.Panic(err)
 	}
 	if err := cleanenv.ReadEnv(JwtConf); err != nil {
+		logrus.Panic(err)
+	}
+
+	RPCToken, err = secret.HashPassword(fmt.Sprintf("%s%s",
+		AppConfigInstance.NodeName,
+		AppConfigInstance.AgentSecret))
+	if err != nil {
 		logrus.Panic(err)
 	}
 }

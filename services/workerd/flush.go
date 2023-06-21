@@ -1,6 +1,7 @@
 package workerd
 
 import (
+	"runtime/debug"
 	"vorker/common"
 	"vorker/models"
 
@@ -9,6 +10,12 @@ import (
 )
 
 func FlushEndpoint(c *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.Errorf("Recovered in f: %+v, stack: %+v", r, string(debug.Stack()))
+			common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
+		}
+	}()
 	UID := c.Param("uid")
 	if len(UID) == 0 {
 		logrus.Errorf("uid is empty, ctx: %v", c)

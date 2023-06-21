@@ -7,12 +7,14 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"sync"
 	"vorker/conf"
 	"vorker/entities"
 	"vorker/utils/idgen"
 
 	"github.com/judwhite/go-svc"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -20,7 +22,7 @@ var (
 	outputFormat  string
 	services      stringList
 	nodes         stringList
-	debug         bool
+	debugMode     bool
 	apiAddr       string
 	metricsAddr   string
 	wg            sync.WaitGroup
@@ -63,6 +65,11 @@ func init() {
 }
 
 func AddGost(tunnelID string, workerName string, workerPort int32) int64 {
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.Errorf("Recovered in f: %+v, stack: %+v", r, string(debug.Stack()))
+		}
+	}()
 	r := buildGostArgs(conf.AppConfigInstance.TunnelScheme, "127.0.0.1", workerPort,
 		conf.AppConfigInstance.TunnelRelayEndpoint, tunnelID)
 	wid := idgen.GetNextID()
@@ -86,13 +93,16 @@ func DeleteGost(workerName string) {
 }
 
 func worker(id int64, args []string, ctx *context.Context, ret *int) {
-	cmd := exec.CommandContext(*ctx, "gost", args...)
+	cmd := exec.CommandContext(*ctx, conf.AppConfigInstance.GostBinPath, args...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = append(os.Environ(), fmt.Sprintf("_GOST_ID=%d", id))
 
-	cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		logrus.Errorf("gost worker error: %v", err)
+	}
 	if cmd.ProcessState.Exited() {
 		*ret = cmd.ProcessState.ExitCode()
 	}

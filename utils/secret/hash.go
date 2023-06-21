@@ -1,6 +1,11 @@
-package utils
+package secret
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"crypto/md5"
+	"encoding/hex"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
@@ -10,4 +15,10 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func MD5(content string) string {
+	data := []byte(content)
+	hash := md5.Sum(data)
+	return hex.EncodeToString(hash[:])
 }

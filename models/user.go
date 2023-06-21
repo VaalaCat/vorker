@@ -1,8 +1,8 @@
 package models
 
 import (
-	"vorker/utils"
 	"vorker/utils/database"
+	"vorker/utils/secret"
 
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -34,7 +34,7 @@ func (u *User) TableName() string {
 }
 
 func CreateUser(user *User) error {
-	if hashedPass, err := utils.HashPassword(user.Password); err != nil {
+	if hashedPass, err := secret.HashPassword(user.Password); err != nil {
 		return err
 	} else {
 		user.Password = hashedPass
@@ -90,7 +90,7 @@ func GetUserByEmail(email string) (*User, error) {
 }
 
 func UpdateUser(userID uint, user *User) error {
-	if hashedPass, err := utils.HashPassword(user.Password); err != nil {
+	if hashedPass, err := secret.HashPassword(user.Password); err != nil {
 		return err
 	} else {
 		user.Password = hashedPass
@@ -153,7 +153,7 @@ func CheckUserPassword(userNameOrEmail, password string) (bool, error) {
 		Email: userNameOrEmail}).First(&user).Error; err != nil {
 		return false, err
 	}
-	return utils.CheckPasswordHash(password, user.Password), nil
+	return secret.CheckPasswordHash(password, user.Password), nil
 }
 
 func CheckUserNameAndEmail(userName, email string) error {

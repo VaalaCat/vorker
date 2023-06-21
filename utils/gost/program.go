@@ -61,7 +61,7 @@ func (p *program) Init(env svc.Environment) error {
 			Addr: apiAddr,
 		}
 	}
-	if debug {
+	if debugMode {
 		if cfg.Log == nil {
 			cfg.Log = &config.LogConfig{}
 		}
