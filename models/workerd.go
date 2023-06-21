@@ -160,12 +160,6 @@ func (w *Worker) Update() error {
 func (w *Worker) Delete() error {
 	db := database.GetDB()
 	defer database.CloseDB(db)
-
-	err := w.DeleteFile()
-	if err != nil {
-		return err
-	}
-
 	return db.Delete(w).Error
 }
 

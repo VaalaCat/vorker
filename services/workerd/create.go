@@ -1,6 +1,7 @@
 package workerd
 
 import (
+	"runtime/debug"
 	"vorker/common"
 	"vorker/entities"
 	"vorker/models"
@@ -11,6 +12,12 @@ import (
 )
 
 func CreateEndpoint(c *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.Errorf("Recovered in f: %+v, stack: %+v", r, string(debug.Stack()))
+			common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
+		}
+	}()
 	worker := &entities.Worker{}
 
 	if err := c.BindJSON(worker); err != nil {

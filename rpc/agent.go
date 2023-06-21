@@ -2,10 +2,9 @@ package rpc
 
 import (
 	"errors"
-	"fmt"
 	"vorker/conf"
 	"vorker/defs"
-	"vorker/utils"
+	"vorker/models"
 
 	"github.com/imroc/req/v3"
 	"github.com/sirupsen/logrus"
@@ -24,23 +23,19 @@ func SyncAgent(endpoint string) error {
 		Data defs.AgentSyncWorkersResp `json:"data"`
 	}{}
 
-	token, err := utils.HashPassword(fmt.Sprintf("%s%s",
-		conf.AppConfigInstance.NodeName,
-		conf.AppConfigInstance.AgentSecret))
-	if err != nil {
-		return err
-	}
-
 	reqResp, err := req.C().R().
 		SetBody(&defs.AgentSyncWorkersReq{}).
 		SetSuccessResult(&rtype).
 		SetHeaders(map[string]string{
 			defs.HeaderNodeName:   conf.AppConfigInstance.NodeName,
-			defs.HeaderNodeSecret: token,
+			defs.HeaderNodeSecret: conf.RPCToken,
 		}).
 		Post(url)
 	resp = &rtype.Data
 	logrus.Infof("sync agent length: %d", len(resp.WorkerList.Workers))
+	// if req is zero, update all workers
+	models.SyncWorkers(resp.WorkerList)
+	// TODO: support modify single worker
 
 	if err != nil || reqResp.StatusCode >= 299 {
 		return errors.New("error")

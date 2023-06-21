@@ -2,17 +2,25 @@ package workerd
 
 import (
 	"fmt"
+	"runtime/debug"
 	"vorker/common"
 	"vorker/models"
 	"vorker/utils/gost"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func DeleteEndpoint(c *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.Errorf("Recovered in f: %+v, stack: %+v", r, string(debug.Stack()))
+			common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
+		}
+	}()
 	UID := c.Param("uid")
 	if len(UID) == 0 {
-		c.JSON(400, gin.H{"code": 1, "error": "uid is empty"})
+		common.RespErr(c, common.RespCodeInvalidRequest, "uid is empty", nil)
 		return
 	}
 
@@ -33,11 +41,16 @@ func Delete(userID uint, UID string) error {
 	if worker == nil {
 		return fmt.Errorf("worker not found")
 	}
-	err = worker.Delete()
-	if err != nil {
+
+	if err = worker.Delete(); err != nil {
 		return err
 	}
-	gost.DeleteGost(worker.Name)
 
-	return GenCapnpConfig()
+	if err = GenCapnpConfig(); err != nil {
+		return err
+	}
+
+	worker.DeleteFile()
+	gost.DeleteGost(worker.Name)
+	return nil
 }

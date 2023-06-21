@@ -1,16 +1,24 @@
 package auth
 
 import (
+	"runtime/debug"
 	"vorker/common"
 	"vorker/conf"
 	"vorker/defs"
 	"vorker/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 func RegisterEndpoint(c *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.Errorf("Recovered in f: %+v, stack: %+v", r, string(debug.Stack()))
+			common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
+		}
+	}()
 	if !conf.AppConfigInstance.EnableRegister {
 		if count, err := models.AdminGetUserNumber(); err != nil {
 			common.RespErr(c, common.RespCodeInternalError,

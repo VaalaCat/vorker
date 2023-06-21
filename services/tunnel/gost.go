@@ -2,6 +2,7 @@ package tunnel
 
 import (
 	"fmt"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"vorker/common"
@@ -15,6 +16,12 @@ import (
 )
 
 func GetIngressConf(c *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.Errorf("Recovered in f: %+v, stack: %+v", r, string(debug.Stack()))
+			common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
+		}
+	}()
 	allTunnel := entities.GetTunnel().GetAll()
 	workersRule := genWorkersRule(allTunnel)
 	// get all nodes name from database
