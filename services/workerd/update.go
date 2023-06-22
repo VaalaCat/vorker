@@ -30,6 +30,7 @@ func UpdateEndpoint(c *gin.Context) {
 		return
 	}
 
+	SyncAgent(worker)
 	common.RespOK(c, "update worker success", nil)
 }
 

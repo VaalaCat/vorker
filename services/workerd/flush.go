@@ -67,5 +67,6 @@ func Flush(userID uint, UID string) error {
 	if err != nil {
 		return err
 	}
+	SyncAgent(worker.Worker)
 	return GenCapnpConfig()
 }

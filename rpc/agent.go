@@ -15,8 +15,9 @@ import (
 func EventNotify(n *models.Node, eventName string) error {
 	reqResp, err := RPCWrapper().
 		SetHeader(defs.HeaderHost, fmt.Sprintf("%s%s", n.Name, n.UID)).
+		SetBody(&entities.NotifyEventRequest{EventName: eventName}).
 		Post(
-			fmt.Sprintf("http://%s:%d/api/agent/notify/",
+			fmt.Sprintf("http://%s:%d/api/agent/notify",
 				conf.AppConfigInstance.TunnelHost,
 				conf.AppConfigInstance.TunnelEntryPort))
 

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"vorker/conf"
@@ -11,6 +12,7 @@ import (
 	"vorker/utils/database"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -208,26 +210,62 @@ func (w *Worker) UpdateFile() error {
 }
 
 func SyncWorkers(workerList *entities.WorkerList) error {
-	var workers []*Worker
 	db := database.GetDB()
 	defer database.CloseDB(db)
-	// write all workers to db
-
+	partialFail := false
 	UIDs := []string{}
+	oldWorkers, err := AdminGetAllWorkers()
+	if err != nil {
+		return err
+	}
+
 	for _, worker := range workerList.Workers {
+		modelWorker := &Worker{Worker: worker}
 		UIDs = append(UIDs, worker.UID)
-		workers = append(workers, &Worker{
-			Worker: worker,
-		})
+
+		if err := modelWorker.Delete(); err != nil && err != gorm.ErrRecordNotFound {
+			logrus.WithError(err).Errorf("sync workers db delete error, worker is: %+v", worker)
+			partialFail = true
+			continue
+		}
+
+		if err := modelWorker.Create(); err != nil {
+			logrus.WithError(err).Errorf("sync workers db create error, worker is: %+v", worker)
+			partialFail = true
+			continue
+		}
+
+		if err := modelWorker.DeleteFile(); err != nil {
+			logrus.WithError(err).Errorf("sync workers delete file error, worker is: %+v", worker)
+			partialFail = true
+			continue
+		}
+
+		if err := modelWorker.UpdateFile(); err != nil {
+			logrus.WithError(err).Errorf("sync workers update file error, worker is: %+v", worker)
+			partialFail = true
+			continue
+		}
 	}
 
-	if err := db.Create(workers).Error; err != nil {
-		return err
+	// delete workers that not in workerList
+	for _, worker := range oldWorkers {
+		if !utils.ContainsString(UIDs, worker.UID) {
+			if err := worker.Delete(); err != nil {
+				logrus.WithError(err).Errorf("sync workers delete worker error, worker is: %+v", worker)
+				partialFail = true
+				continue
+			}
+			if err := worker.DeleteFile(); err != nil {
+				logrus.WithError(err).Errorf("sync workers delete file error, worker is: %+v", worker)
+				partialFail = true
+				continue
+			}
+		}
 	}
 
-	// delete workers not in workerList
-	if err := db.Where("uid not in (?)", UIDs).Delete(&Worker{}).Error; err != nil {
-		return err
+	if partialFail {
+		return errors.New("partial fail")
 	}
 
 	return nil

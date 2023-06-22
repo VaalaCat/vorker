@@ -1,9 +1,11 @@
 package workerd
 
 import (
+	"vorker/conf"
 	"vorker/defs"
 	"vorker/entities"
 	"vorker/models"
+	"vorker/rpc"
 	"vorker/utils"
 
 	"github.com/google/uuid"
@@ -22,7 +24,8 @@ func FillWorkerValue(worker *entities.Worker, keepUID bool, UID string, UserID u
 	worker.HostName = defs.DefaultHostName
 
 	if len(worker.NodeName) == 0 {
-		worker.NodeName = defs.DefaultNodeName
+		// worker.NodeName = defs.DefaultNodeName
+		worker.NodeName = "test"
 	}
 	worker.ExternalPath = defs.DefaultExternalPath
 	port, err := utils.GetAvailablePort(defs.DefaultHostName)
@@ -50,4 +53,22 @@ func FillWorkerValue(worker *entities.Worker, keepUID bool, UID string, UserID u
 		rng, _ := codename.DefaultRNG()
 		worker.Name = codename.Generate(rng, 0)
 	}
+}
+
+func SyncAgent(w *entities.Worker) {
+	go func(worker *entities.Worker) {
+		if worker.NodeName == conf.AppConfigInstance.NodeName {
+			return
+		}
+
+		targetNode, err := models.GetNodeByNodeName(worker.NodeName)
+		if err != nil {
+			logrus.Errorf("worker node is invalid, db error: %v", err)
+			return
+		}
+		if err := rpc.EventNotify(targetNode, defs.EventSyncWorkers); err != nil {
+			logrus.Errorf("emit event: %v error, err: %v", defs.EventSyncWorkers, err)
+			return
+		}
+	}(w)
 }
