@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func EventNotify(n models.Node, eventName string) error {
+func EventNotify(n *models.Node, eventName string) error {
 	reqResp, err := RPCWrapper().
 		SetHeader(defs.HeaderHost, fmt.Sprintf("%s%s", n.Name, n.UID)).
 		Post(
@@ -79,7 +79,7 @@ func GetNode(endpoint string) (*entities.Node, error) {
 
 	reqResp, err := RPCWrapper().
 		SetSuccessResult(&rtype).
-		Post(url)
+		Get(url)
 
 	if err != nil || reqResp.StatusCode >= 299 {
 		return nil, errors.New("error")

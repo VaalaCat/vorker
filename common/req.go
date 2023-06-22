@@ -5,6 +5,7 @@ import (
 )
 
 type Request interface {
-	*entities.DeleteWorkerRequest | *entities.LoginRequest | *entities.RegisterRequest
+	*entities.DeleteWorkerRequest | *entities.LoginRequest | *entities.RegisterRequest |
+		*entities.NotifyEventRequest
 	Validate() bool
 }
