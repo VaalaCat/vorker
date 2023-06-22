@@ -10,6 +10,7 @@ import (
 	"vorker/services/agent"
 	"vorker/services/appconf"
 	"vorker/services/auth"
+	"vorker/services/node"
 	proxyService "vorker/services/proxy"
 	"vorker/services/tunnel"
 	"vorker/services/workerd"
@@ -55,8 +56,12 @@ func init() {
 			if conf.AppConfigInstance.RunMode == "master" {
 				agentAPI.POST("/sync", authz.AgentAuthz(), workerd.AgentSyncWorkers)
 				agentAPI.GET("/ingress", tunnel.GetIngressConf)
+				agentAPI.POST("/add", node.AddEndpoint)
 			} else {
 				agentAPI.GET("/notify", authz.AgentAuthz(), agent.NotifyEndpoint)
+				gost.AddGost(conf.AppConfigInstance.NodeID,
+					fmt.Sprintf("%s%s", conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
+					int32(conf.AppConfigInstance.APIPort))
 			}
 		}
 		api.GET("/allworkers", authz.JWTMiddleware(), workerd.GetAllWorkersEndpoint)

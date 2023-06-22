@@ -28,7 +28,7 @@ var (
 	wg            sync.WaitGroup
 	ret           int
 	gostCtxMap    map[int64]context.CancelFunc
-	workerGostMap map[string]int64
+	gostTunnelMap map[string]int64
 )
 
 func InitGost() {
@@ -36,12 +36,12 @@ func InitGost() {
 		f()
 	}
 	gostCtxMap = make(map[int64]context.CancelFunc)
-	workerGostMap = make(map[string]int64)
+	gostTunnelMap = make(map[string]int64)
 	go func() {
 		t := entities.GetTunnel().GetAll()
 		p := entities.GetProxy().GetAll()
 		r := buildGostPool(t, p)
-		for workerName, wargs := range r {
+		for tunnelName, wargs := range r {
 			wg.Add(1)
 			ctx, cancel := context.WithCancel(context.Background())
 			wid := idgen.GetNextID()
@@ -51,7 +51,7 @@ func InitGost() {
 				defer cancel()
 				worker(wid, wargs, &ctx, &ret)
 			}(wid, wargs)
-			workerGostMap[workerName] = wid
+			gostTunnelMap[tunnelName] = wid
 		}
 		wg.Wait()
 		for _, f := range gostCtxMap {
@@ -64,13 +64,13 @@ func init() {
 	InitGost()
 }
 
-func AddGost(tunnelID string, workerName string, workerPort int32) int64 {
+func AddGost(tunnelID string, tunnelName string, tunnelPort int32) int64 {
 	defer func() {
 		if r := recover(); r != nil {
 			logrus.Errorf("Recovered in f: %+v, stack: %+v", r, string(debug.Stack()))
 		}
 	}()
-	r := buildGostArgs(conf.AppConfigInstance.TunnelScheme, "127.0.0.1", workerPort,
+	r := buildGostArgs(conf.AppConfigInstance.TunnelScheme, "127.0.0.1", tunnelPort,
 		conf.AppConfigInstance.TunnelRelayEndpoint, tunnelID)
 	wid := idgen.GetNextID()
 	wg.Add(1)
@@ -81,15 +81,15 @@ func AddGost(tunnelID string, workerName string, workerPort int32) int64 {
 		defer cancel()
 		worker(wid, wargs, &ctx, &ret)
 	}(wid, r)
-	workerGostMap[workerName] = wid
+	gostTunnelMap[tunnelName] = wid
 	return wid
 }
 
-func DeleteGost(workerName string) {
-	wid := workerGostMap[workerName]
+func DeleteGost(tunnelName string) {
+	wid := gostTunnelMap[tunnelName]
 	gostCtxMap[wid]()
 	delete(gostCtxMap, wid)
-	delete(workerGostMap, workerName)
+	delete(gostTunnelMap, tunnelName)
 }
 
 func worker(id int64, args []string, ctx *context.Context, ret *int) {

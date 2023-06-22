@@ -78,3 +78,25 @@ type AgentSyncWorkersReq struct {
 type AgentSyncWorkersResp struct {
 	WorkerList *entities.WorkerList `json:"worker_list"`
 }
+
+type NotifyEventRequest struct {
+	EventName string            `json:"event_name"`
+	Extra     map[string]string `json:"extra"`
+}
+
+func (n *NotifyEventRequest) Validate() bool {
+	if n == nil {
+		return false
+	}
+	if n.EventName == "" {
+		return false
+	}
+	if len(n.EventName) > 64 {
+		return false
+	}
+	return true
+}
+
+type NotifyEventResponse struct {
+	Status int `json:"status"` // 0: success, 1: failed
+}
