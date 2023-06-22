@@ -11,6 +11,7 @@ import (
 	"sync"
 	"vorker/conf"
 	"vorker/entities"
+	"vorker/services/proxy"
 	"vorker/utils/idgen"
 
 	"github.com/judwhite/go-svc"
@@ -32,6 +33,7 @@ var (
 )
 
 func InitGost() {
+	proxy.Init()
 	for _, f := range gostCtxMap {
 		f()
 	}
