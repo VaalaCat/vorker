@@ -3,11 +3,8 @@ package workerd
 import (
 	"runtime/debug"
 	"vorker/common"
-	"vorker/conf"
-	"vorker/defs"
 	"vorker/entities"
 	"vorker/models"
-	"vorker/rpc"
 	"vorker/utils/gost"
 
 	"github.com/gin-gonic/gin"
@@ -39,22 +36,7 @@ func CreateEndpoint(c *gin.Context) {
 		return
 	}
 
-	go func() {
-		if worker.NodeName == conf.AppConfigInstance.NodeName {
-			return
-		}
-
-		targetNode, err := models.GetNodeByNodeName(worker.NodeName)
-		if err != nil {
-			logrus.Errorf("worker node is invalid, db error: %v", err)
-			return
-		}
-		if err := rpc.EventNotify(targetNode, defs.EventSyncWorkers); err != nil {
-			logrus.Errorf("emit event: %v error, err: %v", defs.EventSyncWorkers, err)
-			return
-		}
-	}()
-
+	SyncAgent(worker)
 	common.RespOK(c, "create worker success", nil)
 }
 

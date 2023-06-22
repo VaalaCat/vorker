@@ -60,7 +60,7 @@ func init() {
 				agentAPI.POST("/add", authz.AgentAuthz(), node.AddEndpoint)
 				agentAPI.GET("/nodeinfo", authz.AgentAuthz(), node.GetNodeInfoEndpoint)
 			} else {
-				agentAPI.GET("/notify", authz.AgentAuthz(), agent.NotifyEndpoint)
+				agentAPI.POST("/notify", authz.AgentAuthz(), agent.NotifyEndpoint)
 			}
 		}
 		api.GET("/allworkers", authz.JWTMiddleware(), workerd.GetAllWorkersEndpoint)
