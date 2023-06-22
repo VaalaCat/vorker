@@ -53,5 +53,7 @@ func Update(userID uint, UID string, worker *entities.Worker) error {
 
 	gost.DeleteGost(worker.Name)
 	gost.AddGost(worker.TunnelID, worker.Name, worker.Port)
+	entities.GetTunnel().DeleteTunnel(workerRecord.Worker)
+	entities.GetTunnel().AddTunnel(workerRecord.Worker)
 	return GenCapnpConfig()
 }

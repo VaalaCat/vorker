@@ -162,7 +162,11 @@ func (w *Worker) Update() error {
 func (w *Worker) Delete() error {
 	db := database.GetDB()
 	defer database.CloseDB(db)
-	return db.Delete(w).Error
+	return db.Where(&Worker{
+		Worker: &entities.Worker{
+			UID: w.UID,
+		},
+	}).Unscoped().Delete(w).Error
 }
 
 func (w *Worker) Flush() error {

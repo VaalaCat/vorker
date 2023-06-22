@@ -7,6 +7,7 @@ import (
 	"vorker/defs"
 	"vorker/entities"
 	"vorker/rpc"
+	"vorker/services/workerd"
 	"vorker/utils/request"
 
 	"github.com/gin-gonic/gin"
@@ -35,6 +36,7 @@ func NotifyEndpoint(c *gin.Context) {
 			common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
 			return
 		} else {
+			workerd.GenCapnpConfig()
 			common.RespOK(c, common.RespMsgOK, nil)
 			return
 		}

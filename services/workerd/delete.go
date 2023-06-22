@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime/debug"
 	"vorker/common"
+	"vorker/entities"
 	"vorker/models"
 	"vorker/utils/gost"
 
@@ -51,6 +52,7 @@ func Delete(userID uint, UID string) error {
 	}
 
 	worker.DeleteFile()
+	entities.GetTunnel().DeleteTunnel(worker.Worker)
 	gost.DeleteGost(worker.Name)
 	return nil
 }
