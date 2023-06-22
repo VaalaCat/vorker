@@ -3,7 +3,7 @@ package auth
 import (
 	"runtime/debug"
 	"vorker/common"
-	"vorker/defs"
+	"vorker/entities"
 	"vorker/models"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +23,7 @@ func GetUserEndpoint(c *gin.Context) {
 		common.RespErr(c, common.RespCodeDBErr, common.RespMsgDBErr, nil)
 		return
 	}
-	common.RespOK(c, "ok", &defs.GetUserResponse{
+	common.RespOK(c, "ok", &entities.GetUserResponse{
 		UserName: user.UserName,
 		Role:     user.Role,
 		Email:    user.Email,

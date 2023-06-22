@@ -4,7 +4,7 @@ import (
 	"runtime/debug"
 	"vorker/authz"
 	"vorker/common"
-	"vorker/defs"
+	"vorker/entities"
 	"vorker/models"
 	"vorker/utils"
 
@@ -52,7 +52,7 @@ func LoginEndpoint(c *gin.Context) {
 	authz.SetToken(c, token)
 
 	c.Header(common.AuthorizationHeaderKey, token)
-	common.RespOK(c, common.RespMsgOK, defs.LoginResponse{
+	common.RespOK(c, common.RespMsgOK, entities.LoginResponse{
 		Status: common.RespCodeOK,
 		Token:  token})
 }

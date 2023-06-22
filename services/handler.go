@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"vorker/authz"
 	"vorker/conf"
+	"vorker/rpc"
 	"vorker/services/agent"
 	"vorker/services/appconf"
 	"vorker/services/auth"
@@ -56,7 +57,8 @@ func init() {
 			if conf.AppConfigInstance.RunMode == "master" {
 				agentAPI.POST("/sync", authz.AgentAuthz(), workerd.AgentSyncWorkers)
 				agentAPI.GET("/ingress", tunnel.GetIngressConf)
-				agentAPI.POST("/add", node.AddEndpoint)
+				agentAPI.POST("/add", authz.AgentAuthz(), node.AddEndpoint)
+				agentAPI.GET("/nodeinfo", authz.AgentAuthz(), node.GetNodeInfoEndpoint)
 			} else {
 				agentAPI.GET("/notify", authz.AgentAuthz(), agent.NotifyEndpoint)
 				gost.AddGost(conf.AppConfigInstance.NodeID,
@@ -93,5 +95,14 @@ func Run(f embed.FS) {
 		})
 	}
 	go gost.Run()
+	if conf.AppConfigInstance.RunMode == "agent" {
+		self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)
+		if err != nil || self == nil {
+			rpc.AddNode(conf.AppConfigInstance.MasterEndpoint)
+		} else {
+			logrus.Info("Node already exists")
+			conf.AppConfigInstance.NodeID = self.UID
+		}
+	}
 	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
 }

@@ -4,7 +4,7 @@ import (
 	"runtime/debug"
 	"vorker/common"
 	"vorker/conf"
-	"vorker/defs"
+	"vorker/entities"
 	"vorker/models"
 
 	"github.com/gin-gonic/gin"
@@ -60,7 +60,7 @@ func RegisterEndpoint(c *gin.Context) {
 		return
 	}
 
-	common.RespOK(c, common.RespMsgOK, &defs.RegisterResponse{
+	common.RespOK(c, common.RespMsgOK, &entities.RegisterResponse{
 		Status: common.RespCodeOK,
 	})
 }

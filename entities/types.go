@@ -1,6 +1,4 @@
-package defs
-
-import "vorker/entities"
+package entities
 
 type RegisterRequest struct {
 	UserName string `json:"userName"`
@@ -76,7 +74,7 @@ type AgentSyncWorkersReq struct {
 }
 
 type AgentSyncWorkersResp struct {
-	WorkerList *entities.WorkerList `json:"worker_list"`
+	WorkerList *WorkerList `json:"worker_list"`
 }
 
 type NotifyEventRequest struct {
@@ -99,4 +97,7 @@ func (n *NotifyEventRequest) Validate() bool {
 
 type NotifyEventResponse struct {
 	Status int `json:"status"` // 0: success, 1: failed
+}
+
+type SyncNodesResponse struct {
 }

@@ -21,3 +21,8 @@ message WorkerList {
 	repeated Worker Workers = 2;
 	string NodeName = 3; // workerd runner host name, for HA
 }
+
+message Node {
+	string Name = 1; // the name of the node
+	string UID = 2; // the id of the node
+}

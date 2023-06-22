@@ -3,6 +3,7 @@ package models
 import (
 	"vorker/conf"
 	"vorker/defs"
+	"vorker/entities"
 	"vorker/utils/database"
 
 	"github.com/google/uuid"
@@ -11,16 +12,17 @@ import (
 
 type Node struct {
 	gorm.Model
-	UID  string `gorm:"unique;not null" json:"uid"`
-	Name string `gorm:"unique;not null" json:"name"`
+	*entities.Node
 }
 
 func init() {
 	db := database.GetDB()
 	db.AutoMigrate(&Node{})
 	if err := db.FirstOrCreate(&Node{
-		UID:  uuid.New().String(),
-		Name: defs.DefaultNodeName,
+		Node: &entities.Node{
+			UID:  uuid.New().String(),
+			Name: defs.DefaultNodeName,
+		},
 	}).Error; err != nil {
 		panic(err)
 	}
@@ -39,30 +41,36 @@ func (Node) TableName() string {
 
 func (n *Node) Create() error {
 	db := database.GetDB()
-	database.CloseDB(db)
+	defer database.CloseDB(db)
 	return db.Create(n).Error
 }
 
 func (n *Node) Update(uid string) error {
 	db := database.GetDB()
-	database.CloseDB(db)
+	defer database.CloseDB(db)
 	return db.Model(&Node{}).Where(
 		&Node{
-			UID: uid,
+			Node: &entities.Node{
+				UID: uid,
+			},
 		},
 	).Updates(
 		&Node{
-			UID:  n.UID,
-			Name: n.Name,
+			Node: &entities.Node{
+				UID:  n.UID,
+				Name: n.Name,
+			},
 		},
 	).Error
 }
 
 func (n *Node) Delete(uid string) error {
 	db := database.GetDB()
-	database.CloseDB(db)
+	defer database.CloseDB(db)
 	return db.Delete(&Node{
-		UID: uid,
+		Node: &entities.Node{
+			UID: uid,
+		},
 	}).Error
 }
 
@@ -94,7 +102,9 @@ func GetNodeByNodeName(nodeName string) (*Node, error) {
 	db := database.GetDB()
 	defer database.CloseDB(db)
 	if err := db.Where(
-		&Node{Name: nodeName},
+		&Node{
+			Node: &entities.Node{
+				Name: nodeName}},
 	).First(&node).Error; err != nil {
 		return nil, err
 	}
