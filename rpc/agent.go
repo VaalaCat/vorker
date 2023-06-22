@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"errors"
+	"fmt"
 	"vorker/conf"
 	"vorker/defs"
 	"vorker/models"
@@ -10,7 +11,20 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func SyncAgentRequest(nodeName string) error {
+func EventNotify(n models.Node, eventName string) error {
+	reqResp, err := req.C().R().
+		SetHeaders(map[string]string{
+			defs.HeaderHost:       fmt.Sprintf("%s%s", n.Name, n.UID),
+			defs.HeaderNodeName:   conf.AppConfigInstance.NodeName,
+			defs.HeaderNodeSecret: conf.RPCToken,
+		}).Post(
+		fmt.Sprintf("http://%s:%d/api/agent/notify/",
+			conf.AppConfigInstance.TunnelHost,
+			conf.AppConfigInstance.TunnelEntryPort))
+
+	if err != nil || reqResp.StatusCode >= 299 {
+		return errors.New("error")
+	}
 	return nil
 }
 

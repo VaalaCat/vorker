@@ -22,6 +22,7 @@ const (
 const (
 	HeaderNodeName   = "x-node-name"
 	HeaderNodeSecret = "x-secret"
+	HeaderHost       = "Host"
 )
 
 const (
