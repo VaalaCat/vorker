@@ -32,3 +32,7 @@ const (
 	CodeInternalError  = 500
 	CodeSuccess        = 200
 )
+
+const (
+	EventSyncWorkers = "sync-workers"
+)

@@ -20,6 +20,10 @@ func AddEndpoint(c *gin.Context) {
 		}
 	}()
 	nodeName := c.GetString(defs.KeyNodeName)
+	if n, err := models.GetNodeByNodeName(nodeName); err == nil && n != nil {
+		common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
+		return
+	}
 
 	newNode := &models.Node{
 		Node: &entities.Node{
