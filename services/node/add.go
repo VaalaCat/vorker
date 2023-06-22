@@ -4,6 +4,7 @@ import (
 	"runtime/debug"
 	"vorker/common"
 	"vorker/defs"
+	"vorker/entities"
 	"vorker/models"
 
 	"github.com/gin-gonic/gin"
@@ -21,15 +22,17 @@ func AddEndpoint(c *gin.Context) {
 	nodeName := c.GetString(defs.KeyNodeName)
 
 	newNode := &models.Node{
-		UID:  uuid.New().String(),
-		Name: nodeName,
+		Node: &entities.Node{
+			UID:  uuid.New().String(),
+			Name: nodeName,
+		},
 	}
 
 	if err := newNode.Create(); err != nil {
 		logrus.Errorf("failed to create node, err: %v", err)
-		c.JSON(defs.CodeInternalError, gin.H{"error": err.Error()})
+		common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
 		return
 	}
 
-	c.JSON(defs.CodeSuccess, gin.H{"message": "success", "data": newNode})
+	common.RespOK(c, common.RespMsgOK, nil)
 }

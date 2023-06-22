@@ -2,7 +2,7 @@ package auth
 
 import (
 	"errors"
-	"vorker/defs"
+	"vorker/entities"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,8 +11,8 @@ const (
 	ErrInvalidRequest = "invalid request"
 )
 
-func parseRegisterReq(c *gin.Context) (registerRequest defs.RegisterRequest, err error) {
-	registerRequest = defs.RegisterRequest{}
+func parseRegisterReq(c *gin.Context) (registerRequest entities.RegisterRequest, err error) {
+	registerRequest = entities.RegisterRequest{}
 	if err = c.ShouldBindJSON(&registerRequest); err != nil {
 		return
 	}
@@ -23,8 +23,8 @@ func parseRegisterReq(c *gin.Context) (registerRequest defs.RegisterRequest, err
 	return registerRequest, nil
 }
 
-func parseLoginReq(c *gin.Context) (loginRequest defs.LoginRequest, err error) {
-	loginRequest = defs.LoginRequest{}
+func parseLoginReq(c *gin.Context) (loginRequest entities.LoginRequest, err error) {
+	loginRequest = entities.LoginRequest{}
 	if err = c.ShouldBindJSON(&loginRequest); err != nil {
 		return
 	}

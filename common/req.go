@@ -1,8 +1,10 @@
 package common
 
-import "vorker/defs"
+import (
+	"vorker/entities"
+)
 
 type Request interface {
-	*defs.DeleteWorkerRequest | *defs.LoginRequest | *defs.RegisterRequest
+	*entities.DeleteWorkerRequest | *entities.LoginRequest | *entities.RegisterRequest
 	Validate() bool
 }

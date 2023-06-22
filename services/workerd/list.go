@@ -96,7 +96,7 @@ func AgentSyncWorkers(c *gin.Context) {
 			common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
 		}
 	}()
-	req := &defs.AgentSyncWorkersReq{}
+	req := &entities.AgentSyncWorkersReq{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		common.RespErr(c, defs.CodeInvalidRequest, err.Error(), nil)
 		return
@@ -112,7 +112,7 @@ func AgentSyncWorkers(c *gin.Context) {
 
 	// build response
 	// TODO: chunk loading
-	resp := &defs.AgentSyncWorkersResp{
+	resp := &entities.AgentSyncWorkersResp{
 		WorkerList: &entities.WorkerList{
 			NodeName: nodeName,
 			Workers:  models.Trans2Entities(workers),
