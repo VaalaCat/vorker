@@ -14,7 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func init() {
+func Init() {
 	proxy := entities.GetProxy()
 	tunnel := entities.GetTunnel()
 	workerRecords, err := models.AdminGetAllWorkers()

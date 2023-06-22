@@ -31,6 +31,14 @@ func DeleteEndpoint(c *gin.Context) {
 		return
 	}
 
+	go func() {
+		worker, err := models.GetWorkerByUID(userID, UID)
+		if err != nil {
+			common.RespErr(c, common.RespCodeInternalError, err.Error(), nil)
+			return
+		}
+		SyncAgent(worker.Worker)
+	}()
 	common.RespOK(c, "delete worker success", nil)
 }
 

@@ -7,12 +7,15 @@ type Proxy struct {
 }
 
 var (
-	proxyMap = &Proxy{
-		proxyMap: &sync.Map{},
-	}
+	proxyMap *Proxy
 )
 
 func GetProxy() *Proxy {
+	if proxyMap == nil {
+		proxyMap = &Proxy{
+			proxyMap: &sync.Map{},
+		}
+	}
 	return proxyMap
 }
 

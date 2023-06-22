@@ -9,12 +9,15 @@ type Tunnel struct {
 }
 
 var (
-	tunnelMap = &Tunnel{
-		tunnelMap: &sync.Map{},
-	}
+	tunnelMap *Tunnel
 )
 
 func GetTunnel() *Tunnel {
+	if tunnelMap == nil {
+		tunnelMap = &Tunnel{
+			tunnelMap: &sync.Map{},
+		}
+	}
 	return tunnelMap
 }
 
