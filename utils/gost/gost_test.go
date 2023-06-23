@@ -4,7 +4,6 @@ import (
 	_ "net/http/pprof"
 	"testing"
 
-	_ "vorker/models"
 	_ "vorker/services/proxy"
 )
 

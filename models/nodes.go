@@ -110,3 +110,13 @@ func GetNodeByNodeName(nodeName string) (*Node, error) {
 	}
 	return &node, nil
 }
+
+func GetAssignNode() (*Node, error) {
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	node := Node{}
+	if err := db.Take(&node).Error; err != nil {
+		return nil, err
+	}
+	return &node, nil
+}

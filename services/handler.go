@@ -91,6 +91,7 @@ func Run(f embed.FS) {
 			c.FileFromFS(c.Request.URL.Path, http.FS(fp))
 		})
 	}
+	gost.InitGost()
 	go gost.Run()
 	if conf.AppConfigInstance.RunMode == "agent" {
 		self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)

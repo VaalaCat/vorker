@@ -10,6 +10,7 @@ import (
 	"vorker/utils"
 
 	"vorker/utils/database"
+	"vorker/utils/gost"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -138,7 +139,7 @@ func Trans2Entities(workers []*Worker) []*entities.Worker {
 func (w *Worker) Create() error {
 	db := database.GetDB()
 	defer database.CloseDB(db)
-
+	gost.AddGost(w.TunnelID, w.Name, w.Port)
 	err := w.UpdateFile()
 	if err != nil {
 		return err
@@ -151,6 +152,8 @@ func (w *Worker) Update() error {
 	db := database.GetDB()
 	defer database.CloseDB(db)
 
+	gost.DeleteGost(w.Name)
+	gost.AddGost(w.TunnelID, w.Name, w.Port)
 	err := w.UpdateFile()
 	if err != nil {
 		return err
@@ -162,6 +165,7 @@ func (w *Worker) Update() error {
 func (w *Worker) Delete() error {
 	db := database.GetDB()
 	defer database.CloseDB(db)
+	gost.DeleteGost(w.Name)
 	return db.Where(&Worker{
 		Worker: &entities.Worker{
 			UID: w.UID,
