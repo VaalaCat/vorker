@@ -53,8 +53,8 @@ func GenCapnpConfig() error {
 
 	proxyMap := entities.GetProxy()
 	tunnelMap := entities.GetTunnel()
-	go proxyMap.InitProxyMap(workerList)
-	go tunnelMap.InitTunnelMap(workerList)
+	proxyMap.InitProxyMap(workerList)
+	tunnelMap.InitTunnelMap(workerList)
 
 	return utils.WriteFile(
 		filepath.Join(

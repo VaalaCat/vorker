@@ -4,6 +4,7 @@ import (
 	"vorker/common"
 	"vorker/defs"
 	"vorker/models"
+	"vorker/rpc"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -19,5 +20,6 @@ func GetNodeInfoEndpoint(c *gin.Context) {
 		return
 	}
 
+	go rpc.EventNotify(node, defs.EventSyncWorkers)
 	common.RespOK(c, common.RespMsgOK, node)
 }

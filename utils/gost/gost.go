@@ -11,7 +11,6 @@ import (
 	"sync"
 	"vorker/conf"
 	"vorker/entities"
-	"vorker/services/proxy"
 	"vorker/utils/idgen"
 
 	"github.com/judwhite/go-svc"
@@ -33,7 +32,6 @@ var (
 )
 
 func InitGost() {
-	proxy.Init()
 	for _, f := range gostCtxMap {
 		f()
 	}
@@ -62,10 +60,6 @@ func InitGost() {
 	}()
 }
 
-func init() {
-	InitGost()
-}
-
 func AddGost(tunnelID string, tunnelName string, tunnelPort int32) int64 {
 	defer func() {
 		if r := recover(); r != nil {
@@ -88,8 +82,10 @@ func AddGost(tunnelID string, tunnelName string, tunnelPort int32) int64 {
 }
 
 func DeleteGost(tunnelName string) {
-	wid := gostTunnelMap[tunnelName]
-	gostCtxMap[wid]()
+	wid, ok := gostTunnelMap[tunnelName]
+	if ok {
+		gostCtxMap[wid]()
+	}
 	delete(gostCtxMap, wid)
 	delete(gostTunnelMap, tunnelName)
 }

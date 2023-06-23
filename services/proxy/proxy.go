@@ -7,31 +7,10 @@ import (
 	"runtime/debug"
 	"vorker/common"
 	"vorker/conf"
-	"vorker/entities"
-	"vorker/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
-
-func Init() {
-	proxy := entities.GetProxy()
-	tunnel := entities.GetTunnel()
-	workerRecords, err := models.AdminGetAllWorkers()
-	if err != nil {
-		logrus.Errorf("failed to get all workers, err: %v", err)
-	}
-	workerList := &entities.WorkerList{
-		Workers: models.Trans2Entities(workerRecords),
-	}
-
-	if err != nil {
-		logrus.Errorf("failed to get all nodes, err: %v", err)
-	}
-
-	proxy.InitProxyMap(workerList)
-	tunnel.InitTunnelMap(workerList)
-}
 
 func Endpoint(c *gin.Context) {
 	defer func() {
