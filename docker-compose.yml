@@ -1,15 +1,15 @@
 version: '3'
 
 services:
-  vorker:
-    image: vaalacat/vorker
+  vorker-master:
+    build: ./
     volumes:
       - ./workerd:/workerd
-      - ./workerd-linux-64:/bin/workerd
+      - ./bin/workerd-linux-arm64:/bin/workerd
+      - ./bin/gost:/bin/gost
     environment:
       - DB_PATH=/workerd/db.sqlite
       - WORKERD_DIR=/workerd
-      - WORKERD_BIN_PATH=/bin/workerd
       - DB_TYPE=sqlite
       - WORKER_LIMIT=10000
       - WORKER_PORT=8080
@@ -23,7 +23,39 @@ services:
       - COOKIE_DOMAIN=localhost
       - JWT_SECRET=123123
       - JWT_EXPIRETIME=6 # hour
+      - AGENT_SECRET=123123
+      - RUN_MODE=master
+      - TUNNEL_RELAY_ENDPOINT=127.0.0.1:18080
     ports:
       - 8080:8080
       - 8888:8888
+      - 10080:10080
+      - 18080:18080
     restart: unless-stopped
+  vorker-agent:
+    build: ./
+    volumes:
+      - /tmp/workerd:/workerd
+      - ./bin/workerd-linux-arm64:/bin/workerd
+      - ./bin/gost:/bin/gost
+    environment:
+      - DB_PATH=/workerd/db.sqlite
+      - WORKERD_DIR=/workerd
+      - DB_TYPE=sqlite
+      - WORKER_LIMIT=10000
+      - WORKER_PORT=8080
+      - API_PORT=8888
+      - LISTEN_ADDR=0.0.0.0
+      - WORKER_URL_SUFFIX=.example.com # worker url = SCHEME://WORKERNAME+WORKER_URL_SUFFIX eg: .example.com
+      - SCHEME=http
+      - ENABLE_REGISTER=false # only allow admin to register
+      - COOKIE_NAME=authorization
+      - COOKIE_AGE=21600 # sec
+      - COOKIE_DOMAIN=localhost
+      - JWT_SECRET=123123
+      - JWT_EXPIRETIME=6 # hour
+      - AGENT_SECRET=123123
+      - RUN_MODE=agent
+      - MASTER_ENDPOINT=http://vorker-master:8888
+      - TUNNEL_RELAY_ENDPOINT=vorker-master:18080
+      - NODE_NAME=agent-1

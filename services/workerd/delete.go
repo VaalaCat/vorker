@@ -6,7 +6,6 @@ import (
 	"vorker/common"
 	"vorker/entities"
 	"vorker/models"
-	"vorker/utils/gost"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -34,7 +33,7 @@ func DeleteEndpoint(c *gin.Context) {
 	go func() {
 		worker, err := models.GetWorkerByUID(userID, UID)
 		if err != nil {
-			common.RespErr(c, common.RespCodeInternalError, err.Error(), nil)
+			logrus.Errorf("failed to get worker by uid, err: %v", err)
 			return
 		}
 		SyncAgent(worker.Worker)
@@ -61,6 +60,5 @@ func Delete(userID uint, UID string) error {
 
 	worker.DeleteFile()
 	entities.GetTunnel().DeleteTunnel(worker.Worker)
-	gost.DeleteGost(worker.Name)
 	return nil
 }

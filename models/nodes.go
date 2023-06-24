@@ -1,6 +1,7 @@
 package models
 
 import (
+	"math/rand"
 	"vorker/conf"
 	"vorker/defs"
 	"vorker/entities"
@@ -112,11 +113,12 @@ func GetNodeByNodeName(nodeName string) (*Node, error) {
 }
 
 func GetAssignNode() (*Node, error) {
-	db := database.GetDB()
-	defer database.CloseDB(db)
-	node := Node{}
-	if err := db.Take(&node).Error; err != nil {
+	nodes, err := AdminGetAllNodes()
+	if err != nil {
 		return nil, err
 	}
-	return &node, nil
+
+	// random get a node
+	idx := rand.Intn(len(nodes))
+	return nodes[idx], nil
 }

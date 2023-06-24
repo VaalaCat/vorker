@@ -5,7 +5,6 @@ import (
 	"vorker/common"
 	"vorker/entities"
 	"vorker/models"
-	"vorker/utils/gost"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -50,7 +49,6 @@ func Create(userID uint, worker *entities.Worker) error {
 	}
 
 	entities.GetTunnel().AddTunnel(worker)
-	gost.AddGost(worker.TunnelID, worker.Name, worker.Port)
 	return GenCapnpConfig()
 }
 
