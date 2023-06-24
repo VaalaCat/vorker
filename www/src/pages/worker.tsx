@@ -7,7 +7,7 @@ export default function WorkerPage() {
   return (
     <Layout
       header={<HeaderComponent />}
-      side={<SideBarComponent />}
+      side={<SideBarComponent selected='workers' />}
       main={<WorkerEditComponent />}
     />
   )

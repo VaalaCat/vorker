@@ -1,4 +1,4 @@
-package gost
+package models
 
 import (
 	"encoding/base64"

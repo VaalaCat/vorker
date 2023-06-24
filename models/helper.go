@@ -1,8 +1,9 @@
-package gost
+package models
 
 import (
 	"fmt"
 	"vorker/conf"
+	"vorker/entities"
 )
 
 func buildGostArgs(scheme, ip string, port int32, rhost string, tunnelID string) stringList {
@@ -17,14 +18,14 @@ func buildGostArgs(scheme, ip string, port int32, rhost string, tunnelID string)
 	return ans
 }
 
-func buildGostPool(tunnelMap map[string]string, workerMap map[string]int32) map[string]stringList {
+func buildGostPool(workers []*entities.Worker) map[string]stringList {
 	ans := make(map[string]stringList, 0)
-	for workerName, tunnelID := range tunnelMap {
-		ip, port := "127.0.0.1", workerMap[workerName]
-		ans[workerName] =
+	for _, worker := range workers {
+		ip, port := "127.0.0.1", worker.Port
+		ans[worker.Name] =
 			buildGostArgs(conf.AppConfigInstance.TunnelScheme,
 				ip, port, conf.AppConfigInstance.TunnelRelayEndpoint,
-				tunnelID)
+				worker.TunnelID)
 	}
 	return ans
 }

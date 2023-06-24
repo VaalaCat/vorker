@@ -4,6 +4,7 @@ import {
   ButtonGroup,
   Divider,
   Input,
+  Select,
   TabPane,
   Tabs,
   Toast,
@@ -18,6 +19,7 @@ import { CodeAtom, VorkerSettingsAtom } from '@/store/workers'
 import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { IconArticle, IconHome } from '@douyinfe/semi-icons'
+import { getNodes } from '@/api/nodes'
 
 export const WorkerEditComponent = () => {
   const router = useRouter()
@@ -26,6 +28,7 @@ export const WorkerEditComponent = () => {
   const [appConfAtom] = useAtom(VorkerSettingsAtom)
   const [code, setCodeAtom] = useAtom(CodeAtom)
   const { Paragraph, Text, Numeral, Title } = Typography
+  const { data: resp } = useQuery(['getNodes'], () => getNodes());
 
   const { data: worker } = useQuery(['getWorker', UID], () => {
     return UID ? api.getWorker(UID as string) : null
@@ -87,7 +90,9 @@ export const WorkerEditComponent = () => {
         <div>
           <ButtonGroup>
             <Button onClick={() => updateWorker.mutate()}>保存</Button>
-            <Button onClick={() => router.push('/admin')}>返回列表</Button>
+            <Button onClick={() => {
+              window.location.assign('/admin')
+            }}>返回列表</Button>
           </ButtonGroup>
         </div>
       </div>
@@ -104,21 +109,44 @@ export const WorkerEditComponent = () => {
           ) : null}
         </TabPane>
         <TabPane itemKey="config" tab={<span>配置</span>}>
-          <div className="flex flex-row w-full">
-            <Input
-              addonBefore={`${appConfAtom?.Scheme}://`}
-              addonAfter={`${appConfAtom?.WorkerURLSuffix}`}
-              style={{ width: '30%' }}
-              defaultValue={worker?.Name}
-              onChange={(value) => {
-                if (worker) {
-                  setEditItem((item) => ({ ...item, Name: value }))
-                }
-              }}
-            />
+          <div className='flex flex-col'>
+            <div className='flex flex-row m-2'>
+              <p className='self-center'>Entry: </p>
+              <div className="flex flex-row w-full">
+                <Input
+                  addonBefore={`${appConfAtom?.Scheme}://`}
+                  addonAfter={`${appConfAtom?.WorkerURLSuffix}`}
+                  style={{ width: '30%' }}
+                  defaultValue={worker?.Name}
+                  onChange={(value) => {
+                    if (worker) {
+                      setEditItem((item) => ({ ...item, Name: value }))
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <div className='flex flex-row m-2'>
+              <p className='self-center'>Node: </p>
+              <Select
+                placeholder="请选择节点" style={{ width: 180 }}
+                optionList={
+                  resp?.data.nodes.map((node) => {
+                    return {
+                      label: node.Name,
+                      value: node.Name,
+                    }
+                  })}
+                onChange={(value) => {
+                  if (worker) {
+                    setEditItem((item) => ({ ...item, NodeName: value as string }))
+                  }
+                }}
+              ></Select>
+            </div>
           </div>
         </TabPane>
       </Tabs>
-    </div>
+    </div >
   )
 }

@@ -11,6 +11,7 @@ import {
   Dropdown,
   List,
   Modal,
+  Tag,
   Toast,
   Typography,
 } from '@douyinfe/semi-ui'
@@ -141,13 +142,15 @@ export function WorkersComponent() {
             }
             main={
               <div className="flex flex-col justify-between h-12">
-                <span
-                  className="text-base"
-                  style={{ color: 'var(--semi-color-text-0)' }}
-                >
-                  {item.Name}
-                </span>
-                <p className="text-slate-400">{item.UID}</p>
+                <div className='flex flex-row w-full'>
+                  <span
+                    className="text-base"
+                    style={{ color: 'var(--semi-color-text-0)' }}
+                  >
+                    {item.Name}
+                  </span>
+                </div>
+                <p className="text-slate-400">Node: <Tag>{item.NodeName} </Tag></p>
               </div>
             }
             extra={

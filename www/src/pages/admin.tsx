@@ -7,7 +7,7 @@ export default function Admin() {
   return (
     <Layout
       header={<HeaderComponent />}
-      side={<SideBarComponent />}
+      side={<SideBarComponent selected='workers' />}
       main={<WorkersComponent />}
     />
   )

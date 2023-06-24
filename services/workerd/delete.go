@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"runtime/debug"
 	"vorker/common"
-	"vorker/entities"
 	"vorker/models"
 
 	"github.com/gin-gonic/gin"
@@ -59,6 +58,5 @@ func Delete(userID uint, UID string) error {
 	}
 
 	worker.DeleteFile()
-	entities.GetTunnel().DeleteTunnel(worker.Worker)
 	return nil
 }

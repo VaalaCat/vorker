@@ -1,4 +1,4 @@
-package gost
+package models
 
 import (
 	_ "net/http/pprof"
