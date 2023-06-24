@@ -17,9 +17,18 @@ export interface WorkerItemProperties {
 // @ts-expect-error
 export const DEFAUTL_WORKER_ITEM: WorkerItem = {
   UID: 'worker',
-  Code: btoa(`addEventListener("fetch", event => {
-	event.respondWith(new Response("Hello World"));
-});`),
+  Code: btoa(`addEventListener("fetch", (event) => {
+	event.respondWith(handler(event));
+});
+
+async function handler(event) {
+	try {
+		let resp = new Response("worker: " + event.request.url + " is online! -- " + new Date())
+		return resp
+	} catch(e) {
+		return new Response(e.stack, { status: 500 })
+	}
+}`),
 }
 
 export interface WorkerEditorProperties {

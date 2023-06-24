@@ -9,9 +9,18 @@ const (
 	DefaultNodeName     = "default"
 	DefaultExternalPath = "/"
 	DefaultEntry        = "entry.js"
-	DefaultCode         = `addEventListener("fetch", event => {
-	event.respondWith(new Response("Hello World"));
-});`
+	DefaultCode         = `addEventListener("fetch", (event) => {
+	event.respondWith(handler(event));
+});
+
+async function handler(event) {
+	try {
+		let resp = new Response("worker: " + event.request.url + " is online! -- " + new Date())
+		return resp
+	} catch(e) {
+		return new Response(e.stack, { status: 500 })
+	}
+}`
 )
 
 const (
