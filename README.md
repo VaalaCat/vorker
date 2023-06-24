@@ -4,7 +4,7 @@ Vorker is a simple self host cloudflare worker alternative which built with clou
 
 Fearues and Issues are welcome!
 
-![](./arch.png)
+![](./images/arch.png)
 
 ## Features
 
@@ -24,11 +24,19 @@ Fearues and Issues are welcome!
 
 - Admin Page
 
-![](https://vaala.cat/images/vorkeradmin.png)
+![](./images/worker-admin.png)
 
 - Worker Editor
 
-![](https://vaala.cat/images/vorkeredit.png)
+![](./images/worker-edit.png)
+
+- Worker Config
+
+![](./images/worker-config.png)
+
+- Agent Status
+
+![](./images/status.png)
 
 - Worker Execution
 
