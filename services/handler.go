@@ -91,6 +91,7 @@ func Run(f embed.FS) {
 		router.StaticFileFS("/register", "register.html", http.FS(fp))
 		router.StaticFileFS("/worker", "worker.html", http.FS(fp))
 		router.StaticFileFS("/index", "index.html", http.FS(fp))
+		router.StaticFileFS("/nodes", "nodes.html", http.FS(fp))
 		router.NoRoute(func(c *gin.Context) {
 			c.FileFromFS(c.Request.URL.Path, http.FS(fp))
 		})
