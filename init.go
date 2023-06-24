@@ -1,6 +1,7 @@
 package main
 
 import (
+	"vorker/conf"
 	"vorker/entities"
 	"vorker/models"
 
@@ -10,7 +11,7 @@ import (
 func InitCache() {
 	proxy := entities.GetProxy()
 	tunnel := entities.GetTunnel()
-	workerRecords, err := models.AdminGetAllWorkers()
+	workerRecords, err := models.AdminGetWorkersByNodeName(conf.AppConfigInstance.NodeName)
 	if err != nil {
 		logrus.Errorf("failed to get all workers, err: %v", err)
 	}
