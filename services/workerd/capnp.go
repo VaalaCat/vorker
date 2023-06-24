@@ -51,11 +51,6 @@ func GenCapnpConfig() error {
 		Workers: models.Trans2Entities(workerRecords),
 	}
 
-	proxyMap := entities.GetProxy()
-	tunnelMap := entities.GetTunnel()
-	proxyMap.InitProxyMap(workerList)
-	tunnelMap.InitTunnelMap(workerList)
-
 	return utils.WriteFile(
 		filepath.Join(
 			conf.AppConfigInstance.WorkerdDir,

@@ -10,7 +10,6 @@ import (
 	"vorker/utils"
 
 	"vorker/utils/database"
-	"vorker/utils/gost"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -100,6 +99,18 @@ func AdminGetAllWorkers() ([]*Worker, error) {
 	return workers, nil
 }
 
+func AdminGetAllWorkersTunnelMap() (map[string]string, error) {
+	workers, err := AdminGetAllWorkers()
+	if err != nil {
+		return nil, err
+	}
+	tunnelMap := make(map[string]string)
+	for _, worker := range workers {
+		tunnelMap[worker.Name] = worker.TunnelID
+	}
+	return tunnelMap, nil
+}
+
 func AdminGetWorkersByNodeName(nodeName string) ([]*Worker, error) {
 	var workers []*Worker
 	db := database.GetDB()
@@ -140,11 +151,11 @@ func (w *Worker) Create() error {
 	db := database.GetDB()
 	defer database.CloseDB(db)
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		gost.AddGost(w.TunnelID, w.Name, w.Port)
-	}
-	err := w.UpdateFile()
-	if err != nil {
-		return err
+		AddGost(w.TunnelID, w.Name, w.Port)
+		err := w.UpdateFile()
+		if err != nil {
+			return err
+		}
 	}
 
 	return db.Create(w).Error
@@ -154,12 +165,12 @@ func (w *Worker) Update() error {
 	db := database.GetDB()
 	defer database.CloseDB(db)
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		gost.DeleteGost(w.Name)
-		gost.AddGost(w.TunnelID, w.Name, w.Port)
-	}
-	err := w.UpdateFile()
-	if err != nil {
-		return err
+		DeleteGost(w.Name)
+		AddGost(w.TunnelID, w.Name, w.Port)
+		err := w.UpdateFile()
+		if err != nil {
+			return err
+		}
 	}
 
 	return db.Save(w).Error
@@ -169,7 +180,7 @@ func (w *Worker) Delete() error {
 	db := database.GetDB()
 	defer database.CloseDB(db)
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		gost.DeleteGost(w.Name)
+		DeleteGost(w.Name)
 	}
 	return db.Where(&Worker{
 		Worker: &entities.Worker{

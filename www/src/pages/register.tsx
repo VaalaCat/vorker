@@ -1,6 +1,5 @@
 import { HeaderComponent } from '@/components/header'
 import { Layout } from '@/components/layout'
-import { LoginComponent } from '@/components/login'
 import { RegisterComponent } from '@/components/register'
 import * as React from 'react'
 

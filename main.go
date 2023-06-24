@@ -9,6 +9,5 @@ import (
 var fs embed.FS
 
 func main() {
-	InitCache()
 	services.Run(fs)
 }

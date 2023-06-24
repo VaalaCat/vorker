@@ -8,7 +8,6 @@ import (
 	"vorker/common"
 	"vorker/conf"
 	"vorker/defs"
-	"vorker/entities"
 	"vorker/models"
 
 	"github.com/gin-gonic/gin"
@@ -22,7 +21,13 @@ func GetIngressConf(c *gin.Context) {
 			common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
 		}
 	}()
-	allTunnel := entities.GetTunnel().GetAll()
+	allTunnel, err := models.AdminGetAllWorkersTunnelMap()
+	if err != nil {
+		logrus.Errorf("get all workers failed: %v", err)
+		common.RespErr(c, defs.CodeInternalError, err.Error(), nil)
+		return
+	}
+
 	workersRule := genWorkersRule(allTunnel)
 	// get all nodes name from database
 	allNodes, err := models.AdminGetAllNodesMap()

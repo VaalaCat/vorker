@@ -19,6 +19,9 @@ type Node struct {
 func init() {
 	db := database.GetDB()
 	db.AutoMigrate(&Node{})
+	if conf.AppConfigInstance.RunMode != "master" {
+		return
+	}
 	if err := db.FirstOrCreate(&Node{
 		Node: &entities.Node{
 			UID:  uuid.New().String(),

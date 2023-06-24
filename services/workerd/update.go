@@ -5,7 +5,6 @@ import (
 	"vorker/common"
 	"vorker/entities"
 	"vorker/models"
-	"vorker/utils/gost"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,7 +29,6 @@ func UpdateEndpoint(c *gin.Context) {
 		return
 	}
 
-	SyncAgent(worker)
 	common.RespOK(c, "update worker success", nil)
 }
 
@@ -45,15 +43,17 @@ func Update(userID uint, UID string, worker *entities.Worker) error {
 		return fmt.Errorf("worker is nil")
 	}
 
-	workerRecord.Worker = worker
-	err = workerRecord.Update()
+	err = workerRecord.Delete()
 	if err != nil {
 		return err
 	}
+	SyncAgent(workerRecord.Worker)
 
-	gost.DeleteGost(worker.Name)
-	gost.AddGost(worker.TunnelID, worker.Name, worker.Port)
-	entities.GetTunnel().DeleteTunnel(workerRecord.Worker)
-	entities.GetTunnel().AddTunnel(workerRecord.Worker)
+	newWorker := &models.Worker{Worker: worker}
+	err = newWorker.Create()
+	if err != nil {
+		return err
+	}
+	SyncAgent(newWorker.Worker)
 	return GenCapnpConfig()
 }

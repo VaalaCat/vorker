@@ -1,4 +1,4 @@
-package gost
+package models
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	"runtime/debug"
 	"sync"
 	"vorker/conf"
-	"vorker/entities"
 	"vorker/utils/idgen"
 
 	"github.com/judwhite/go-svc"
@@ -38,9 +37,11 @@ func InitGost() {
 	gostCtxMap = make(map[int64]context.CancelFunc)
 	gostTunnelMap = make(map[string]int64)
 	go func() {
-		t := entities.GetTunnel().GetAll()
-		p := entities.GetProxy().GetAll()
-		r := buildGostPool(t, p)
+		workers, err := AdminGetWorkersByNodeName(conf.AppConfigInstance.NodeName)
+		if err != nil {
+			logrus.Fatalf("get workers failed: %v", err)
+		}
+		r := buildGostPool(Trans2Entities(workers))
 		for tunnelName, wargs := range r {
 			wg.Add(1)
 			ctx, cancel := context.WithCancel(context.Background())

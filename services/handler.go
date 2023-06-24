@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"vorker/authz"
 	"vorker/conf"
+	"vorker/models"
 	"vorker/rpc"
 	"vorker/services/agent"
 	"vorker/services/appconf"
@@ -16,7 +17,6 @@ import (
 	"vorker/services/tunnel"
 	"vorker/services/workerd"
 	"vorker/utils"
-	"vorker/utils/gost"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -95,8 +95,8 @@ func Run(f embed.FS) {
 			c.FileFromFS(c.Request.URL.Path, http.FS(fp))
 		})
 	}
-	gost.InitGost()
-	go gost.Run()
+	models.InitGost()
+	go models.Run()
 	if conf.AppConfigInstance.RunMode == "agent" {
 		self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)
 		if err != nil || self == nil {
@@ -105,7 +105,7 @@ func Run(f embed.FS) {
 			logrus.Info("Node already exists")
 			conf.AppConfigInstance.NodeID = self.UID
 		}
-		gost.AddGost(conf.AppConfigInstance.NodeID,
+		models.AddGost(conf.AppConfigInstance.NodeID,
 			fmt.Sprintf("%s%s", conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
 			int32(conf.AppConfigInstance.APIPort))
 	}

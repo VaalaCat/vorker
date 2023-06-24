@@ -48,7 +48,6 @@ func Create(userID uint, worker *entities.Worker) error {
 		return err
 	}
 
-	entities.GetTunnel().AddTunnel(worker)
 	return GenCapnpConfig()
 }
 
