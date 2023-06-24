@@ -234,8 +234,6 @@ func (w *Worker) UpdateFile() error {
 }
 
 func SyncWorkers(workerList *entities.WorkerList) error {
-	db := database.GetDB()
-	defer database.CloseDB(db)
 	partialFail := false
 	UIDs := []string{}
 	oldWorkers, err := AdminGetAllWorkers()
