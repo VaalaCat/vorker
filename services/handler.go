@@ -63,6 +63,10 @@ func init() {
 				agentAPI.POST("/notify", authz.AgentAuthz(), agent.NotifyEndpoint)
 			}
 		}
+		nodeAPI := api.Group("/node")
+		{
+			nodeAPI.GET("/all", authz.JWTMiddleware(), node.UserGetNodesEndpoint)
+		}
 		api.GET("/allworkers", authz.JWTMiddleware(), workerd.GetAllWorkersEndpoint)
 		api.GET("/vorker/config", appconf.GetEndpoint)
 		api.POST("/auth/register", auth.RegisterEndpoint)

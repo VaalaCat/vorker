@@ -18,7 +18,6 @@ ingresses:
     reload: 10s
     http:
       url: http://127.0.0.1:8888/api/agent/ingress
-      timeout: 10s
 
 authers:
   - name: internal
