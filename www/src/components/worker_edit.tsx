@@ -10,7 +10,6 @@ import {
   Toast,
   Typography,
 } from '@douyinfe/semi-ui'
-import { MonacoEditor } from './editor'
 import { DEFAUTL_WORKER_ITEM, WorkerItem } from '@/types/workers'
 import * as api from '@/api/workers'
 import { useRouter } from 'next/router'
@@ -20,6 +19,12 @@ import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { IconArticle, IconHome } from '@douyinfe/semi-icons'
 import { getNodes } from '@/api/nodes'
+import dynamic from 'next/dynamic'
+
+const MonacoEditor = dynamic(
+  import('./editor').then((m) => m.MonacoEditor),
+  { ssr: false }
+)
 
 export const WorkerEditComponent = () => {
   const router = useRouter()
@@ -28,7 +33,7 @@ export const WorkerEditComponent = () => {
   const [appConfAtom] = useAtom(VorkerSettingsAtom)
   const [code, setCodeAtom] = useAtom(CodeAtom)
   const { Paragraph, Text, Numeral, Title } = Typography
-  const { data: resp } = useQuery(['getNodes'], () => getNodes());
+  const { data: resp } = useQuery(['getNodes'], () => getNodes())
 
   const { data: worker } = useQuery(['getWorker', UID], () => {
     return UID ? api.getWorker(UID as string) : null
@@ -90,16 +95,24 @@ export const WorkerEditComponent = () => {
         <div>
           <ButtonGroup>
             <Button onClick={() => updateWorker.mutate()}>保存</Button>
-            <Button onClick={() => {
-              window.location.assign('/admin')
-            }}>返回列表</Button>
+            <Button
+              onClick={() => {
+                window.location.assign('/admin')
+              }}
+            >
+              返回列表
+            </Button>
           </ButtonGroup>
         </div>
       </div>
 
       <Divider margin={4}></Divider>
       <Tabs>
-        <TabPane itemKey="code" style={{ overflow: 'initial' }} tab={<span>代码</span>}>
+        <TabPane
+          itemKey="code"
+          style={{ overflow: 'initial' }}
+          tab={<span>代码</span>}
+        >
           {worker ? (
             <div className="flex flex-col m-4">
               <div>
@@ -109,9 +122,9 @@ export const WorkerEditComponent = () => {
           ) : null}
         </TabPane>
         <TabPane itemKey="config" tab={<span>配置</span>}>
-          <div className='flex flex-col'>
-            <div className='flex flex-row m-2'>
-              <p className='self-center'>Entry: </p>
+          <div className="flex flex-col">
+            <div className="flex flex-row m-2">
+              <p className="self-center">Entry: </p>
               <div className="flex flex-row w-full">
                 <Input
                   addonBefore={`${appConfAtom?.Scheme}://`}
@@ -126,20 +139,23 @@ export const WorkerEditComponent = () => {
                 />
               </div>
             </div>
-            <div className='flex flex-row m-2'>
-              <p className='self-center'>Node: </p>
+            <div className="flex flex-row m-2">
+              <p className="self-center">Node: </p>
               <Select
-                placeholder="请选择节点" style={{ width: 180 }}
-                optionList={
-                  resp?.data.nodes.map((node) => {
-                    return {
-                      label: node.Name,
-                      value: node.Name,
-                    }
-                  })}
+                placeholder="请选择节点"
+                style={{ width: 180 }}
+                optionList={resp?.data.nodes.map((node) => {
+                  return {
+                    label: node.Name,
+                    value: node.Name,
+                  }
+                })}
                 onChange={(value) => {
                   if (worker) {
-                    setEditItem((item) => ({ ...item, NodeName: value as string }))
+                    setEditItem((item) => ({
+                      ...item,
+                      NodeName: value as string,
+                    }))
                   }
                 }}
               ></Select>
@@ -147,6 +163,6 @@ export const WorkerEditComponent = () => {
           </div>
         </TabPane>
       </Tabs>
-    </div >
+    </div>
   )
 }

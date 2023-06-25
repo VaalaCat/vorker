@@ -16,7 +16,6 @@ import {
   Typography,
 } from '@douyinfe/semi-ui'
 import { useCallback, useEffect, useState } from 'react'
-import { MonacoEditor } from './editor'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useAtom } from 'jotai'
 import { CodeAtom, VorkerSettingsAtom } from '@/store/workers'
@@ -31,6 +30,12 @@ import {
 } from '@douyinfe/semi-icons'
 import { CH } from '@/lib/color'
 import { it } from 'node:test'
+import dynamic from 'next/dynamic'
+
+const MonacoEditor = dynamic(
+  import('./editor').then((m) => m.MonacoEditor),
+  { ssr: false }
+)
 
 export function WorkersComponent() {
   // get worker list
@@ -142,7 +147,7 @@ export function WorkersComponent() {
             }
             main={
               <div className="flex flex-col justify-between h-12">
-                <div className='flex flex-row w-full'>
+                <div className="flex flex-row w-full">
                   <span
                     className="text-base"
                     style={{ color: 'var(--semi-color-text-0)' }}
@@ -150,7 +155,9 @@ export function WorkersComponent() {
                     {item.Name}
                   </span>
                 </div>
-                <p className="text-slate-400">Node: <Tag>{item.NodeName} </Tag></p>
+                <p className="text-slate-400">
+                  Node: <Tag>{item.NodeName} </Tag>
+                </p>
               </div>
             }
             extra={
