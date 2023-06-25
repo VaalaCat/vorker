@@ -99,7 +99,7 @@ export const WorkerEditComponent = () => {
 
       <Divider margin={4}></Divider>
       <Tabs>
-        <TabPane itemKey="code" tab={<span>代码</span>}>
+        <TabPane itemKey="code" style={{ overflow: 'initial' }} tab={<span>代码</span>}>
           {worker ? (
             <div className="flex flex-col m-4">
               <div>
