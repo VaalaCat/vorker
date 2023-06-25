@@ -13,12 +13,13 @@ Fearues and Issues are welcome!
 - [x] Multi worker routing
 - [x] Woker CRUD Management
 - [x] Web UI & Online Editor
+- [x] Multi Node
 - [ ] Log
 - [ ] Metrics
 - [ ] Worker version control
 - [ ] Worker Debugging
 - [ ] Support KV storage
-- [ ] Multi Node HA support
+- [ ] HA support
 
 ## Screenshots
 
@@ -46,47 +47,31 @@ Fearues and Issues are welcome!
 
 ### Docker
 
-1. Download the latest release workerd from [here](https://github.com/cloudflare/workerd/releases/) and place it in a blank directory.
+1. Run by docker command or download the docker-compose.yml from repo and execute `docker-compose up -d`.
 
-example:
-```bash
-mkdir vorker && cd vorker
-curl -fSL -O https://github.com/cloudflare/workerd/releases/download/v1.20230518.0/workerd-linux-64.gz
-gzip -d workerd-linux-64.gz
-chmod +x workerd-linux-64
-```
-
-2. Run by docker command or download the docker-compose.yml from repo and execute `docker-compose up -d`.
+all envs defined in [env.go](./conf/env.go), you can take a look at it for more details.
 
 ```bash
 docker run -dit --name=vorker \
-	-e DB_PATH=/path/to/workerd/db.sqlite \
-	-e WORKERD_DIR=/path/to/workerd \
-	-e WORKERD_BIN_PATH=/bin/workerd \
-	-e DB_TYPE=sqlite \
-	-e WORKER_LIMIT=10000 \
-	-e WORKER_PORT=8080 \
-	-e API_PORT=8888 \
-	-e LISTEN_ADDR=0.0.0.0 \
-	-e WORKER_URL_SUFFIX=.example.com \ # concat with worker name and scheme
-	-e SCHEME=http \ # external scheme
+	-e WORKER_URL_SUFFIX=.example.com \
+	-e COOKIE_DOMAIN=example.com \
 	-e ENABLE_REGISTER=false \
 	-e COOKIE_NAME=authorization \
-	-e COOKIE_AGE=21600 \
-	-e COOKIE_DOMAIN=localhost # change it to your domain \
 	-e JWT_SECRET=xxxxxxx \
 	-e JWT_EXPIRETIME=6 \
+	-e AGENT_SECRET=xxxxxxx \
 	-p 8080:8080 \
 	-p 8888:8888 \
-	-v $PWD/workerd:/path/to/workerd \
-	-v $PWD/workerd-linux-64:/bin/workerd \
+	-p 18080:18080 \
+	-v /tmp/workerd:/workerd \
 	vaalacat/vorker:latest
+
 # this is a example, you can change the env to fit your need
 # for this example, you can visit http://localhost:8888/admin to access the web ui
 # and the worker URL will be: SCHEME://WORKER_NAME.example.com
 ```
 
-3. test your workerd, if your vorker is running on localhost, you can use curl to test it.
+2. test your workerd, if your vorker is running on localhost, you can use curl to test it.
 
 visit `http://localhost:8888/admin` to control your worker.
 

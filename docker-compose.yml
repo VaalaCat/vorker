@@ -5,8 +5,6 @@ services:
     build: ./
     volumes:
       - ./workerd:/workerd
-      - ./bin/workerd-linux-arm64:/bin/workerd
-      - ./bin/gost:/bin/gost
     environment:
       - DB_PATH=/workerd/db.sqlite
       - WORKERD_DIR=/workerd
@@ -36,8 +34,6 @@ services:
     build: ./
     volumes:
       - /tmp/workerd:/workerd
-      - ./bin/workerd-linux-arm64:/bin/workerd
-      - ./bin/gost:/bin/gost
     environment:
       - DB_PATH=/workerd/db.sqlite
       - WORKERD_DIR=/workerd

@@ -4,6 +4,51 @@ kind: pipeline
 type: docker
 
 steps:
+  - name: cache node modules
+    image: node:18-alpine
+    commands:
+      - cd www
+      - npm config set registry https://registry.npmmirror.com
+      - npm install
+    volumes:
+      - name: nodecache
+        path: /drone/src/www/node_modules
+  - name: get bin
+    image: m.daocloud.io/docker.io/ubuntu:22.04
+    commands:
+      - apt update
+      - apt install -y wget
+      - wget 'https://ghproxy.com/https://github.com/go-gost/gost/releases/download/v3.0.0-rc8/gost_3.0.0-rc8_linux_amd64.tar.gz'
+      - wget 'https://ghproxy.com/https://github.com/cloudflare/workerd/releases/download/v1.20230518.0/workerd-linux-64.gz'
+      - tar -xvf gost_3.0.0-rc8_linux_amd64.tar.gz
+      - mv gost bin/gost
+      - gzip -d workerd-linux-64.gz
+      - mv workerd-linux-64 bin/workerd
+  - name: pull and cache image
+    image: docker:dind
+    environment:
+      DOCKER_PASSWORD:
+        from_secret: docker_password
+      DOCKER_USERNAME:
+        from_secret: docker_username
+    volumes:
+      - name: dockersock
+        path: /var/run
+    failure: ignore
+    depends_on:
+      - get bin
+    commands:
+      - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
+      - docker info
+      - docker build -t vaalacat/vorker .
+  - name: cahce go package
+    image: golang:1.20
+    commands:
+      - CGO_ENABLED=0 GOPROXY=https://goproxy.cn,direct go get
+    volumes:
+      - name: gocache
+        path: /go/pkg/mod
+
   - name: build frontend
     image: node:18-alpine
     commands:
@@ -12,12 +57,22 @@ steps:
       - npm install
       - npm run build
       - npx next export
+    volumes:
+      - name: nodecache
+        path: /drone/src/www/node_modules
+    depends_on:
+      - cache node modules
+
   - name: build backend
     image: golang:1.20
     commands:
       - CGO_ENABLED=0 GOPROXY=https://goproxy.cn,direct go build -o vorker
     depends_on:
       - build frontend
+    volumes:
+      - name: gocache
+        path: /go/pkg/mod
+
   - name: build and push image
     image: docker:dind
     environment:
@@ -35,6 +90,7 @@ steps:
       - docker push vaalacat/vorker
     depends_on:
       - build backend
+      - pull and cache image
 
 services:
   - name: docker
@@ -49,3 +105,9 @@ services:
 volumes:
   - name: dockersock
     temp: {}
+  - name: gocache
+    host:
+      path: /tmp/dronecahe
+  - name: nodecache
+    host:
+      path: /tmp/dronenodecahe

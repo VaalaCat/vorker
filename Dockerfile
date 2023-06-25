@@ -6,6 +6,10 @@ RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list &
 RUN apt-get update && \
 	DEBIAN_FRONTEND=noninteractive apt-get install -qy libc++1 ca-certificates
 
+COPY bin/* /bin/
+
+RUN chmod +x /bin/*
+
 WORKDIR /app
 
 COPY vorker /app/
