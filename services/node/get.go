@@ -55,7 +55,7 @@ func UserGetNodesEndpoint(c *gin.Context) {
 			fmt.Sprintf("%s%s", node.Name, node.UID))
 		if err != nil {
 			logrus.Errorf("failed to ping node %s, err: %v", node.Name, err)
-			pingMap[node.Name] = -1
+			pingMap[node.Name] = 9999
 		}
 	}
 
