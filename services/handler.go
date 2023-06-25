@@ -106,9 +106,9 @@ func Run(f embed.FS) {
 			logrus.Info("Node already exists")
 			conf.AppConfigInstance.NodeID = self.UID
 		}
-		models.AddGost(conf.AppConfigInstance.NodeID,
-			fmt.Sprintf("%s%s", conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
-			int32(conf.AppConfigInstance.APIPort))
 	}
+	models.AddGost(conf.AppConfigInstance.NodeID,
+		fmt.Sprintf("%s%s", conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
+		int32(conf.AppConfigInstance.APIPort))
 	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
 }
