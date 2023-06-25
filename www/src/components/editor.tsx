@@ -1,7 +1,12 @@
 import React from 'react'
-import Editor from '@monaco-editor/react'
+import * as monaco from 'monaco-editor'
+import Editor, { loader } from '@monaco-editor/react'
 import { useAtom } from 'jotai'
 import { CodeAtom } from '@/store/workers'
+
+loader.config({
+  monaco,
+})
 
 export function MonacoEditor({ uid }: { uid: string }) {
   const [codeAtom, setCodeAtom] = useAtom(CodeAtom)
