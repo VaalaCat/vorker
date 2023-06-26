@@ -49,7 +49,7 @@ export function NodesComponent() {
   }, [reloadNodes, resp?.data, rerenderID, setPingMapsAtom])
 
   return (
-    <div className='columns-1 sm:grid grid-flow-col auto-cols-auto'>
+    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
       {nodelist?.map((node) => (
         <div key={node.UID} >
           <NodeComponent node={node} ping={pingMapsAtom[node.Name]} />

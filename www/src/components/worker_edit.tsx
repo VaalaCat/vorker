@@ -47,7 +47,7 @@ export const WorkerEditComponent = () => {
 
   const runWorker = useMutation(async (UID: string) => {
     let resp = await api.runWorker(UID)
-    // let raw_resp = JSON.stringify(resp)
+    let raw_resp = JSON.stringify(resp)
     let run_resp = Buffer.from(resp?.data?.run_resp, 'base64').toString('utf8')
     let opts = {
       title: 'worker run result',
@@ -55,13 +55,13 @@ export const WorkerEditComponent = () => {
         <>
           <Paragraph spacing="extended" >
             <code className='overflow-scroll w-full'>{
-              run_resp.length > 100 ?
+              (run_resp.length > 100 ?
                 run_resp.slice(0, 100) + '......' :
-                run_resp
+                run_resp.length == 0 ? "data is undefined, raw resp: " + raw_resp : run_resp)
             }</code>
           </Paragraph>
           <div className='flex flex-row justify-end'>
-            <Text>too long to show, copy to see full content</Text>
+            <Text>copy to see full content</Text>
             <Paragraph copyable={{ content: run_resp }} spacing="extended" className='justify-end' />
           </div>
         </>

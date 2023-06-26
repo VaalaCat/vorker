@@ -11,6 +11,7 @@ import {
   Dropdown,
   List,
   Modal,
+  Notification,
   Tag,
   Toast,
   Typography,
@@ -24,6 +25,7 @@ import { Router, useRouter } from 'next/router'
 import {
   IconEdit,
   IconHome,
+  IconLink,
   IconMore,
   IconTreeTriangleDown,
   IconTreeTriangleRight,
@@ -43,6 +45,7 @@ export function WorkersComponent() {
   const [workerUID, setWorkerUID] = useState('')
   const [editItem, setEditItem] = useState(DEFAULT_WORKER_ITEM)
   const [appConfAtom] = useAtom(VorkerSettingsAtom)
+  const { Paragraph, Text, Numeral, Title } = Typography
 
   const router = useRouter()
 
@@ -102,6 +105,32 @@ export function WorkersComponent() {
     },
     [deleteWorker]
   )
+
+  const runWorker = useMutation(async (UID: string) => {
+    let resp = await api.runWorker(UID)
+    let raw_resp = JSON.stringify(resp)
+    let run_resp = Buffer.from(resp?.data?.run_resp, 'base64').toString('utf8')
+    let opts = {
+      title: 'worker run result',
+      content: (
+        <>
+          <Paragraph spacing="extended" >
+            <code className='overflow-scroll w-full'>{
+              (run_resp.length > 100 ?
+                run_resp.slice(0, 100) + '......' :
+                run_resp.length == 0 ? "data is undefined, raw resp: " + raw_resp : run_resp)
+            }</code>
+          </Paragraph>
+          <div className='flex flex-row justify-end'>
+            <Text>copy to see full content</Text>
+            <Paragraph copyable={{ content: run_resp }} spacing="extended" className='justify-end' />
+          </div>
+        </>
+      ),
+      duration: 10,
+    };
+    Notification.info({ ...opts, position: 'bottomRight' })
+  })
 
   useEffect(() => {
     reloadWorkers()
@@ -182,9 +211,16 @@ export function WorkersComponent() {
                   </Button>
                   <Button
                     icon={<IconTreeTriangleRight />}
-                    onClick={() => handleOpenWorker(item)}
+                    // onClick={() => handleOpenWorker(item)}
+                    onClick={() => runWorker.mutate(item.UID)}
                   >
                     Run
+                  </Button>
+                  <Button
+                    icon={<IconLink />}
+                    onClick={() => handleOpenWorker(item)}
+                  >
+                    Open
                   </Button>
                   <Dropdown
                     // onVisibleChange={(v) => handleVisibleChange(1, v)}
