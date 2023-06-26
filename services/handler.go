@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"time"
 	"vorker/authz"
 	"vorker/conf"
 	"vorker/models"
@@ -83,9 +84,9 @@ func Run(f embed.FS) {
 	WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
 	models.InitGost()
 	go models.GostRun()
+	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
 
 	if conf.AppConfigInstance.RunMode == "master" {
-		go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
 		fp, err := fs.Sub(f, "www/out")
 		if err != nil {
 			logrus.Panic(err)
@@ -101,14 +102,25 @@ func Run(f embed.FS) {
 			c.FileFromFS(c.Request.URL.Path, http.FS(fp))
 		})
 	} else {
-		self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)
-		if err != nil || self == nil {
-			rpc.AddNode(conf.AppConfigInstance.MasterEndpoint)
-		} else {
-			logrus.Info("Node already exists")
-			conf.AppConfigInstance.NodeID = self.UID
-		}
 		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
+		for {
+			logrus.Info("Registering node to master...")
+			self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)
+			if err != nil || self == nil {
+				err := rpc.AddNode(conf.AppConfigInstance.MasterEndpoint)
+				if err != nil {
+					logrus.WithError(err).Error("Add node failed.. retrying for 5 seconds")
+					time.Sleep(5 * time.Second)
+				} else {
+					logrus.Info("Node added successfully")
+				}
+				continue
+			} else {
+				logrus.Info("Node already exists")
+				conf.AppConfigInstance.NodeID = self.UID
+			}
+			break
+		}
 	}
 
 	models.AddGost(conf.AppConfigInstance.NodeID,

@@ -2,28 +2,18 @@ version: '3'
 
 services:
   vorker-master:
-    build: ./
+    # build: ./
+    image: vaalacat/vorker
     volumes:
-      - ./workerd:/workerd
+      - /tmp/workerd-master:/workerd # change to your own path
     environment:
-      - DB_PATH=/workerd/db.sqlite
-      - WORKERD_DIR=/workerd
-      - DB_TYPE=sqlite
-      - WORKER_LIMIT=10000
-      - WORKER_PORT=8080
-      - API_PORT=8888
-      - LISTEN_ADDR=0.0.0.0
       - WORKER_URL_SUFFIX=.example.com # worker url = SCHEME://WORKERNAME+WORKER_URL_SUFFIX eg: .example.com
       - SCHEME=http
       - ENABLE_REGISTER=false # only allow admin to register
-      - COOKIE_NAME=authorization
-      - COOKIE_AGE=21600 # sec
-      - COOKIE_DOMAIN=localhost
+      - COOKIE_DOMAIN=example.com
       - JWT_SECRET=123123
-      - JWT_EXPIRETIME=6 # hour
       - AGENT_SECRET=123123
       - RUN_MODE=master
-      - TUNNEL_RELAY_ENDPOINT=127.0.0.1:18080
     ports:
       - 8080:8080
       - 8888:8888
@@ -31,25 +21,12 @@ services:
       - 18080:18080
     restart: unless-stopped
   vorker-agent:
-    build: ./
+    # build: ./
+    image: vaalacat/vorker
     volumes:
-      - /tmp/workerd:/workerd
+      - /tmp/workerd-agent:/workerd # change to your own path
     environment:
-      - DB_PATH=/workerd/db.sqlite
-      - WORKERD_DIR=/workerd
-      - DB_TYPE=sqlite
-      - WORKER_LIMIT=10000
-      - WORKER_PORT=8080
-      - API_PORT=8888
-      - LISTEN_ADDR=0.0.0.0
       - WORKER_URL_SUFFIX=.example.com # worker url = SCHEME://WORKERNAME+WORKER_URL_SUFFIX eg: .example.com
-      - SCHEME=http
-      - ENABLE_REGISTER=false # only allow admin to register
-      - COOKIE_NAME=authorization
-      - COOKIE_AGE=21600 # sec
-      - COOKIE_DOMAIN=localhost
-      - JWT_SECRET=123123
-      - JWT_EXPIRETIME=6 # hour
       - AGENT_SECRET=123123
       - RUN_MODE=agent
       - MASTER_ENDPOINT=http://vorker-master:8888
