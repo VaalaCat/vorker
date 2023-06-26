@@ -41,6 +41,7 @@ func init() {
 			{
 				workerApi.GET("/:uid", workerd.GetWorkerEndpoint)
 				workerApi.GET("/flush/:uid", workerd.FlushEndpoint)
+				workerApi.GET("/run/:uid", workerd.RunWorkerEndpoint)
 				workerApi.POST("/create", workerd.CreateEndpoint)
 				workerApi.PATCH("/:uid", workerd.UpdateEndpoint)
 				workerApi.DELETE("/:uid", workerd.DeleteEndpoint)
@@ -57,6 +58,7 @@ func init() {
 			nodeAPI := api.Group("/node")
 			{
 				nodeAPI.GET("/all", authz.JWTMiddleware(), node.UserGetNodesEndpoint)
+				nodeAPI.GET("/sync/:nodename", authz.JWTMiddleware(), node.SyncNodeEndpoint)
 			}
 			api.GET("/allworkers", authz.JWTMiddleware(), workerd.GetAllWorkersEndpoint)
 			api.GET("/vorker/config", appconf.GetEndpoint)

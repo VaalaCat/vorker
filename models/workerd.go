@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"vorker/conf"
@@ -13,6 +14,7 @@ import (
 	"vorker/utils/database"
 
 	"github.com/google/uuid"
+	"github.com/imroc/req/v3"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"gorm.io/gorm"
@@ -256,6 +258,17 @@ func (w *Worker) UpdateFile() error {
 			w.UID,
 			w.Entry),
 		string(w.Code))
+}
+
+func (w *Worker) Run() ([]byte, error) {
+	resp, err := req.C().R().SetHeader(
+		defs.HeaderHost, fmt.Sprintf("%s%s", w.Name, conf.AppConfigInstance.WorkerURLSuffix),
+	).Get(fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost,
+		conf.AppConfigInstance.TunnelEntryPort))
+	if err != nil || resp == nil || resp.StatusCode >= 299 {
+		return nil, err
+	}
+	return resp.Bytes(), nil
 }
 
 func SyncWorkers(workerList *entities.WorkerList) error {
