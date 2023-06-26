@@ -4,6 +4,7 @@ import {
   ButtonGroup,
   Divider,
   Input,
+  Notification,
   Select,
   TabPane,
   Tabs,
@@ -44,6 +45,32 @@ export const WorkerEditComponent = () => {
     Toast.info('保存成功！')
   })
 
+  const runWorker = useMutation(async (UID: string) => {
+    let resp = await api.runWorker(UID)
+    // let raw_resp = JSON.stringify(resp)
+    let run_resp = Buffer.from(resp?.data?.run_resp, 'base64').toString('utf8')
+    let opts = {
+      title: 'worker run result',
+      content: (
+        <>
+          <Paragraph spacing="extended" >
+            <code className='overflow-scroll w-full'>{
+              run_resp.length > 100 ?
+                run_resp.slice(0, 100) + '......' :
+                run_resp
+            }</code>
+          </Paragraph>
+          <div className='flex flex-row justify-end'>
+            <Text>too long to show, copy to see full content</Text>
+            <Paragraph copyable={{ content: run_resp }} spacing="extended" className='justify-end' />
+          </div>
+        </>
+      ),
+      duration: 10,
+    };
+    Notification.info({ ...opts, position: 'bottomRight' })
+  })
+
   useEffect(() => {
     worker && setEditItem(worker)
   }, [UID, worker])
@@ -71,8 +98,8 @@ export const WorkerEditComponent = () => {
 
   return (
     <div className="m-4 flex flex-col">
-      <div className="flex justify-between">
-        <div className="flex flex-col gap-1">
+      <div className="flex flex-row justify-between">
+        <div className='flex flex-col'>
           <Breadcrumb compact={false}>
             <Breadcrumb.Item
               href="/admin"
@@ -83,6 +110,23 @@ export const WorkerEditComponent = () => {
               {editItem.Name}
             </Breadcrumb.Item>
           </Breadcrumb>
+        </div>
+        <div className='flex flex-col'>
+          <ButtonGroup>
+            <Button onClick={() => updateWorker.mutate()}>Save</Button>
+            <Button
+              onClick={() => {
+                window.location.assign('/admin')
+              }}
+            >
+              Back
+            </Button>
+          </ButtonGroup>
+        </div>
+      </div>
+      <div className="flex flex-row gap-1">
+        <div className='columns-1 md:columns-2'>
+          <div></div>
           <Title heading={5}>ID</Title>
           <Paragraph copyable={{ content: editItem.UID }} spacing="extended">
             <code>{editItem.UID}</code>
@@ -92,36 +136,28 @@ export const WorkerEditComponent = () => {
             <code>{workerURL}</code>
           </Paragraph>
         </div>
-        <div>
-          <ButtonGroup>
-            <Button onClick={() => updateWorker.mutate()}>保存</Button>
-            <Button
-              onClick={() => {
-                window.location.assign('/admin')
-              }}
-            >
-              返回列表
-            </Button>
-          </ButtonGroup>
-        </div>
       </div>
 
       <Divider margin={4}></Divider>
-      <Tabs>
+      <Tabs tabBarExtraContent={
+        <Button theme='borderless'
+          onClick={() => runWorker.mutate(editItem.UID)}
+        >Run</Button>
+      }>
         <TabPane
           itemKey="code"
           style={{ overflow: 'initial' }}
-          tab={<span>代码</span>}
+          tab={<span>Code</span>}
         >
           {worker ? (
-            <div className="flex flex-col m-4">
+            <div className="flex flex-col my-1">
               <div>
                 <MonacoEditor uid={worker.UID} />
               </div>
             </div>
           ) : null}
         </TabPane>
-        <TabPane itemKey="config" tab={<span>配置</span>}>
+        <TabPane itemKey="config" tab={<span>Config</span>}>
           <div className="flex flex-col">
             <div className="flex flex-row m-2">
               <p className="self-center">Entry: </p>
@@ -130,7 +166,7 @@ export const WorkerEditComponent = () => {
                   addonBefore={`${appConfAtom?.Scheme}://`}
                   addonAfter={`${appConfAtom?.WorkerURLSuffix}`}
                   style={{ width: '30%' }}
-                  defaultValue={worker?.Name}
+                  value={editItem.Name}
                   onChange={(value) => {
                     if (worker) {
                       setEditItem((item) => ({ ...item, Name: value }))
@@ -150,6 +186,7 @@ export const WorkerEditComponent = () => {
                     value: node.Name,
                   }
                 })}
+                value={editItem.NodeName}
                 onChange={(value) => {
                   if (worker) {
                     setEditItem((item) => ({

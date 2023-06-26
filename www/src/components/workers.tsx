@@ -72,6 +72,11 @@ export function WorkersComponent() {
     Toast.info('同步成功！')
   })
 
+  const flushAllWorkers = useMutation(async () => {
+    await api.flushAllWorkers()
+    Toast.info('同步成功！')
+  })
+
   const handleOpenWorker = useCallback(
     (item: WorkerItem) => {
       window.open(
@@ -128,8 +133,9 @@ export function WorkersComponent() {
           <Breadcrumb.Item href="/admin">Workers</Breadcrumb.Item>
         </Breadcrumb>
         <ButtonGroup>
-          <Button onClick={() => reloadWorkers()}>同步</Button>
-          <Button onClick={() => createWorker.mutate()}>创建</Button>
+          <Button onClick={() => reloadWorkers()}>Refresh</Button>
+          <Button onClick={() => flushAllWorkers.mutate()}>Flush</Button>
+          <Button onClick={() => createWorker.mutate()}>New</Button>
         </ButtonGroup>
       </div>
       <List
@@ -172,25 +178,25 @@ export function WorkersComponent() {
                       })
                     }}
                   >
-                    编辑
+                    Edit
                   </Button>
                   <Button
                     icon={<IconTreeTriangleRight />}
                     onClick={() => handleOpenWorker(item)}
                   >
-                    运行
+                    Run
                   </Button>
                   <Dropdown
                     // onVisibleChange={(v) => handleVisibleChange(1, v)}
                     menu={[
                       {
                         node: 'item',
-                        name: '删除',
+                        name: 'Delete',
                         onClick: () => handleDeleteWorker(item),
                       },
                       {
                         node: 'item',
-                        name: '同步',
+                        name: 'Sync',
                         onClick: () => flushWorker.mutate(item.UID),
                       },
                     ]}
