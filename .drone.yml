@@ -101,10 +101,15 @@ services:
     volumes:
       - name: dockersock
         path: /var/run
+      - name: dockercache
+        path: /var/lib/docker
 
 volumes:
   - name: dockersock
     temp: {}
+  - name: dockercache
+    host:
+      path: /tmp/dronedockercache
   - name: gocache
     host:
       path: /tmp/dronecahe
