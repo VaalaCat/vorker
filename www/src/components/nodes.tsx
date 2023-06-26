@@ -5,11 +5,13 @@ import {
   PingMapList,
   Tracker as TrackerType,
 } from '@/types/nodes'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { Card, Title, Tracker, Flex, Text, Color } from '@tremor/react'
 import { useAtom } from 'jotai'
 import { PingMapsAtom } from '@/store/nodes'
+import { Button } from '@douyinfe/semi-ui'
+import * as nodesApi from '@/api/nodes'
 
 export function NodesComponent() {
   const [nodelist, setNodelist] = useState<Node[]>([])
@@ -47,9 +49,9 @@ export function NodesComponent() {
   }, [reloadNodes, resp?.data, rerenderID, setPingMapsAtom])
 
   return (
-    <div>
+    <div className='columns-1 sm:grid grid-flow-col auto-cols-auto'>
       {nodelist?.map((node) => (
-        <div key={node.UID}>
+        <div key={node.UID} >
           <NodeComponent node={node} ping={pingMapsAtom[node.Name]} />
         </div>
       ))}
@@ -58,6 +60,10 @@ export function NodesComponent() {
 }
 
 export function NodeComponent({ node, ping }: { node: Node; ping: number[] }) {
+  const syncNodes = useMutation(async (nodeName: string) => {
+    await nodesApi.syncNodes(nodeName)
+  })
+
   const data = ping.map((v, i) => {
     if (v >= 1000) {
       return { color: 'rose', tooltip: `${v}ms` }
@@ -70,6 +76,7 @@ export function NodeComponent({ node, ping }: { node: Node; ping: number[] }) {
     }
     return { color: 'emerald', tooltip: `${v}ms` }
   }) as TrackerType[]
+
   const sla = parseFloat(
     ((1 - ping.filter((v) => v >= 500).length / ping.length) * 100).toFixed(2)
   )
@@ -77,17 +84,23 @@ export function NodeComponent({ node, ping }: { node: Node; ping: number[] }) {
   const avg = parseFloat(
     (validValue.reduce((a, b) => a + b, 0) / validValue.length).toFixed(2)
   )
+
   return (
     <div className="m-2">
-      <Card className="h-50">
-        <Title>{node.Name}</Title>
+      <Card >
+        <div className='flex flex-row justify-between'>
+          <Title>{node.Name}</Title>
+          <Button theme='borderless' className='justify-end'
+            onClick={() => syncNodes.mutate(node.Name)}
+          > Sync </Button>
+        </div>
         <Text>ID {node.UID}</Text>
         <Flex justifyContent="end" className="mt-4">
           <Text>Uptime {sla}%</Text>
           <Text className="ml-2">Avg. {avg}ms</Text>
         </Flex>
         <Tracker data={data} className="mt-2" />
-      </Card>
-    </div>
+      </Card >
+    </div >
   )
 }
