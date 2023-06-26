@@ -14,18 +14,18 @@ type AppConfig struct {
 	DBPath              string `env:"DB_PATH" env-default:"/workerd/db.sqlite"`
 	WorkerdDir          string `env:"WORKERD_DIR" env-default:"/workerd"`
 	DBType              string `env:"DB_TYPE" env-default:"sqlite"`
-	WorkerLimit         int    `env:"WORKER_LIMIT" env-default:"1000"`
+	WorkerLimit         int    `env:"WORKER_LIMIT" env-default:"10000"`
 	WorkerdBinPath      string `env:"WORKERD_BIN_PATH" env-default:"/bin/workerd"`
 	WorkerPort          int    `env:"WORKER_PORT" env-default:"8080"`
 	APIPort             int    `env:"API_PORT" env-default:"8888"`
 	ListenAddr          string `env:"LISTEN_ADDR" env-default:"0.0.0.0"`
-	WorkerURLSuffix     string `env:"WORKER_URL_SUFFIX"`
+	WorkerURLSuffix     string `env:"WORKER_URL_SUFFIX"` // required, e.g. .example.com
 	Scheme              string `env:"SCHEME" env-default:"http"`
 	CookieName          string `env:"COOKIE_NAME" env-default:"authorization"`
-	CookieAge           int    `env:"COOKIE_AGE" env-default:"86400"` // sec
-	CookieDomain        string `env:"COOKIE_DOMAIN"`
+	CookieAge           int    `env:"COOKIE_AGE" env-default:"86400"` // second 86400 = 1 day
+	CookieDomain        string `env:"COOKIE_DOMAIN"`                  // required, e.g. example.com
 	EnableRegister      bool   `env:"ENABLE_REGISTER" env-default:"true"`
-	AgentSecret         string `env:"AGENT_SECRET"`
+	AgentSecret         string `env:"AGENT_SECRET"` //	required, e.g. 123123123
 	NodeName            string `env:"NODE_NAME" env-default:"default"`
 	MasterEndpoint      string `env:"MASTER_ENDPOINT" env-default:"http://127.0.0.1:8888"`
 	RunMode             string `env:"RUN_MODE" env-default:"master"` // master, agent
@@ -40,8 +40,8 @@ type AppConfig struct {
 }
 
 type JwtConfig struct {
-	Secret     string `env:"JWT_SECRET"`
-	ExpireTime int64  `env:"JWT_EXPIRETIME"` // hour
+	Secret     string `env:"JWT_SECRET" env-default:"secret"`
+	ExpireTime int64  `env:"JWT_EXPIRETIME" env-default:"24"` // hour
 }
 
 type JwtClaims struct {

@@ -35,22 +35,33 @@ func init() {
 	))
 	api := router.Group("/api")
 	{
-		workerApi := api.Group("/worker", authz.JWTMiddleware())
-		{
-			workerApi.GET("/:uid", workerd.GetWorkerEndpoint)
-			workerApi.GET("/flush/:uid", workerd.FlushEndpoint)
-			workerApi.POST("/create", workerd.CreateEndpoint)
-			workerApi.PATCH("/:uid", workerd.UpdateEndpoint)
-			workerApi.DELETE("/:uid", workerd.DeleteEndpoint)
-		}
-		workersApi := api.Group("/workers", authz.JWTMiddleware())
-		{
-			workersApi.GET("/flush", workerd.FlushAllEndpoint)
-			workersApi.GET("/:offset/:limit", workerd.GetWorkersEndpoint)
-		}
-		userApi := api.Group("/user", authz.JWTMiddleware())
-		{
-			userApi.GET("/info", auth.GetUserEndpoint)
+		if conf.AppConfigInstance.RunMode == "master" {
+			workerApi := api.Group("/worker", authz.JWTMiddleware())
+			{
+				workerApi.GET("/:uid", workerd.GetWorkerEndpoint)
+				workerApi.GET("/flush/:uid", workerd.FlushEndpoint)
+				workerApi.POST("/create", workerd.CreateEndpoint)
+				workerApi.PATCH("/:uid", workerd.UpdateEndpoint)
+				workerApi.DELETE("/:uid", workerd.DeleteEndpoint)
+			}
+			workersApi := api.Group("/workers", authz.JWTMiddleware())
+			{
+				workersApi.GET("/flush", workerd.FlushAllEndpoint)
+				workersApi.GET("/:offset/:limit", workerd.GetWorkersEndpoint)
+			}
+			userApi := api.Group("/user", authz.JWTMiddleware())
+			{
+				userApi.GET("/info", auth.GetUserEndpoint)
+			}
+			nodeAPI := api.Group("/node")
+			{
+				nodeAPI.GET("/all", authz.JWTMiddleware(), node.UserGetNodesEndpoint)
+			}
+			api.GET("/allworkers", authz.JWTMiddleware(), workerd.GetAllWorkersEndpoint)
+			api.GET("/vorker/config", appconf.GetEndpoint)
+			api.POST("/auth/register", auth.RegisterEndpoint)
+			api.POST("/auth/login", auth.LoginEndpoint)
+			api.GET("/auth/logout", authz.JWTMiddleware(), auth.LogoutEndpoint)
 		}
 		agentAPI := api.Group("/agent")
 		{
@@ -63,15 +74,6 @@ func init() {
 				agentAPI.POST("/notify", authz.AgentAuthz(), agent.NotifyEndpoint)
 			}
 		}
-		nodeAPI := api.Group("/node")
-		{
-			nodeAPI.GET("/all", authz.JWTMiddleware(), node.UserGetNodesEndpoint)
-		}
-		api.GET("/allworkers", authz.JWTMiddleware(), workerd.GetAllWorkersEndpoint)
-		api.GET("/vorker/config", appconf.GetEndpoint)
-		api.POST("/auth/register", auth.RegisterEndpoint)
-		api.POST("/auth/login", auth.LoginEndpoint)
-		api.GET("/auth/logout", authz.JWTMiddleware(), auth.LogoutEndpoint)
 	}
 
 	proxy.Any("/*proxyPath", proxyService.Endpoint)
@@ -79,8 +81,11 @@ func init() {
 
 func Run(f embed.FS) {
 	WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
-	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
-	{
+	models.InitGost()
+	go models.GostRun()
+
+	if conf.AppConfigInstance.RunMode == "master" {
+		go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
 		fp, err := fs.Sub(f, "www/out")
 		if err != nil {
 			logrus.Panic(err)
@@ -95,10 +100,7 @@ func Run(f embed.FS) {
 		router.NoRoute(func(c *gin.Context) {
 			c.FileFromFS(c.Request.URL.Path, http.FS(fp))
 		})
-	}
-	models.InitGost()
-	go models.Run()
-	if conf.AppConfigInstance.RunMode == "agent" {
+	} else {
 		self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)
 		if err != nil || self == nil {
 			rpc.AddNode(conf.AppConfigInstance.MasterEndpoint)
@@ -106,7 +108,9 @@ func Run(f embed.FS) {
 			logrus.Info("Node already exists")
 			conf.AppConfigInstance.NodeID = self.UID
 		}
+		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
 	}
+
 	models.AddGost(conf.AppConfigInstance.NodeID,
 		fmt.Sprintf("%s%s", conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
 		int32(conf.AppConfigInstance.APIPort))

@@ -107,7 +107,7 @@ func worker(id int64, args []string, ctx *context.Context, ret *int) {
 	}
 }
 
-func Run() {
+func GostRun() {
 	if conf.AppConfigInstance.RunMode == "master" {
 		p := &program{}
 		if err := svc.Run(p); err != nil {
