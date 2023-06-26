@@ -3,16 +3,19 @@ package agent
 import (
 	"runtime/debug"
 	"vorker/common"
-	"vorker/conf"
 	"vorker/defs"
 	"vorker/entities"
-	"vorker/rpc"
-	"vorker/services/workerd"
 	"vorker/utils/request"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
+
+func init() {
+	EventRouterImplInstance.RegisteHandler(defs.EventSyncWorkers, SyncEventHandler)
+	EventRouterImplInstance.RegisteHandler(defs.EventAddWorker, AddWorkerEventHandler)
+	EventRouterImplInstance.RegisteHandler(defs.EventDeleteWorker, DelWorkerEventHandler)
+}
 
 func NotifyEndpoint(c *gin.Context) {
 	defer func() {
@@ -25,28 +28,10 @@ func NotifyEndpoint(c *gin.Context) {
 	req := &entities.NotifyEventRequest{}
 	err := request.Bind[*entities.NotifyEventRequest](c, req)
 	if err != nil {
+		logrus.Errorf("event: %s error, err: %+v", req.EventName, err)
 		common.RespErr(c, common.RespCodeInvalidRequest, common.RespMsgInvalidRequest, nil)
 		return
 	}
 
-	switch req.EventName {
-	case defs.EventSyncWorkers:
-		if err = rpc.SyncAgent(conf.AppConfigInstance.MasterEndpoint); err != nil {
-			logrus.Errorf("event: %s error, err: %+v", req.EventName, err)
-			common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
-			return
-		} else {
-			workerd.GenCapnpConfig()
-			common.RespOK(c, common.RespMsgOK, nil)
-			return
-		}
-	default:
-	}
-
-	if err != nil {
-		logrus.Errorf("event: %s error, err: %+v", req.EventName, err)
-		common.RespErr(c, common.RespCodeInternalError, err.Error(), nil)
-		return
-	}
-	common.RespOK(c, common.RespMsgOK, nil)
+	EventRouterImplInstance.Handle(c, req)
 }

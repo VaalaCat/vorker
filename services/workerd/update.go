@@ -47,13 +47,11 @@ func Update(userID uint, UID string, worker *entities.Worker) error {
 	if err != nil {
 		return err
 	}
-	SyncAgent(workerRecord.Worker)
 
 	newWorker := &models.Worker{Worker: worker}
 	err = newWorker.Create()
 	if err != nil {
 		return err
 	}
-	SyncAgent(newWorker.Worker)
 	return GenCapnpConfig()
 }

@@ -24,8 +24,10 @@ async function handler(event) {
 )
 
 const (
-	KeyNodeName   = "node_name"
-	KeyNodeSecret = "node_secret"
+	KeyNodeName    = "node_name"
+	KeyNodeSecret  = "node_secret"
+	KeyNodeProto   = "node_proto"
+	KeyWorkerProto = "worker_proto"
 )
 
 const (
