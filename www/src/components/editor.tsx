@@ -1,12 +1,13 @@
 import React, { useLayoutEffect } from 'react'
-import * as monaco from 'monaco-editor'
 import Editor, { loader } from '@monaco-editor/react'
 import { useAtom } from 'jotai'
 import { CodeAtom } from '@/store/workers'
 import dynamic from 'next/dynamic'
 
 loader.config({
-  monaco: monaco,
+  paths: {
+    vs: 'https://fastly.jsdelivr.net/npm/monaco-editor@0.36.1/min/vs',
+  },
 })
 
 export function MonacoEditor({ uid }: { uid: string }) {
