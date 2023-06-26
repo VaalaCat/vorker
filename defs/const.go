@@ -43,5 +43,7 @@ const (
 )
 
 const (
-	EventSyncWorkers = "sync-workers"
+	EventSyncWorkers  = "sync-workers"
+	EventAddWorker    = "add-worker"
+	EventDeleteWorker = "delete-worker"
 )

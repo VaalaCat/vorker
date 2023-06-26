@@ -32,10 +32,10 @@ type AppConfig struct {
 	TunnelScheme        string `env:"TUNNEL_SCHEME" env-default:"relay+ws"`
 	TunnelRelayEndpoint string `env:"TUNNEL_RELAY_ENDPOINT" env-default:"127.0.0.1:18080"`
 	TunnelEntryPort     int32  `env:"TUNNEL_ENTRY_PORT" env-default:"10080"`
-	TunnelUsername      string `env:"TUNNEL_USERNAME" env-default:"0d6dc4284682b94416bfef602a9a3a76"` // change it for security
-	TunnelPassword      string `env:"TUNNEL_PASSWORD" env-default:"fa61edeb2c504b79673904947c41dbb2"` // change it for security
-	TunnelHost          string `env:"TUNNEL_HOST" env-default:"127.0.0.1"`                            // for agent
+	TunnelHost          string `env:"TUNNEL_HOST" env-default:"127.0.0.1"` // for agent
 	GostBinPath         string `env:"GOST_BIN_PATH" env-default:"/bin/gost"`
+	TunnelUsername      string
+	TunnelPassword      string
 	NodeID              string
 }
 
@@ -71,6 +71,11 @@ func init() {
 	RPCToken, err = secret.HashPassword(fmt.Sprintf("%s%s",
 		AppConfigInstance.NodeName,
 		AppConfigInstance.AgentSecret))
+	AppConfigInstance.TunnelUsername = secret.MD5(AppConfigInstance.AgentSecret +
+		AppConfigInstance.WorkerURLSuffix)
+	AppConfigInstance.TunnelPassword = secret.MD5(AppConfigInstance.AgentSecret +
+		AppConfigInstance.WorkerURLSuffix + AppConfigInstance.TunnelUsername)
+
 	if err != nil {
 		logrus.Panic(err)
 	}
