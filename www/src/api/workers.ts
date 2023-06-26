@@ -44,3 +44,7 @@ export const getAppConfig = () => {
     .get<{ data: VorkerSettingsProperties }>(`/api/vorker/config`, {})
     .then((res) => res.data.data)
 }
+
+export const runWorker = (uid: string) => {
+  return api.get(`/api/worker/run/${uid}`, {}).then((res) => res.data)
+}
