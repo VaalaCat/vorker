@@ -119,6 +119,7 @@ func Run(f embed.FS) {
 				logrus.Info("Node already exists")
 				conf.AppConfigInstance.NodeID = self.UID
 			}
+			agent.SyncCall()
 			break
 		}
 	}

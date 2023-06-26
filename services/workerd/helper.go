@@ -70,7 +70,7 @@ func SyncAgent(w *entities.Worker) {
 			logrus.Errorf("worker node is invalid, db error: %v", err)
 			return
 		}
-		if err := rpc.EventNotify(targetNode, defs.EventSyncWorkers); err != nil {
+		if err := rpc.EventNotify(targetNode.Node, defs.EventSyncWorkers, nil); err != nil {
 			logrus.Errorf("emit event: %v error, err: %v", defs.EventSyncWorkers, err)
 			return
 		}

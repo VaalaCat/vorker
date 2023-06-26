@@ -7,12 +7,14 @@ import (
 	"vorker/conf"
 	"vorker/defs"
 	"vorker/entities"
+	"vorker/rpc"
 	"vorker/utils"
 
 	"vorker/utils/database"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 	"gorm.io/gorm"
 )
 
@@ -148,22 +150,32 @@ func Trans2Entities(workers []*Worker) []*entities.Worker {
 }
 
 func (w *Worker) Create() error {
-	db := database.GetDB()
-	defer database.CloseDB(db)
 	if w.NodeName == conf.AppConfigInstance.NodeName {
 		AddGost(w.TunnelID, w.Name, w.Port)
 		err := w.UpdateFile()
 		if err != nil {
 			return err
 		}
+	} else {
+		n, err := GetNodeByNodeName(w.NodeName)
+		if err != nil {
+			return err
+		}
+		wp, err := proto.Marshal(w)
+		if err != nil {
+			return err
+		}
+		go rpc.EventNotify(n.Node, defs.EventAddWorker, map[string][]byte{
+			defs.KeyWorkerProto: wp,
+		})
 	}
 
+	db := database.GetDB()
+	defer database.CloseDB(db)
 	return db.Create(w).Error
 }
 
 func (w *Worker) Update() error {
-	db := database.GetDB()
-	defer database.CloseDB(db)
 	if w.NodeName == conf.AppConfigInstance.NodeName {
 		DeleteGost(w.Name)
 		AddGost(w.TunnelID, w.Name, w.Port)
@@ -172,21 +184,38 @@ func (w *Worker) Update() error {
 			return err
 		}
 	}
-
+	db := database.GetDB()
+	defer database.CloseDB(db)
 	return db.Save(w).Error
 }
 
 func (w *Worker) Delete() error {
-	db := database.GetDB()
-	defer database.CloseDB(db)
 	if w.NodeName == conf.AppConfigInstance.NodeName {
 		DeleteGost(w.Name)
+	} else {
+		n, err := GetNodeByNodeName(w.NodeName)
+		if err != nil {
+			return err
+		}
+		wp, err := proto.Marshal(w)
+		if err != nil {
+			return err
+		}
+		go rpc.EventNotify(n.Node, defs.EventDeleteWorker, map[string][]byte{
+			defs.KeyWorkerProto: wp,
+		})
 	}
-	return db.Where(&Worker{
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	if err := db.Where(&Worker{
 		Worker: &entities.Worker{
 			UID: w.UID,
 		},
-	}).Unscoped().Delete(w).Error
+	}).Unscoped().Delete(w).Error; err != nil {
+		return err
+	}
+
+	return w.DeleteFile()
 }
 
 func (w *Worker) Flush() error {
@@ -204,10 +233,6 @@ func (w *Worker) Flush() error {
 
 	w.Port = int32(port)
 	if err = w.Update(); err != nil {
-		return err
-	}
-
-	if err = w.UpdateFile(); err != nil {
 		return err
 	}
 	return nil
@@ -291,32 +316,4 @@ func SyncWorkers(workerList *entities.WorkerList) error {
 	}
 
 	return nil
-}
-
-func SyncAddWorker(worker *entities.Worker) error {
-	db := database.GetDB()
-	defer database.CloseDB(db)
-	return db.Create(&Worker{
-		Worker: worker,
-	}).Error
-}
-
-func SyncDeleteWorker(worker *entities.Worker) error {
-	db := database.GetDB()
-	defer database.CloseDB(db)
-	return db.Where(&Worker{
-		Worker: worker,
-	}).Delete(&Worker{}).Error
-}
-
-func SyncUpdateWorker(workerName string, worker *entities.Worker) error {
-	db := database.GetDB()
-	defer database.CloseDB(db)
-	return db.Model(&Worker{}).Where(&Worker{
-		Worker: &entities.Worker{
-			Name: workerName,
-		},
-	}).Updates(&Worker{
-		Worker: worker,
-	}).Error
 }

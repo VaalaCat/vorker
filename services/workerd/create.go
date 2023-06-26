@@ -35,7 +35,6 @@ func CreateEndpoint(c *gin.Context) {
 		return
 	}
 
-	SyncAgent(worker)
 	common.RespOK(c, "create worker success", nil)
 }
 

@@ -30,7 +30,7 @@ func GetNodeInfoEndpoint(c *gin.Context) {
 		return
 	}
 
-	go rpc.EventNotify(node, defs.EventSyncWorkers)
+	go rpc.EventNotify(node.Node, defs.EventSyncWorkers, nil)
 	common.RespOK(c, common.RespMsgOK, node)
 }
 

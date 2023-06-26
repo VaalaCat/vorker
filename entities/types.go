@@ -79,7 +79,7 @@ type AgentSyncWorkersResp struct {
 
 type NotifyEventRequest struct {
 	EventName string            `json:"event_name"`
-	Extra     map[string]string `json:"extra"`
+	Extra     map[string][]byte `json:"extra"`
 }
 
 func (n *NotifyEventRequest) Validate() bool {

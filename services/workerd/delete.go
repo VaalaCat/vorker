@@ -29,14 +29,6 @@ func DeleteEndpoint(c *gin.Context) {
 		return
 	}
 
-	go func() {
-		worker, err := models.GetWorkerByUID(userID, UID)
-		if err != nil {
-			logrus.Errorf("failed to get worker by uid, err: %v", err)
-			return
-		}
-		SyncAgent(worker.Worker)
-	}()
 	common.RespOK(c, "delete worker success", nil)
 }
 
@@ -57,6 +49,5 @@ func Delete(userID uint, UID string) error {
 		return err
 	}
 
-	worker.DeleteFile()
 	return nil
 }
