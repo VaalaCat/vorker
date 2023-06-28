@@ -67,6 +67,10 @@ func AddGost(tunnelID string, tunnelName string, tunnelPort int32) int64 {
 			logrus.Errorf("Recovered in f: %+v, stack: %+v", r, string(debug.Stack()))
 		}
 	}()
+	if _, ok := gostTunnelMap[tunnelName]; ok {
+		logrus.Infof("tunnel %s already exists, stop it", tunnelName)
+		DeleteGost(tunnelName)
+	}
 	r := buildGostArgs(conf.AppConfigInstance.TunnelScheme, "127.0.0.1", tunnelPort,
 		conf.AppConfigInstance.TunnelRelayEndpoint, tunnelID)
 	wid := idgen.GetNextID()
