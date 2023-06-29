@@ -161,11 +161,10 @@ export const WorkerEditComponent = () => {
           <div className="flex flex-col">
             <div className="flex flex-row m-2">
               <p className="self-center">Entry: </p>
-              <div className="flex flex-row w-full">
+              <div className="grid grid-cols-1 lg:grid-cols-2">
                 <Input
-                  addonBefore={`${appConfAtom?.Scheme}://`}
-                  addonAfter={`${appConfAtom?.WorkerURLSuffix}`}
-                  style={{ width: '30%' }}
+                  addonBefore={<p className='invisible w-0 sm:visible sm:w-auto'>{appConfAtom?.Scheme}://</p>}
+                  addonAfter={<p className='invisible w-0 sm:visible w-25'>{appConfAtom?.WorkerURLSuffix}</p>}
                   value={editItem.Name}
                   onChange={(value) => {
                     if (worker) {
