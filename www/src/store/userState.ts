@@ -1,6 +1,5 @@
 import { UserInfo } from '@/types/body'
-import { atom, useAtom } from 'jotai'
-import { userInfo } from 'os'
+import { atom } from 'nanostores'
 
 // Create your atoms and derivatives
-export const UserAtom = atom<UserInfo | undefined>({} as UserInfo)
+export const $user = atom<UserInfo | undefined>({} as UserInfo)

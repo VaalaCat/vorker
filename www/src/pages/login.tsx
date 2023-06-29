@@ -1,9 +1,10 @@
 import { HeaderComponent } from '@/components/header'
 import { Layout } from '@/components/layout'
 import { LoginComponent } from '@/components/login'
+import dynamic from 'next/dynamic'
 import * as React from 'react'
 
-export default function SignIn() {
+export function SignIn() {
   return (
     <Layout
       header={<HeaderComponent />}
@@ -12,3 +13,5 @@ export default function SignIn() {
     ></Layout>
   )
 }
+
+export default dynamic(() => Promise.resolve(SignIn), { ssr: false })

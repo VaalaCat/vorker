@@ -18,8 +18,8 @@ import {
 } from '@douyinfe/semi-ui'
 import { useCallback, useEffect, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useAtom } from 'jotai'
-import { CodeAtom, VorkerSettingsAtom } from '@/store/workers'
+import { useStore } from '@nanostores/react'
+import { $code, $vorkerSettings } from '@/store/workers'
 import ColorHash from 'color-hash'
 import { Router, useRouter } from 'next/router'
 import {
@@ -33,6 +33,7 @@ import {
 import { CH } from '@/lib/color'
 import { it } from 'node:test'
 import dynamic from 'next/dynamic'
+import { t } from '@/lib/i18n'
 
 const MonacoEditor = dynamic(
   import('./editor').then((m) => m.MonacoEditor),
@@ -41,11 +42,11 @@ const MonacoEditor = dynamic(
 
 export function WorkersComponent() {
   // get worker list
-  const [code, setCodeAtom] = useAtom(CodeAtom)
+  const code = useStore($code)
   const [workerUID, setWorkerUID] = useState('')
   const [editItem, setEditItem] = useState(DEFAULT_WORKER_ITEM)
-  const [appConfAtom] = useAtom(VorkerSettingsAtom)
   const { Paragraph, Text, Numeral, Title } = Typography
+  const appConf = useStore($vorkerSettings)
 
   const router = useRouter()
 
@@ -83,11 +84,11 @@ export function WorkersComponent() {
   const handleOpenWorker = useCallback(
     (item: WorkerItem) => {
       window.open(
-        `${appConfAtom?.Scheme}://${item.Name}${appConfAtom?.WorkerURLSuffix}`,
+        `${appConf?.Scheme}://${item.Name}${appConf?.WorkerURLSuffix}`,
         '_blank'
       )
     },
-    [appConfAtom?.Scheme, appConfAtom?.WorkerURLSuffix]
+    [appConf?.Scheme, appConf?.WorkerURLSuffix]
   )
 
   const handleDeleteWorker = useCallback(
@@ -114,21 +115,27 @@ export function WorkersComponent() {
       title: 'worker run result',
       content: (
         <>
-          <Paragraph spacing="extended" >
-            <code className='overflow-scroll w-full'>{
-              (run_resp.length > 100 ?
-                run_resp.slice(0, 100) + '......' :
-                run_resp.length == 0 ? "data is undefined, raw resp: " + raw_resp : run_resp)
-            }</code>
+          <Paragraph spacing="extended">
+            <code className="overflow-scroll w-full">
+              {run_resp.length > 100
+                ? run_resp.slice(0, 100) + '......'
+                : run_resp.length == 0
+                ? 'data is undefined, raw resp: ' + raw_resp
+                : run_resp}
+            </code>
           </Paragraph>
-          <div className='flex flex-row justify-end'>
+          <div className="flex flex-row justify-end">
             <Text>copy to see full content</Text>
-            <Paragraph copyable={{ content: run_resp }} spacing="extended" className='justify-end' />
+            <Paragraph
+              copyable={{ content: run_resp }}
+              spacing="extended"
+              className="justify-end"
+            />
           </div>
         </>
       ),
       duration: 10,
-    };
+    }
     Notification.info({ ...opts, position: 'bottomRight' })
   })
 
@@ -139,9 +146,9 @@ export function WorkersComponent() {
   useEffect(() => {
     if (worker) {
       setEditItem(worker)
-      setCodeAtom(Buffer.from(worker.Code, 'base64').toString('utf8'))
+      $code.set(Buffer.from(worker.Code, 'base64').toString('utf8'))
     }
-  }, [setCodeAtom, worker])
+  }, [worker])
 
   useEffect(() => {
     if (code && editItem)
@@ -162,9 +169,9 @@ export function WorkersComponent() {
           <Breadcrumb.Item href="/admin">Workers</Breadcrumb.Item>
         </Breadcrumb>
         <ButtonGroup>
-          <Button onClick={() => reloadWorkers()}>Refresh</Button>
-          <Button onClick={() => flushAllWorkers.mutate()}>Flush</Button>
-          <Button onClick={() => createWorker.mutate()}>New</Button>
+          <Button onClick={() => reloadWorkers()}>{t.refresh}</Button>
+          <Button onClick={() => reloadWorkers()}>{t.sync}</Button>
+          <Button onClick={() => createWorker.mutate()}>{t.create}</Button>
         </ButtonGroup>
       </div>
       <List
@@ -207,7 +214,7 @@ export function WorkersComponent() {
                       })
                     }}
                   >
-                    Edit
+                    {t.edit}
                   </Button>
                   <Button
                     icon={<IconTreeTriangleRight />}
@@ -220,19 +227,19 @@ export function WorkersComponent() {
                     icon={<IconLink />}
                     onClick={() => handleOpenWorker(item)}
                   >
-                    Open
+                    {t.open}
                   </Button>
                   <Dropdown
                     // onVisibleChange={(v) => handleVisibleChange(1, v)}
                     menu={[
                       {
                         node: 'item',
-                        name: 'Delete',
+                        name: t.delete,
                         onClick: () => handleDeleteWorker(item),
                       },
                       {
                         node: 'item',
-                        name: 'Sync',
+                        name: t.sync,
                         onClick: () => flushWorker.mutate(item.UID),
                       },
                     ]}
