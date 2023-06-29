@@ -1,4 +1,4 @@
-import { PingMap, PingMapList } from "@/types/nodes";
-import { atom } from "jotai";
+import { PingMap, PingMapList } from '@/types/nodes'
+import { atom } from 'nanostores'
 
-export const PingMapsAtom = atom<PingMapList>({})
+export const $nodeStatus = atom<PingMapList>({})
