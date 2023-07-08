@@ -186,7 +186,6 @@ export const WorkerEditComponent = () => {
                     </p>
                   }
                   value={editItem.Name}
-                  style={{ width: '30%' }}
                   defaultValue={worker?.Name}
                   onChange={(value) => {
                     if (worker) {
