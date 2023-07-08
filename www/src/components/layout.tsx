@@ -18,8 +18,8 @@ export const Layout = ({
     <QueryClientProvider client={queryClient}>
       <SemiLayout>
         <Header>{header}</Header>
-        <SemiLayout>
-          <Sider>{side}</Sider>
+        <SemiLayout className="relative">
+          <Sider className="fixed md:relative">{side}</Sider>
           <Content
             className="flex-1 overflow-scroll"
             style={{ height: '93vh' }}

@@ -9,6 +9,8 @@ import { useEffect } from 'react'
 import { $user } from '@/store/userState'
 import { useRouter } from 'next/router'
 import { CH } from '@/lib/color'
+import { IconMenu } from '@douyinfe/semi-icons'
+import { $expandSidebar } from './sidebar'
 
 export const HeaderComponent = () => {
   const user = useStore($user)
@@ -102,6 +104,15 @@ export const HeaderComponent = () => {
               登出
             </Button>
           )}
+          <div className="md:hidden">
+            <Button
+              theme="borderless"
+              icon={<IconMenu />}
+              onClick={() => {
+                $expandSidebar.set(!$expandSidebar.get())
+              }}
+            />
+          </div>
         </ButtonGroup>
       </Nav.Footer>
     </Nav>
