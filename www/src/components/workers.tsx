@@ -62,23 +62,23 @@ export function WorkersComponent() {
   const createWorker = useMutation(async () => {
     await api.createWorker({ ...DEFAULT_WORKER_ITEM })
     await reloadWorkers()
-    Toast.info('创建成功！')
+    Toast.info(t.workerCreateSuccess)
   })
 
   const deleteWorker = useMutation(async (uid: string) => {
     await api.deleteWorker(uid)
     await reloadWorkers()
-    Toast.warning('删除成功！')
+    Toast.warning(t.workerDeleteSuccess)
   })
 
   const flushWorker = useMutation(async (uid: string) => {
     await api.flushWorker(uid)
-    Toast.info('同步成功！')
+    Toast.info(t.workerSyncSuccess)
   })
 
   const flushAllWorkers = useMutation(async () => {
     await api.flushAllWorkers()
-    Toast.info('同步成功！')
+    Toast.info(t.workerSyncSuccess)
   })
 
   const handleOpenWorker = useCallback(
@@ -94,7 +94,7 @@ export function WorkersComponent() {
   const handleDeleteWorker = useCallback(
     (item: WorkerItem) => {
       Modal.warning({
-        title: `删除 worker`,
+        title: t.deleteWorker,
         content: (
           <span className="break-all">
             确定要删除 {item.Name} (ID: <code>{item.UID}</code>) 吗
@@ -256,7 +256,7 @@ export function WorkersComponent() {
       />
       {workerUID ? (
         <div className="flex flex-col w-full m-4">
-          <Typography>Worker Editor</Typography>
+          <Typography>{t.editor}</Typography>
           <div></div>
           <div>
             <MonacoEditor uid={workerUID} />

@@ -11,6 +11,7 @@ import { useRouter } from 'next/router'
 import { CH } from '@/lib/color'
 import { IconMenu } from '@douyinfe/semi-icons'
 import { $expandSidebar } from './sidebar'
+import { t } from '@/lib/i18n'
 
 export const HeaderComponent = () => {
   const user = useStore($user)
@@ -35,7 +36,7 @@ export const HeaderComponent = () => {
 
   useEffect(() => {
     if (router.asPath !== '/login' && !user) {
-      Toast.warning('未登录，跳转登录页面...')
+      Toast.warning(t.notLoggedInPrompt)
       router.push({
         pathname: '/login',
       })
@@ -67,7 +68,7 @@ export const HeaderComponent = () => {
               }}
               className="pointer-events-auto"
             >
-              登录
+              {t.login}
             </Button>
           )}
           {!userinfo && appconf?.EnableRegister && (
@@ -79,7 +80,7 @@ export const HeaderComponent = () => {
               }}
               className="pointer-events-auto"
             >
-              注册
+              {t.register}
             </Button>
           )}
           {userinfo && (
@@ -101,7 +102,7 @@ export const HeaderComponent = () => {
               }}
               className="pointer-events-auto"
             >
-              登出
+              {t.logout}
             </Button>
           )}
           <div className="md:hidden">
