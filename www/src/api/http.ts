@@ -12,6 +12,9 @@ instance.interceptors.response.use((response) => {
   if (response.headers?.['x-authorization-token']) {
     localStorage.setItem('token', response.headers['x-authorization-token'])
   }
+  if (!!response.data.code) {
+    throw response.data.msg
+  }
   return response
 })
 
