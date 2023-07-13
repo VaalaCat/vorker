@@ -1,23 +1,24 @@
 import { LoginRequest } from '@/types/body'
 import { Button, Card, Form, Input, Toast, Tooltip } from '@douyinfe/semi-ui'
 import * as api from '@/api/auth'
+import { t } from '@/lib/i18n'
+import { useMutation } from '@tanstack/react-query'
 
 export function LoginComponent() {
-  const handleSubmit = (values: LoginRequest) => {
-    Toast.info('正在登录，请稍等...')
-    api
+  const handleSubmit = useMutation(async (values: LoginRequest) => {
+    return api
       .login(values)
       .then((res) => {
         if (res.status === 0) {
-          Toast.success('登录成功')
+          Toast.success(t.loginSuccess)
           window.location.href = '/admin'
         }
       })
       .catch((err) => {
-        Toast.error('登录失败')
+        Toast.error(t.loginFailed)
         console.log(err)
       })
-  }
+  })
 
   return (
     <Card
@@ -30,10 +31,13 @@ export function LoginComponent() {
       }}
     >
       {' '}
-      <Form layout="vertical" onSubmit={(values) => handleSubmit(values)}>
+      <Form
+        layout="vertical"
+        onSubmit={(values) => handleSubmit.mutate(values)}
+      >
         <Form.Input
           field="UserName"
-          label="用户名"
+          label={{ text: t.username }}
           labelPosition="inset"
           style={{ width: 200 }}
         />
@@ -41,11 +45,15 @@ export function LoginComponent() {
           field="Password"
           labelPosition="inset"
           mode="password"
-          label={{ text: '密码' }}
+          label={{ text: t.password }}
           style={{ width: 200 }}
         />
-        <Button htmlType="submit" type="primary">
-          提交
+        <Button
+          htmlType="submit"
+          type="primary"
+          loading={handleSubmit.isLoading}
+        >
+          {t.submit}
         </Button>
       </Form>
     </Card>

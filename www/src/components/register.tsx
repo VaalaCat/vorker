@@ -1,23 +1,24 @@
 import { RegisterRequest } from '@/types/body'
 import { Button, Card, Form, Toast } from '@douyinfe/semi-ui'
 import * as api from '@/api/auth'
+import { t } from '@/lib/i18n'
+import { useMutation } from '@tanstack/react-query'
 
 export function RegisterComponent() {
-  const handleSubmit = (values: RegisterRequest) => {
-    Toast.info('正在注册，请稍等...')
-    api
+  const handleSubmit = useMutation((values: RegisterRequest) => {
+    return api
       .register(values)
       .then((res) => {
         if (res.status === 0) {
-          Toast.success('注册成功，跳转中...')
+          Toast.success(t.registerSuccess)
           window.location.href = '/admin'
         }
       })
       .catch((err) => {
-        Toast.error('注册失败')
+        Toast.error(t.registerSuccess)
         console.log(err)
       })
-  }
+  })
 
   return (
     <Card
@@ -30,10 +31,13 @@ export function RegisterComponent() {
       }}
     >
       {' '}
-      <Form layout="vertical" onSubmit={(values) => handleSubmit(values)}>
+      <Form
+        layout="vertical"
+        onSubmit={(values) => handleSubmit.mutate(values)}
+      >
         <Form.Input
           field="UserName"
-          label="用户名"
+          label={{ text: t.username }}
           labelPosition="inset"
           style={{ width: 200 }}
         />
@@ -41,17 +45,21 @@ export function RegisterComponent() {
           field="Password"
           labelPosition="inset"
           mode="password"
-          label={{ text: '密码' }}
+          label={{ text: t.password }}
           style={{ width: 200 }}
         />
         <Form.Input
           field="Email"
           labelPosition="inset"
-          label={{ text: '邮箱' }}
+          label={{ text: t.email }}
           style={{ width: 200 }}
         />
-        <Button htmlType="submit" type="primary">
-          提交
+        <Button
+          htmlType="submit"
+          type="primary"
+          loading={handleSubmit.isLoading}
+        >
+          {t.submit}
         </Button>
       </Form>
     </Card>
