@@ -1,7 +1,8 @@
-import { VorkerSettingsProperties } from "@/types/workers";
-import { atom } from "jotai";
+import { VorkerSettingsProperties } from '@/types/workers'
+import { atom } from 'nanostores'
 
-export const CodeAtom = atom("")
+export const $code = atom('')
 
-export const VorkerSettingsAtom =
-	atom<undefined | VorkerSettingsProperties>(undefined)
+export const $vorkerSettings = atom<undefined | VorkerSettingsProperties>(
+  undefined
+)

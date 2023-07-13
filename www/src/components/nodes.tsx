@@ -8,10 +8,10 @@ import {
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { Card, Title, Tracker, Flex, Text, Color } from '@tremor/react'
-import { useAtom } from 'jotai'
-import { PingMapsAtom } from '@/store/nodes'
 import { Button } from '@douyinfe/semi-ui'
 import * as nodesApi from '@/api/nodes'
+import { useStore } from '@nanostores/react'
+import { $nodeStatus } from '@/store/nodes'
 
 export function NodesComponent() {
   const [nodelist, setNodelist] = useState<Node[]>([])
@@ -27,16 +27,13 @@ export function NodesComponent() {
       refetchInterval: 5000,
     }
   )
-  const [pingMapsAtom, setPingMapsAtom] = useAtom(PingMapsAtom)
-  const pingMapsAtomRef = useRef(pingMapsAtom)
-  pingMapsAtomRef.current = pingMapsAtom
+  const nodeStatus = useStore($nodeStatus)
 
   useEffect(() => {
     setNodelist(resp?.data.nodes || [])
     if (resp?.data) {
       const v = Object.entries(resp.data.ping).map(([k, v]) => {
-        let t =
-          pingMapsAtomRef.current[k] || Array.from({ length: 50 }, () => -1)
+        let t = $nodeStatus.get()[k] || Array.from({ length: 50 }, () => -1)
         if (t.length > 50) {
           t.shift()
         }
@@ -44,15 +41,15 @@ export function NodesComponent() {
         return s
       })
       const a = Object.fromEntries(v) as PingMapList
-      setPingMapsAtom(a)
+      $nodeStatus.set(a)
     }
-  }, [reloadNodes, resp?.data, rerenderID, setPingMapsAtom])
+  }, [reloadNodes, resp?.data, rerenderID])
 
   return (
-    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       {nodelist?.map((node) => (
-        <div key={node.UID} >
-          <NodeComponent node={node} ping={pingMapsAtom[node.Name]} />
+        <div key={node.UID}>
+          <NodeComponent node={node} ping={nodeStatus[node.Name]} />
         </div>
       ))}
     </div>
@@ -87,12 +84,17 @@ export function NodeComponent({ node, ping }: { node: Node; ping: number[] }) {
 
   return (
     <div className="m-2">
-      <Card >
-        <div className='flex flex-row justify-between'>
+      <Card>
+        <div className="flex flex-row justify-between">
           <Title>{node.Name}</Title>
-          <Button theme='borderless' className='justify-end'
+          <Button
+            theme="borderless"
+            className="justify-end"
             onClick={() => syncNodes.mutate(node.Name)}
-          > Sync </Button>
+          >
+            {' '}
+            Sync{' '}
+          </Button>
         </div>
         <Text>ID {node.UID}</Text>
         <Flex justifyContent="end" className="mt-4">
@@ -100,7 +102,7 @@ export function NodeComponent({ node, ping }: { node: Node; ping: number[] }) {
           <Text className="ml-2">Avg. {avg}ms</Text>
         </Flex>
         <Tracker data={data} className="mt-2" />
-      </Card >
-    </div >
+      </Card>
+    </div>
   )
 }

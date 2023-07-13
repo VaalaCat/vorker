@@ -1,7 +1,7 @@
 import React, { useLayoutEffect } from 'react'
 import Editor, { loader } from '@monaco-editor/react'
-import { useAtom } from 'jotai'
-import { CodeAtom } from '@/store/workers'
+import { useStore } from '@nanostores/react'
+import { $code } from '@/store/workers'
 import dynamic from 'next/dynamic'
 
 loader.config({
@@ -11,14 +11,14 @@ loader.config({
 })
 
 export function MonacoEditor({ uid }: { uid: string }) {
-  const [codeAtom, setCodeAtom] = useAtom(CodeAtom)
+  const code = useStore($code)
   useLayoutEffect(() => {}, [])
   return (
     <div className="flex-1">
       <Editor
         height="60vh"
-        onChange={(v) => setCodeAtom(v || '')}
-        value={codeAtom}
+        onChange={(v) => $code.set(v || '')}
+        value={code}
         defaultLanguage="javascript"
       />
     </div>

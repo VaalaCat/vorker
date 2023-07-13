@@ -1,18 +1,20 @@
-import { VorkerSettingsAtom } from '@/store/workers'
+import { $vorkerSettings } from '@/store/workers'
 import { Avatar, Button, ButtonGroup, Nav, Toast } from '@douyinfe/semi-ui'
 import { useQuery } from '@tanstack/react-query'
-import { useAtom } from 'jotai'
+import { useStore } from '@nanostores/react'
 import { LuFunctionSquare } from 'react-icons/lu'
 import * as api from '@/api/workers'
 import * as auth from '@/api/auth'
 import { useEffect } from 'react'
-import { UserAtom } from '@/store/userState'
+import { $user } from '@/store/userState'
 import { useRouter } from 'next/router'
 import { CH } from '@/lib/color'
+import { IconMenu } from '@douyinfe/semi-icons'
+import { $expandSidebar } from './sidebar'
+import { t } from '@/lib/i18n'
 
 export const HeaderComponent = () => {
-  const [appConf, setAppConf] = useAtom(VorkerSettingsAtom)
-  const [userAtom, setUserAtom] = useAtom(UserAtom)
+  const user = useStore($user)
   const router = useRouter()
 
   const { data: appconf } = useQuery(['getAppConf'], () => {
@@ -23,23 +25,23 @@ export const HeaderComponent = () => {
   })
 
   useEffect(() => {
-    setAppConf(appconf)
-  }, [appconf, setAppConf])
+    $vorkerSettings.set(appconf)
+  }, [appconf])
 
   useEffect(() => {
     if (userinfo) {
-      setUserAtom(userinfo)
+      $user.set(userinfo)
     }
-  }, [setUserAtom, userinfo])
+  }, [userinfo])
 
   useEffect(() => {
-    if (router.asPath !== '/login' && !userAtom) {
-      Toast.warning('未登录，跳转登录页面...')
+    if (router.asPath !== '/login' && !user) {
+      Toast.warning(t.notLoggedInPrompt)
       router.push({
         pathname: '/login',
       })
     }
-  }, [userAtom, router])
+  }, [router, user])
 
   return (
     <Nav mode="horizontal" defaultSelectedKeys={['Home']}>
@@ -66,7 +68,7 @@ export const HeaderComponent = () => {
               }}
               className="pointer-events-auto"
             >
-              登录
+              {t.login}
             </Button>
           )}
           {!userinfo && appconf?.EnableRegister && (
@@ -78,7 +80,7 @@ export const HeaderComponent = () => {
               }}
               className="pointer-events-auto"
             >
-              注册
+              {t.register}
             </Button>
           )}
           {userinfo && (
@@ -87,7 +89,7 @@ export const HeaderComponent = () => {
               shape="square"
               style={{ background: CH.hex(JSON.stringify(userinfo)) }}
             >
-              {userAtom?.userName?.slice(0, 2).toUpperCase()}
+              {user?.userName?.slice(0, 2).toUpperCase()}
             </Avatar>
           )}
           {userinfo && (
@@ -100,9 +102,18 @@ export const HeaderComponent = () => {
               }}
               className="pointer-events-auto"
             >
-              登出
+              {t.logout}
             </Button>
           )}
+          <div className="md:hidden">
+            <Button
+              theme="borderless"
+              icon={<IconMenu />}
+              onClick={() => {
+                $expandSidebar.set(!$expandSidebar.get())
+              }}
+            />
+          </div>
         </ButtonGroup>
       </Nav.Footer>
     </Nav>

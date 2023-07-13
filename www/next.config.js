@@ -6,6 +6,9 @@ const nextConfig = {
     '@douyinfe/semi-icons',
     '@douyinfe/semi-illustrations',
   ],
+  experimental: {
+    serverComponentsExternalPackages: ['@nanostores/react'],
+  },
   async rewrites() {
     return {
       fallback: [
