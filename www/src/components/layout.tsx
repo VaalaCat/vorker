@@ -11,7 +11,7 @@ export const Layout = ({
   main,
 }: {
   header: React.ReactNode
-  side: React.ReactNode
+  side?: React.ReactNode
   main: React.ReactNode
 }) => {
   return (
@@ -19,7 +19,7 @@ export const Layout = ({
       <SemiLayout>
         <Header>{header}</Header>
         <SemiLayout className="relative">
-          <Sider className="fixed md:relative">{side}</Sider>
+          {side && <Sider className="fixed md:relative">{side}</Sider>}
           <Content
             className="flex-1 overflow-scroll"
             style={{ height: '93vh' }}

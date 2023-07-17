@@ -5,7 +5,7 @@ import { useStore } from '@nanostores/react'
 import { LuFunctionSquare } from 'react-icons/lu'
 import * as api from '@/api/workers'
 import * as auth from '@/api/auth'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { $user } from '@/store/userState'
 import { useRouter } from 'next/router'
 import { CH } from '@/lib/color'
@@ -13,9 +13,14 @@ import { IconMenu } from '@douyinfe/semi-icons'
 import { $expandSidebar } from './sidebar'
 import { t } from '@/lib/i18n'
 
-export const HeaderComponent = () => {
+export const HeaderComponent = ({
+  hasSider = true,
+}: {
+  hasSider?: boolean
+}) => {
   const user = useStore($user)
   const router = useRouter()
+  const [md, setMd] = useState(false)
 
   const { data: appconf } = useQuery(['getAppConf'], () => {
     return api.getAppConfig()
@@ -43,6 +48,15 @@ export const HeaderComponent = () => {
     }
   }, [router, user])
 
+  useEffect(() => {
+    const q = window.matchMedia('(min-width: 768px)')
+    const update = (e: MediaQueryListEvent) => {
+      setMd(e.matches)
+    }
+    q.addEventListener('change', update)
+    return () => q.removeEventListener('change', update)
+  }, [])
+
   return (
     <Nav mode="horizontal" defaultSelectedKeys={['Home']}>
       <Nav.Header>
@@ -59,61 +73,63 @@ export const HeaderComponent = () => {
       </Nav.Header>
       <Nav.Footer>
         <ButtonGroup aria-label="header button">
-          {!userinfo && (
-            <Button
-              type="primary"
-              theme="borderless"
-              onClick={() => {
-                router.push({ pathname: '/login' })
-              }}
-              className="pointer-events-auto"
-            >
-              {t.login}
-            </Button>
-          )}
-          {!userinfo && appconf?.EnableRegister && (
-            <Button
-              type="primary"
-              theme="borderless"
-              onClick={() => {
-                router.push({ pathname: '/register' })
-              }}
-              className="pointer-events-auto"
-            >
-              {t.register}
-            </Button>
-          )}
-          {userinfo && (
-            <Avatar
-              size="small"
-              shape="square"
-              style={{ background: CH.hex(JSON.stringify(userinfo)) }}
-            >
-              {user?.userName?.slice(0, 2).toUpperCase()}
-            </Avatar>
-          )}
-          {userinfo && (
-            <Button
-              type="primary"
-              theme="borderless"
-              onClick={() => {
-                auth.logout()
-                window.location.reload()
-              }}
-              className="pointer-events-auto"
-            >
-              {t.logout}
-            </Button>
-          )}
-          <div className="md:hidden">
-            <Button
-              theme="borderless"
-              icon={<IconMenu />}
-              onClick={() => {
-                $expandSidebar.set(!$expandSidebar.get())
-              }}
-            />
-          </div>
+          {[
+            !userinfo && (
+              <Button
+                type="primary"
+                theme="borderless"
+                onClick={() => {
+                  router.push({ pathname: '/login' })
+                }}
+                className="pointer-events-auto"
+              >
+                {t.login}
+              </Button>
+            ),
+            !userinfo && appconf?.EnableRegister && (
+              <Button
+                type="primary"
+                theme="borderless"
+                onClick={() => {
+                  router.push({ pathname: '/register' })
+                }}
+                className="pointer-events-auto"
+              >
+                {t.register}
+              </Button>
+            ),
+            userinfo && (
+              <Avatar
+                size="small"
+                shape="square"
+                style={{ background: CH.hex(JSON.stringify(userinfo || '')) }}
+              >
+                {user?.userName?.slice(0, 2).toUpperCase()}
+              </Avatar>
+            ),
+            userinfo && (
+              <Button
+                type="primary"
+                theme="borderless"
+                onClick={() => {
+                  auth.logout()
+                  window.location.reload()
+                }}
+                className="pointer-events-auto"
+              >
+                {t.logout}
+              </Button>
+            ),
+            !md && hasSider && (
+              <Button
+                theme="borderless"
+                icon={<IconMenu />}
+                onClick={() => {
+                  $expandSidebar.set(!$expandSidebar.get())
+                }}
+              />
+            ),
+          ].filter(Boolean)}
         </ButtonGroup>
       </Nav.Footer>
     </Nav>
