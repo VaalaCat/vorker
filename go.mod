@@ -16,7 +16,7 @@ require (
 	github.com/lucasepe/codename v0.2.0
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/crypto v0.10.0
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/protobuf v1.31.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/gorm v1.24.6
 )
@@ -37,6 +37,7 @@ require (
 	github.com/gin-contrib/cors v1.3.1 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/glebarez/go-sqlite v1.20.3 // indirect
+	github.com/go-co-op/gocron v1.31.0 // indirect
 	github.com/go-gost/gosocks4 v0.0.1 // indirect
 	github.com/go-gost/gosocks5 v0.3.1-0.20211109033403-d894d75b7f09 // indirect
 	github.com/go-gost/plugin v0.0.0-20230418123101-d221a4ec9a98 // indirect
@@ -94,7 +95,9 @@ require (
 	github.com/refraction-networking/utls v1.3.2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230126093431-47fa9a501578 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rs/xid v1.3.0 // indirect
+	github.com/samber/lo v1.38.1 // indirect
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5 // indirect
 	github.com/shadowsocks/shadowsocks-go v0.0.0-20200409064450-3e585ff90601 // indirect
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8 // indirect
@@ -114,6 +117,7 @@ require (
 	github.com/xtaci/smux v1.5.16 // indirect
 	github.com/xtaci/tcpraw v1.2.25 // indirect
 	github.com/yl2chen/cidranger v1.0.2 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.11.0 // indirect

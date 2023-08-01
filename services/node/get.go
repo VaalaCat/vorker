@@ -52,7 +52,7 @@ func UserGetNodesEndpoint(c *gin.Context) {
 	for _, node := range nodes {
 		pingMap[node.Name], err = request.Ping(
 			fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost, conf.AppConfigInstance.TunnelEntryPort),
-			fmt.Sprintf("%s%s", node.Name, node.UID))
+			fmt.Sprintf("%s%s%s", node.Name, node.UID, conf.AppConfigInstance.WorkerURLSuffix))
 		if err != nil {
 			logrus.Errorf("failed to ping node %s, err: %v", node.Name, err)
 			pingMap[node.Name] = 9999

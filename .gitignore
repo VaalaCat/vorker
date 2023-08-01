@@ -6,5 +6,6 @@ bin/workerd*
 vorker
 .vscode
 bin/gost
+gost.yaml
 
 node_modules

@@ -15,8 +15,8 @@ import (
 	"vorker/services/auth"
 	"vorker/services/node"
 	proxyService "vorker/services/proxy"
-	"vorker/services/tunnel"
 	"vorker/services/workerd"
+	"vorker/tunnel"
 	"vorker/utils"
 
 	"github.com/gin-gonic/gin"
@@ -70,7 +70,6 @@ func init() {
 		{
 			if conf.AppConfigInstance.RunMode == "master" {
 				agentAPI.POST("/sync", authz.AgentAuthz(), workerd.AgentSyncWorkers)
-				agentAPI.GET("/ingress", tunnel.GetIngressConf)
 				agentAPI.POST("/add", authz.AgentAuthz(), node.AddEndpoint)
 				agentAPI.GET("/nodeinfo", authz.AgentAuthz(), node.GetNodeInfoEndpoint)
 			} else {
@@ -83,51 +82,69 @@ func init() {
 }
 
 func Run(f embed.FS) {
-	WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
-	models.InitGost()
-	go models.GostRun()
+	go tunnel.RelayServerRun()
+	go WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
 	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
 
 	if conf.AppConfigInstance.RunMode == "master" {
-		fp, err := fs.Sub(f, "www/out")
-		if err != nil {
-			logrus.Panic(err)
-		}
-		router.StaticFileFS("/404", "404.html", http.FS(fp))
-		router.StaticFileFS("/login", "login.html", http.FS(fp))
-		router.StaticFileFS("/admin", "admin.html", http.FS(fp))
-		router.StaticFileFS("/register", "register.html", http.FS(fp))
-		router.StaticFileFS("/worker", "worker.html", http.FS(fp))
-		router.StaticFileFS("/index", "index.html", http.FS(fp))
-		router.StaticFileFS("/nodes", "nodes.html", http.FS(fp))
-		router.NoRoute(func(c *gin.Context) {
-			c.FileFromFS(c.Request.URL.Path, http.FS(fp))
-		})
+		HandleStaticFile(f)
 	} else {
 		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
-		for {
-			logrus.Info("Registering node to master...")
-			self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)
-			if err != nil || self == nil {
-				err := rpc.AddNode(conf.AppConfigInstance.MasterEndpoint)
-				if err != nil {
-					logrus.WithError(err).Error("Add node failed.. retrying for 5 seconds")
-					time.Sleep(5 * time.Second)
-				} else {
-					logrus.Info("Node added successfully")
-				}
-				continue
-			} else {
-				logrus.Info("Node already exists")
-				conf.AppConfigInstance.NodeID = self.UID
-			}
-			agent.SyncCall()
-			break
-		}
+		RegisterNodeToMaster()
 	}
 
-	models.AddGost(conf.AppConfigInstance.NodeID,
-		fmt.Sprintf("%s%s", conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
-		int32(conf.AppConfigInstance.APIPort))
+	go TunnelAgentRun()
 	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
+}
+
+func TunnelAgentRun() {
+	workers, err := models.AdminGetWorkersByNodeName(conf.AppConfigInstance.NodeName)
+	if err != nil {
+		logrus.Fatalf("get workers failed: %v", err)
+	}
+	w := models.Trans2Entities(workers)
+	allWorkers, allNodes := models.GetIngressParam()
+	tunnel.InitTunnelAgent(w, allWorkers, allNodes)
+	tunnel.Add(conf.AppConfigInstance.NodeID,
+		fmt.Sprintf("%s%s", conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
+		int32(conf.AppConfigInstance.APIPort), w, allWorkers, allNodes)
+}
+
+func HandleStaticFile(f embed.FS) {
+	fp, err := fs.Sub(f, "www/out")
+	if err != nil {
+		logrus.Panic(err)
+	}
+	router.StaticFileFS("/404", "404.html", http.FS(fp))
+	router.StaticFileFS("/login", "login.html", http.FS(fp))
+	router.StaticFileFS("/admin", "admin.html", http.FS(fp))
+	router.StaticFileFS("/register", "register.html", http.FS(fp))
+	router.StaticFileFS("/worker", "worker.html", http.FS(fp))
+	router.StaticFileFS("/index", "index.html", http.FS(fp))
+	router.StaticFileFS("/nodes", "nodes.html", http.FS(fp))
+	router.NoRoute(func(c *gin.Context) {
+		c.FileFromFS(c.Request.URL.Path, http.FS(fp))
+	})
+}
+
+func RegisterNodeToMaster() {
+	for {
+		logrus.Info("Registering node to master...")
+		self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)
+		if err != nil || self == nil {
+			err := rpc.AddNode(conf.AppConfigInstance.MasterEndpoint)
+			if err != nil {
+				logrus.WithError(err).Error("Add node failed.. retrying for 5 seconds")
+				time.Sleep(5 * time.Second)
+			} else {
+				logrus.Info("Node added successfully")
+			}
+			continue
+		} else {
+			logrus.Info("Node already exists")
+			conf.AppConfigInstance.NodeID = self.UID
+		}
+		agent.SyncCall()
+		break
+	}
 }

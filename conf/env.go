@@ -32,8 +32,10 @@ type AppConfig struct {
 	TunnelScheme        string `env:"TUNNEL_SCHEME" env-default:"relay+ws"`
 	TunnelRelayEndpoint string `env:"TUNNEL_RELAY_ENDPOINT" env-default:"127.0.0.1:18080"`
 	TunnelEntryPort     int32  `env:"TUNNEL_ENTRY_PORT" env-default:"10080"`
-	TunnelHost          string `env:"TUNNEL_HOST" env-default:"127.0.0.1"` // for agent
+	TunnelHost          string `env:"TUNNEL_HOST" env-default:"127.0.0.1"` // usually 127.0.0.1
 	GostBinPath         string `env:"GOST_BIN_PATH" env-default:"/bin/gost"`
+	TunnelAPIPort       string `env:"TUNNEL_API_PORT" env-default:":7788"`
+	DefaultWorkerHost   string `env:"DEFAULT_WORKER_HOST" env-default:"localhost"`
 	TunnelUsername      string
 	TunnelPassword      string
 	NodeID              string

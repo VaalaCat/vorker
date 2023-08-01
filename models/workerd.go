@@ -9,6 +9,7 @@ import (
 	"vorker/defs"
 	"vorker/entities"
 	"vorker/rpc"
+	"vorker/tunnel"
 	"vorker/utils"
 
 	"vorker/utils/database"
@@ -153,8 +154,14 @@ func Trans2Entities(workers []*Worker) []*entities.Worker {
 
 func (w *Worker) Create() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		AddGost(w.TunnelID, w.Name, w.Port)
-		err := w.UpdateFile()
+		workers, err := AdminGetWorkersByNodeName(w.NodeName)
+		if err != nil {
+			return err
+		}
+		allWorkers, allNodes := GetIngressParam()
+		tunnel.Add(w.TunnelID, w.Name, w.Port,
+			Trans2Entities(workers), allWorkers, allNodes)
+		err = w.UpdateFile()
 		if err != nil {
 			return err
 		}
@@ -179,9 +186,15 @@ func (w *Worker) Create() error {
 
 func (w *Worker) Update() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		DeleteGost(w.Name)
-		AddGost(w.TunnelID, w.Name, w.Port)
-		err := w.UpdateFile()
+		workers, err := AdminGetWorkersByNodeName(w.NodeName)
+		if err != nil {
+			return err
+		}
+		allWorkers, allNodes := GetIngressParam()
+		tunnel.Delete(w.Name, Trans2Entities(workers), allWorkers, allNodes)
+		tunnel.Add(w.TunnelID, w.Name, w.Port,
+			Trans2Entities(workers), allWorkers, allNodes)
+		err = w.UpdateFile()
 		if err != nil {
 			return err
 		}
@@ -193,7 +206,12 @@ func (w *Worker) Update() error {
 
 func (w *Worker) Delete() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		DeleteGost(w.Name)
+		workers, err := AdminGetWorkersByNodeName(w.NodeName)
+		if err != nil {
+			return err
+		}
+		allWorkers, allNodes := GetIngressParam()
+		tunnel.Delete(w.Name, Trans2Entities(workers), allWorkers, allNodes)
 	} else {
 		n, err := GetNodeByNodeName(w.NodeName)
 		if err != nil {

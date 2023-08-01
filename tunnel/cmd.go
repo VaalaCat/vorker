@@ -1,4 +1,4 @@
-package models
+package tunnel
 
 import (
 	"encoding/base64"
@@ -28,9 +28,14 @@ type stringList []string
 func (l *stringList) String() string {
 	return fmt.Sprintf("%s", *l)
 }
+
 func (l *stringList) Set(value string) error {
 	*l = append(*l, value)
 	return nil
+}
+
+func (l *stringList) CMDString() string {
+	return strings.Join(*l, " ")
 }
 
 func buildConfigFromCmd(services, nodes stringList) (*config.Config, error) {

@@ -1,4 +1,4 @@
-package models
+package tunnel
 
 import (
 	"net/http"
@@ -13,70 +13,57 @@ import (
 	"github.com/judwhite/go-svc"
 )
 
-type program struct{}
+type gostInstance struct {
+	cfgFile      string
+	outputFormat string
+	services     stringList
+	nodes        stringList
+	debugMode    bool
+	apiAddr      string
+	metricsAddr  string
+}
 
-func (p *program) Init(env svc.Environment) error {
+func (p *gostInstance) Init(env svc.Environment) error {
 	cfg := &config.Config{}
-	if cfgFile != "" && conf.AppConfigInstance.RunMode == "master" {
-		if err := cfg.ReadFile(cfgFile); err != nil {
+	if p.cfgFile != "" && conf.AppConfigInstance.RunMode == "master" {
+		if err := cfg.ReadFile(p.cfgFile); err != nil {
 			return err
 		}
 	}
 
-	cmdCfg, err := buildConfigFromCmd(services, nodes)
+	cmdCfg, err := buildConfigFromCmd(p.services, p.nodes)
 	if err != nil {
 		return err
 	}
 	cfg = p.mergeConfig(cfg, cmdCfg)
 
-	if len(cfg.Services) == 0 && apiAddr == "" {
+	if len(cfg.Services) == 0 && p.apiAddr == "" {
 		if err := cfg.Load(); err != nil {
 			return err
 		}
 	}
 
-	if v := os.Getenv("GOST_API"); v != "" {
+	if p.apiAddr != "" {
 		cfg.API = &config.APIConfig{
-			Addr: v,
+			Addr: p.apiAddr,
 		}
 	}
-	if v := os.Getenv("GOST_LOGGER_LEVEL"); v != "" {
-		cfg.Log = &config.LogConfig{
-			Level: v,
-		}
-	}
-	if v := os.Getenv("GOST_PROFILING"); v != "" {
-		cfg.Profiling = &config.ProfilingConfig{
-			Addr: v,
-		}
-	}
-	if v := os.Getenv("GOST_METRICS"); v != "" {
-		cfg.Metrics = &config.MetricsConfig{
-			Addr: v,
-		}
-	}
-
-	if apiAddr != "" {
-		cfg.API = &config.APIConfig{
-			Addr: apiAddr,
-		}
-	}
-	if debugMode {
+	if p.debugMode {
 		if cfg.Log == nil {
 			cfg.Log = &config.LogConfig{}
 		}
 		cfg.Log.Level = string(logger.DebugLevel)
 	}
-	if metricsAddr != "" {
+	if p.metricsAddr != "" {
 		cfg.Metrics = &config.MetricsConfig{
-			Addr: metricsAddr,
+			Addr: p.metricsAddr,
 		}
 	}
 
 	logger.SetDefault(logFromConfig(cfg.Log))
 
-	if outputFormat != "" {
-		if err := cfg.Write(os.Stdout, outputFormat); err != nil {
+	if p.outputFormat != "" {
+		if err := cfg.Write(os.Stdout, p.outputFormat); err != nil {
 			return err
 		}
 		os.Exit(0)
@@ -89,7 +76,7 @@ func (p *program) Init(env svc.Environment) error {
 	return nil
 }
 
-func (p *program) Start() error {
+func (p *gostInstance) Start() error {
 	log := logger.Default()
 	cfg := config.Global()
 
@@ -140,7 +127,7 @@ func (p *program) Start() error {
 	return nil
 }
 
-func (p *program) Stop() error {
+func (p *gostInstance) Stop() error {
 	for name, srv := range registry.ServiceRegistry().GetAll() {
 		srv.Close()
 		logger.Default().Debugf("service %s shutdown", name)
@@ -148,7 +135,7 @@ func (p *program) Stop() error {
 	return nil
 }
 
-func (p *program) mergeConfig(cfg1, cfg2 *config.Config) *config.Config {
+func (p *gostInstance) mergeConfig(cfg1, cfg2 *config.Config) *config.Config {
 	if cfg1 == nil {
 		return cfg2
 	}

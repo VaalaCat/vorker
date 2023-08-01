@@ -2,8 +2,8 @@ version: '3'
 
 services:
   vorker-master:
-    # build: ./
-    image: vaalacat/vorker
+    build: ./
+    # image: vaalacat/vorker
     volumes:
       - /tmp/workerd-master:/workerd # change to your own path
     environment:
@@ -15,14 +15,17 @@ services:
       - AGENT_SECRET=123123
       - RUN_MODE=master
     ports:
+      - 7788:7788
       - 8080:8080
       - 8888:8888
       - 10080:10080
       - 18080:18080
     restart: unless-stopped
   vorker-agent:
-    # build: ./
-    image: vaalacat/vorker
+    build: ./
+    # image: vaalacat/vorker
+    ports:
+      - 7789:7788
     volumes:
       - /tmp/workerd-agent:/workerd # change to your own path
     environment:
