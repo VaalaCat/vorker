@@ -1,6 +1,7 @@
 package tunnel
 
 import (
+	"fmt"
 	"log"
 	_ "net/http/pprof"
 	"runtime/debug"
@@ -85,7 +86,11 @@ func Add(tunnelID string, tunnelName string,
 	}
 
 	rules := genIngressRules(allWorkers, allNodes)
-	ingressConf := ingressConfigTemplate(rules)
+	newHostname := fmt.Sprintf("%s%s", tunnelName,
+		conf.AppConfigInstance.WorkerURLSuffix)
+	newRules := append(rules, &config.IngressRuleConfig{
+		Hostname: newHostname})
+	ingressConf := ingressConfigTemplate(newRules)
 	for i := 0; i < maxRetry; i++ {
 		if err = gost.NewGostClient().PutIngress(VorkerDefaultIngressName, ingressConf); err != nil {
 			logrus.WithError(err).Errorf("add tunnel error")
@@ -130,7 +135,10 @@ func Delete(tunnelName string, workers []*entities.Worker,
 	}
 
 	rules := genIngressRules(allWorkers, allNodes)
-	ingressConf := ingressConfigTemplate(rules)
+	newRules := lo.Filter(rules, func(rule *config.IngressRuleConfig, i int) bool {
+		return rule.Hostname != tunnelName
+	})
+	ingressConf := ingressConfigTemplate(newRules)
 	for i := 0; i < maxRetry; i++ {
 		if err = gost.NewGostClient().PutIngress(VorkerDefaultIngressName, ingressConf); err != nil {
 			logrus.WithError(err).Errorf("add tunnel error")
