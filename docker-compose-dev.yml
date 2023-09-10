@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  vorker-master:
+    build:
+      context: .
+      dockerfile: .dev.Dockerfile
+    # image: vaalacat/vorker
+    volumes:
+      - /tmp/workerd-master:/workerd # change to your own path
+      - .:/workspaces/vorker
+      - /tmp/workerd-master-home:/home/dev
+    stdin_open: true
+    tty: true
+    environment:
+      - WORKER_URL_SUFFIX=.example.com # worker url = SCHEME://WORKERNAME+WORKER_URL_SUFFIX eg: .example.com
+      - SCHEME=http
+      - ENABLE_REGISTER=false # only allow admin to register
+      - COOKIE_DOMAIN=example.com
+      - JWT_SECRET=123123
+      - AGENT_SECRET=123123
+      - RUN_MODE=master
+    ports:
+      - 7788:7788
+      - 8080:8080
+      - 8888:8888
+      - 10080:10080
+      - 18080:18080
+    restart: unless-stopped
+  vorker-agent:
+    build:
+      context: .
+      dockerfile: .dev.Dockerfile
+    # image: vaalacat/vorker
+    ports:
+      - 7789:7788
+    stdin_open: true
+    tty: true
+    volumes:
+      - /tmp/workerd-agent:/workerd # change to your own path
+      - .:/workspaces/vorker
+      - /tmp/workerd-agent-home:/home/dev
+    environment:
+      - WORKER_URL_SUFFIX=.example.com # worker url = SCHEME://WORKERNAME+WORKER_URL_SUFFIX eg: .example.com
+      - AGENT_SECRET=123123
+      - RUN_MODE=agent
+      - MASTER_ENDPOINT=http://vorker-master:8888
+      - TUNNEL_RELAY_ENDPOINT=vorker-master:18080
+      - NODE_NAME=agent-1

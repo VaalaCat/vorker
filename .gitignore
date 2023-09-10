@@ -9,3 +9,4 @@ bin/gost
 gost.yaml
 
 node_modules
+tmp
