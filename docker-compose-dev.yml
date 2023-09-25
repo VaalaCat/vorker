@@ -38,7 +38,7 @@ services:
     tty: true
     volumes:
       - /tmp/workerd-agent:/workerd # change to your own path
-      - .:/workspaces/vorker
+      - ./tmp:/workspaces/vorker
       - /tmp/workerd-agent-home:/home/dev
     environment:
       - WORKER_URL_SUFFIX=.example.com # worker url = SCHEME://WORKERNAME+WORKER_URL_SUFFIX eg: .example.com

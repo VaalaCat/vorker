@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"vorker/conf"
 
+	"github.com/go-gost/x/api"
 	"github.com/go-gost/x/config"
 	"github.com/imroc/req/v3"
+	"github.com/sirupsen/logrus"
 )
 
 type GostInterface interface {
 	reqCli() *req.Client
+	PostConfig() error
 
 	PostService(servConf *config.ServiceConfig) error
 	DeleteService(serviceName string) error
@@ -42,4 +45,20 @@ func NewGostClient() GostInterface {
 		UserName:   conf.AppConfigInstance.TunnelUsername,
 		Password:   conf.AppConfigInstance.TunnelPassword,
 	}
+}
+
+func (g *GostClient) PostConfig() error {
+	if conf.AppConfigInstance.RunMode != "master" {
+		return nil
+	}
+
+	url := g.APIBaseURL + "/config"
+	resp := &api.Response{}
+	rawResp, err := g.reqCli().R().SetSuccessResult(resp).Post(url)
+	if err != nil || rawResp.Response.StatusCode >= 299 {
+		logrus.WithError(err).Errorf("post ingress error, resp: %+v", rawResp)
+		return err
+	}
+	logrus.Infof("post ingress success, resp: %+v", resp)
+	return nil
 }

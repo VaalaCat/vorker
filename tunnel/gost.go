@@ -53,6 +53,7 @@ func InitTunnelAgent(workers []*entities.Worker, allWorkers, allNodes map[string
 			break
 		}
 	}
+	gost.NewGostClient().PostConfig()
 }
 
 func Add(tunnelID string, tunnelName string,
@@ -78,7 +79,6 @@ func Add(tunnelID string, tunnelName string,
 			continue
 		} else {
 			logrus.Infof("add tunnel success")
-			return nil
 		}
 	}
 	if conf.AppConfigInstance.RunMode == "agent" {
@@ -98,6 +98,7 @@ func Add(tunnelID string, tunnelName string,
 			continue
 		} else {
 			logrus.Infof("add tunnel success")
+			gost.NewGostClient().PostConfig()
 			return nil
 		}
 	}
@@ -127,7 +128,6 @@ func Delete(tunnelName string, workers []*entities.Worker,
 			continue
 		} else {
 			logrus.Infof("delete tunnel success")
-			return nil
 		}
 	}
 	if conf.AppConfigInstance.RunMode == "agent" {
@@ -146,6 +146,7 @@ func Delete(tunnelName string, workers []*entities.Worker,
 			continue
 		} else {
 			logrus.Infof("add tunnel success")
+			gost.NewGostClient().PostConfig()
 			return nil
 		}
 	}
