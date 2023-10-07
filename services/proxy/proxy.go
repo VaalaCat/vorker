@@ -31,17 +31,25 @@ func Endpoint(c *gin.Context) {
 		return
 	}
 
-	tun, err := forwarder.GetListener().GetTunnelInfo(worker.GetTunnelID())
-	if err != nil {
-		logrus.Errorf("failed to get tunnel info, err: %v", err)
-		common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
-		return
-	}
+	var remote *url.URL
+	if worker.GetNodeName() == conf.AppConfigInstance.NodeName {
+		remote, err = url.Parse(fmt.Sprintf("http://%s:%d", worker.GetHostName(), worker.GetPort()))
+		if err != nil {
+			logrus.Panic(err)
+		}
+	} else {
+		tun, err := forwarder.GetListener().GetTunnelInfo(worker.GetTunnelID())
+		if err != nil {
+			logrus.Errorf("failed to get tunnel info, err: %v", err)
+			common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
+			return
+		}
 
-	remote, err := url.Parse(fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost,
-		tun.GetPort()))
-	if err != nil {
-		logrus.Panic(err)
+		remote, err = url.Parse(fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost,
+			tun.GetPort()))
+		if err != nil {
+			logrus.Panic(err)
+		}
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(remote)

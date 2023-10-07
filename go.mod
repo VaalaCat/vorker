@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.1
 
 require (
-	github.com/VaalaCat/tunnel v0.0.1
+	github.com/VaalaCat/tunnel v0.0.4
 	github.com/gin-gonic/gin v1.9.1
 	github.com/glebarez/sqlite v1.7.0
 	github.com/golang-jwt/jwt/v5 v5.0.0

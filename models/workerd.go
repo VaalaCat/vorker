@@ -278,14 +278,20 @@ func (w *Worker) UpdateFile() error {
 }
 
 func (w *Worker) Run() ([]byte, error) {
-	tun, err := forwarder.GetListener().GetTunnelInfo(w.GetTunnelID())
-	if err != nil {
-		return nil, err
+	var addr string
+	if w.GetNodeName() == conf.AppConfigInstance.NodeName {
+		addr = fmt.Sprintf("http://%s:%d", w.GetHostName(), w.GetPort())
+	} else {
+		tun, err := forwarder.GetListener().GetTunnelInfo(w.GetTunnelID())
+		if err != nil {
+			return nil, err
+		}
+		addr = fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost,
+			tun.GetPort())
 	}
 	resp, err := req.C().R().SetHeader(
 		defs.HeaderHost, fmt.Sprintf("%s%s", w.Name, conf.AppConfigInstance.WorkerURLSuffix),
-	).Get(fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost,
-		tun.GetPort()))
+	).Get(addr)
 	if err != nil || resp == nil || resp.StatusCode >= 299 {
 		return nil, err
 	}

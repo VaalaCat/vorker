@@ -8,7 +8,6 @@ import (
 	"time"
 	"vorker/authz"
 	"vorker/conf"
-	"vorker/defs"
 	"vorker/models"
 	"vorker/rpc"
 	"vorker/services/agent"
@@ -88,9 +87,10 @@ func Run(f embed.FS) {
 
 	if conf.AppConfigInstance.RunMode == "master" {
 		go tunnel.Serve()
+		time.Sleep(1 * time.Second)
+		go TunnelAgentRun()
 		HandleStaticFile(f)
 	} else {
-		go TunnelAgentRun()
 		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
 		RegisterNodeToMaster()
 	}
@@ -104,12 +104,14 @@ func TunnelAgentRun() {
 		logrus.Fatalf("get workers failed: %v", err)
 	}
 	w := models.Trans2Entities(workers)
-	allWorkers, allNodes := models.GetIngressParam()
-	tunnel.InitAgent(w, allWorkers, allNodes)
-	tunnel.Add(
-		fmt.Sprintf("%s%s", conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
-		defs.DefaultHostName, int32(conf.AppConfigInstance.APIPort),
-	)
+
+	nodes, err := models.AdminGetAllNodes()
+	if err != nil {
+		logrus.Fatalf("get nodes failed: %v", err)
+	}
+	n := models.NodeModels2Entities(nodes)
+
+	tunnel.InitAgent(w, n)
 }
 
 func HandleStaticFile(f embed.FS) {
@@ -146,6 +148,7 @@ func RegisterNodeToMaster() {
 			logrus.Info("Node already exists")
 			conf.AppConfigInstance.NodeID = self.UID
 		}
+		tunnel.Add(conf.AppConfigInstance.NodeID, conf.AppConfigInstance.TunnelHost, int32(conf.AppConfigInstance.APIPort))
 		agent.SyncCall()
 		break
 	}

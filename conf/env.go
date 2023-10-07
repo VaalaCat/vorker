@@ -35,6 +35,7 @@ type AppConfig struct {
 	TunnelHost string `env:"TUNNEL_HOST" env-default:"127.0.0.1"` // usually 127.0.0.1
 	// GostBinPath         string `env:"GOST_BIN_PATH" env-default:"/bin/gost"`
 	// TunnelAPIPort       string `env:"TUNNEL_API_PORT" env-default:":7788"`
+	RPCHost           string `env:"RPC_HOST" env-default:"localhost"`
 	RPCPort           int64  `env:"RPC_PORT" env-default:"7788"`
 	DefaultWorkerHost string `env:"DEFAULT_WORKER_HOST" env-default:"localhost"`
 	TunnelUsername    string
@@ -82,4 +83,8 @@ func init() {
 	if err != nil {
 		logrus.Panic(err)
 	}
+}
+
+func IsMaster() bool {
+	return AppConfigInstance.RunMode == "master"
 }

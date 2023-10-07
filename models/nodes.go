@@ -125,3 +125,11 @@ func GetAssignNode() (*Node, error) {
 	idx := rand.Intn(len(nodes))
 	return nodes[idx], nil
 }
+
+func NodeModels2Entities(nodes []*Node) []*entities.Node {
+	ans := make([]*entities.Node, len(nodes))
+	for i, node := range nodes {
+		ans[i] = node.Node
+	}
+	return ans
+}
