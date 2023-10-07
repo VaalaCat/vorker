@@ -11,9 +11,9 @@ import (
 	"vorker/rpc"
 	"vorker/tunnel"
 	"vorker/utils"
-
 	"vorker/utils/database"
 
+	"github.com/VaalaCat/tunnel/forwarder"
 	"github.com/google/uuid"
 	"github.com/imroc/req/v3"
 	"github.com/sirupsen/logrus"
@@ -48,6 +48,22 @@ func GetWorkerByUID(userID uint, uid string) (*Worker, error) {
 		&Worker{
 			Worker: &entities.Worker{
 				UID: uid,
+			},
+		},
+	).First(&worker).Error; err != nil {
+		return nil, err
+	}
+	return &worker, nil
+}
+
+func AdminGetWorkerByName(name string) (*Worker, error) {
+	var worker Worker
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	if err := db.Where(
+		&Worker{
+			Worker: &entities.Worker{
+				Name: name,
 			},
 		},
 	).First(&worker).Error; err != nil {
@@ -154,14 +170,8 @@ func Trans2Entities(workers []*Worker) []*entities.Worker {
 
 func (w *Worker) Create() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		workers, err := AdminGetWorkersByNodeName(w.NodeName)
-		if err != nil {
-			return err
-		}
-		allWorkers, allNodes := GetIngressParam()
-		tunnel.Add(w.TunnelID, w.Name, w.Port,
-			Trans2Entities(workers), allWorkers, allNodes)
-		err = w.UpdateFile()
+		tunnel.Add(w.GetTunnelID(), w.GetHostName(), w.GetPort())
+		err := w.UpdateFile()
 		if err != nil {
 			return err
 		}
@@ -186,15 +196,9 @@ func (w *Worker) Create() error {
 
 func (w *Worker) Update() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		workers, err := AdminGetWorkersByNodeName(w.NodeName)
-		if err != nil {
-			return err
-		}
-		allWorkers, allNodes := GetIngressParam()
-		tunnel.Delete(w.Name, Trans2Entities(workers), allWorkers, allNodes)
-		tunnel.Add(w.TunnelID, w.Name, w.Port,
-			Trans2Entities(workers), allWorkers, allNodes)
-		err = w.UpdateFile()
+		tunnel.Delete(w.GetTunnelID())
+		tunnel.Add(w.GetTunnelID(), w.GetHostName(), w.GetPort())
+		err := w.UpdateFile()
 		if err != nil {
 			return err
 		}
@@ -206,12 +210,7 @@ func (w *Worker) Update() error {
 
 func (w *Worker) Delete() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		workers, err := AdminGetWorkersByNodeName(w.NodeName)
-		if err != nil {
-			return err
-		}
-		allWorkers, allNodes := GetIngressParam()
-		tunnel.Delete(w.Name, Trans2Entities(workers), allWorkers, allNodes)
+		tunnel.Delete(w.GetTunnelID())
 	} else {
 		n, err := GetNodeByNodeName(w.NodeName)
 		if err != nil {
@@ -279,10 +278,14 @@ func (w *Worker) UpdateFile() error {
 }
 
 func (w *Worker) Run() ([]byte, error) {
+	tun, err := forwarder.GetListener().GetTunnelInfo(w.GetTunnelID())
+	if err != nil {
+		return nil, err
+	}
 	resp, err := req.C().R().SetHeader(
 		defs.HeaderHost, fmt.Sprintf("%s%s", w.Name, conf.AppConfigInstance.WorkerURLSuffix),
 	).Get(fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost,
-		conf.AppConfigInstance.TunnelEntryPort))
+		tun.GetPort()))
 	if err != nil || resp == nil || resp.StatusCode >= 299 {
 		return nil, err
 	}

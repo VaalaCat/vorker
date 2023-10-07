@@ -8,6 +8,7 @@ import (
 	"time"
 	"vorker/authz"
 	"vorker/conf"
+	"vorker/defs"
 	"vorker/models"
 	"vorker/rpc"
 	"vorker/services/agent"
@@ -82,18 +83,18 @@ func init() {
 }
 
 func Run(f embed.FS) {
-	go tunnel.RelayServerRun()
 	go WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
 	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
 
 	if conf.AppConfigInstance.RunMode == "master" {
+		go tunnel.Serve()
 		HandleStaticFile(f)
 	} else {
+		go TunnelAgentRun()
 		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
 		RegisterNodeToMaster()
 	}
 
-	go TunnelAgentRun()
 	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
 }
 
@@ -104,10 +105,11 @@ func TunnelAgentRun() {
 	}
 	w := models.Trans2Entities(workers)
 	allWorkers, allNodes := models.GetIngressParam()
-	tunnel.InitTunnelAgent(w, allWorkers, allNodes)
-	tunnel.Add(conf.AppConfigInstance.NodeID,
+	tunnel.InitAgent(w, allWorkers, allNodes)
+	tunnel.Add(
 		fmt.Sprintf("%s%s", conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
-		int32(conf.AppConfigInstance.APIPort), w, allWorkers, allNodes)
+		defs.DefaultHostName, int32(conf.AppConfigInstance.APIPort),
+	)
 }
 
 func HandleStaticFile(f embed.FS) {

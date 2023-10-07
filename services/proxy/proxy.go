@@ -7,7 +7,9 @@ import (
 	"runtime/debug"
 	"vorker/common"
 	"vorker/conf"
+	"vorker/models"
 
+	"github.com/VaalaCat/tunnel/forwarder"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -21,9 +23,23 @@ func Endpoint(c *gin.Context) {
 	}()
 	host := c.Request.Host
 	c.Request.Host = host
+	workerName := host[:len(host)-len(conf.AppConfigInstance.WorkerURLSuffix)]
+	worker, err := models.AdminGetWorkerByName(workerName)
+	if err != nil {
+		logrus.Errorf("failed to get worker by name, err: %v", err)
+		common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
+		return
+	}
+
+	tun, err := forwarder.GetListener().GetTunnelInfo(worker.GetTunnelID())
+	if err != nil {
+		logrus.Errorf("failed to get tunnel info, err: %v", err)
+		common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
+		return
+	}
 
 	remote, err := url.Parse(fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost,
-		conf.AppConfigInstance.TunnelEntryPort))
+		tun.GetPort()))
 	if err != nil {
 		logrus.Panic(err)
 	}
