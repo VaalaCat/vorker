@@ -43,8 +43,8 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y\
 	systemd-sysv \
 	--no-install-recommends 
 
-RUN wget https://mirrors.ustc.edu.cn/golang/go1.20.4.linux-arm64.tar.gz && \
-	rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.4.linux-arm64.tar.gz
+RUN wget https://mirrors.ustc.edu.cn/golang/go1.21.1.linux-arm64.tar.gz && \
+	rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.1.linux-arm64.tar.gz
 
 WORKDIR /app
 
@@ -72,8 +72,8 @@ RUN go install github.com/cweill/gotests/gotests@latest 		&& \
 	go install github.com/go-delve/delve/cmd/dlv@latest     	&& \
 	go install honnef.co/go/tools/cmd/staticcheck@latest    	&& \
 	go install golang.org/x/tools/gopls@latest
-                                                       
-EXPOSE 8888                                            
-EXPOSE 8080                                            
 
-CMD [ "/app/vorker" ]
+EXPOSE 8888
+EXPOSE 8080
+
+CMD [ "/bin/bash" ]

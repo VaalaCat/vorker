@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"io/fs"
@@ -8,15 +9,14 @@ import (
 	"time"
 	"vorker/authz"
 	"vorker/conf"
-	"vorker/models"
 	"vorker/rpc"
 	"vorker/services/agent"
 	"vorker/services/appconf"
 	"vorker/services/auth"
 	"vorker/services/node"
 	proxyService "vorker/services/proxy"
-	"vorker/services/tunnel"
 	"vorker/services/workerd"
+	"vorker/tunnel"
 	"vorker/utils"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +36,7 @@ func init() {
 	))
 	api := router.Group("/api")
 	{
-		if conf.AppConfigInstance.RunMode == "master" {
+		if conf.IsMaster() {
 			workerApi := api.Group("/worker", authz.JWTMiddleware())
 			{
 				workerApi.GET("/:uid", workerd.GetWorkerEndpoint)
@@ -68,9 +68,8 @@ func init() {
 		}
 		agentAPI := api.Group("/agent")
 		{
-			if conf.AppConfigInstance.RunMode == "master" {
+			if conf.IsMaster() {
 				agentAPI.POST("/sync", authz.AgentAuthz(), workerd.AgentSyncWorkers)
-				agentAPI.GET("/ingress", tunnel.GetIngressConf)
 				agentAPI.POST("/add", authz.AgentAuthz(), node.AddEndpoint)
 				agentAPI.GET("/nodeinfo", authz.AgentAuthz(), node.GetNodeInfoEndpoint)
 			} else {
@@ -84,27 +83,41 @@ func init() {
 
 func Run(f embed.FS) {
 	WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
-	models.InitGost()
-	go models.GostRun()
 	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
 
-	if conf.AppConfigInstance.RunMode == "master" {
-		fp, err := fs.Sub(f, "www/out")
-		if err != nil {
-			logrus.Panic(err)
-		}
-		router.StaticFileFS("/404", "404.html", http.FS(fp))
-		router.StaticFileFS("/login", "login.html", http.FS(fp))
-		router.StaticFileFS("/admin", "admin.html", http.FS(fp))
-		router.StaticFileFS("/register", "register.html", http.FS(fp))
-		router.StaticFileFS("/worker", "worker.html", http.FS(fp))
-		router.StaticFileFS("/index", "index.html", http.FS(fp))
-		router.StaticFileFS("/nodes", "nodes.html", http.FS(fp))
-		router.NoRoute(func(c *gin.Context) {
-			c.FileFromFS(c.Request.URL.Path, http.FS(fp))
-		})
+	if conf.IsMaster() {
+		tunnel.Serve()
+		HandleStaticFile(f)
 	} else {
+		RegisterNodeToMaster()
+		tunnel.GetClient().Run(context.Background())
 		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
+	}
+	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
+}
+
+func HandleStaticFile(f embed.FS) {
+	fp, err := fs.Sub(f, "www/out")
+	if err != nil {
+		logrus.Panic(err)
+	}
+	router.StaticFileFS("/404", "404.html", http.FS(fp))
+	router.StaticFileFS("/login", "login.html", http.FS(fp))
+	router.StaticFileFS("/admin", "admin.html", http.FS(fp))
+	router.StaticFileFS("/register", "register.html", http.FS(fp))
+	router.StaticFileFS("/worker", "worker.html", http.FS(fp))
+	router.StaticFileFS("/index", "index.html", http.FS(fp))
+	router.StaticFileFS("/nodes", "nodes.html", http.FS(fp))
+	router.NoRoute(func(c *gin.Context) {
+		c.FileFromFS(c.Request.URL.Path, http.FS(fp))
+	})
+}
+
+func RegisterNodeToMaster() {
+	if conf.IsMaster() {
+		return
+	}
+	go func() {
 		for {
 			logrus.Info("Registering node to master...")
 			self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)
@@ -121,13 +134,17 @@ func Run(f embed.FS) {
 				logrus.Info("Node already exists")
 				conf.AppConfigInstance.NodeID = self.UID
 			}
+			tun, err := tunnel.GetClient().Query(conf.AppConfigInstance.NodeID)
+			if err != nil || tun == nil {
+				logrus.Warnf("Query tunnel failed, err: %v, try to add tunnel", err)
+				tunnel.GetClient().Add(conf.AppConfigInstance.NodeID, utils.NodeHostPrefix(
+					conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
+					int(conf.AppConfigInstance.APIPort))
+			} else {
+				logrus.Info("Tunnel already exists, skip adding")
+			}
 			agent.SyncCall()
-			break
+			time.Sleep(30 * time.Second)
 		}
-	}
-
-	models.AddGost(conf.AppConfigInstance.NodeID,
-		fmt.Sprintf("%s%s", conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
-		int32(conf.AppConfigInstance.APIPort))
-	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
+	}()
 }

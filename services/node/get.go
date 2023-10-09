@@ -8,6 +8,7 @@ import (
 	"vorker/defs"
 	"vorker/models"
 	"vorker/rpc"
+	"vorker/utils"
 	"vorker/utils/request"
 
 	"github.com/gin-gonic/gin"
@@ -50,9 +51,16 @@ func UserGetNodesEndpoint(c *gin.Context) {
 	}
 	pingMap := map[string]int{}
 	for _, node := range nodes {
+
+		var addr string
+		if node.Name == conf.AppConfigInstance.NodeName {
+			addr = fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost, conf.AppConfigInstance.APIPort)
+		} else {
+			addr = fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost, conf.AppConfigInstance.TunnelEntryPort)
+		}
+
 		pingMap[node.Name], err = request.Ping(
-			fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost, conf.AppConfigInstance.TunnelEntryPort),
-			fmt.Sprintf("%s%s", node.Name, node.UID))
+			addr, utils.NodeHost(node.Name, node.UID))
 		if err != nil {
 			logrus.Errorf("failed to ping node %s, err: %v", node.Name, err)
 			pingMap[node.Name] = 9999

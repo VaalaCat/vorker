@@ -8,7 +8,6 @@ import (
 	"vorker/rpc"
 	"vorker/utils"
 
-	"github.com/google/uuid"
 	"github.com/lucasepe/codename"
 	"github.com/sirupsen/logrus"
 )
@@ -16,9 +15,6 @@ import (
 func FillWorkerValue(worker *entities.Worker, keepUID bool, UID string, UserID uint) {
 	if !keepUID {
 		worker.UID = utils.GenerateUID()
-	}
-	if len(worker.TunnelID) == 0 || !keepUID {
-		worker.TunnelID = uuid.New().String()
 	}
 	worker.UserID = uint64(UserID)
 	worker.HostName = defs.DefaultHostName
@@ -31,6 +27,12 @@ func FillWorkerValue(worker *entities.Worker, keepUID bool, UID string, UserID u
 			worker.NodeName = defs.DefaultNodeName
 		}
 	}
+	if node, err := models.GetNodeByNodeName(worker.NodeName); err == nil {
+		worker.TunnelID = node.UID
+	} else {
+		worker.TunnelID = conf.AppConfigInstance.NodeID
+	}
+
 	worker.ExternalPath = defs.DefaultExternalPath
 	port, err := utils.GetAvailablePort(defs.DefaultHostName)
 	if err != nil {

@@ -19,7 +19,7 @@ type Node struct {
 func init() {
 	db := database.GetDB()
 	db.AutoMigrate(&Node{})
-	if conf.AppConfigInstance.RunMode != "master" {
+	if !conf.IsMaster() {
 		return
 	}
 	if err := db.FirstOrCreate(&Node{
@@ -124,4 +124,12 @@ func GetAssignNode() (*Node, error) {
 	// random get a node
 	idx := rand.Intn(len(nodes))
 	return nodes[idx], nil
+}
+
+func NodeModels2Entities(nodes []*Node) []*entities.Node {
+	ans := make([]*entities.Node, len(nodes))
+	for i, node := range nodes {
+		ans[i] = node.Node
+	}
+	return ans
 }

@@ -1,8 +1,8 @@
 navigate to [protobuf release page](https://github.com/protocolbuffers/protobuf/releases) and download the latest release for your platform
 
 ```bash
-wget https://github.com/protocolbuffers/protobuf/releases/download/v3.11.2/protoc-3.11.2-linux-x86_64.zip
-7z x protoc-3.11.2-linux-x86_64.zip -o/usr/local
+wget https://github.com/protocolbuffers/protobuf/releases/download/v24.0-rc3/protoc-24.0-rc-3-linux-aarch_64.zip
+7z x protoc-24.0-rc-3-linux-aarch_64 -o/usr/local
 ```
 
 install protoc-gen-go

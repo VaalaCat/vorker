@@ -27,7 +27,7 @@ func TestRun(t *testing.T) {
 		panic(err)
 	}
 	f.WriteString(c)
-	WorkerdRun("/workspaces/vorker/workerd/", []string{})
+	go WorkerdRun("/workspaces/vorker/workerd/", []string{})
 	ch := make(chan struct{})
 	<-ch
 }

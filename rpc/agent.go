@@ -6,6 +6,7 @@ import (
 	"vorker/conf"
 	"vorker/defs"
 	"vorker/entities"
+	"vorker/utils"
 
 	"github.com/imroc/req/v3"
 	"github.com/sirupsen/logrus"
@@ -13,7 +14,7 @@ import (
 
 func EventNotify(n *entities.Node, eventName string, extra map[string][]byte) error {
 	reqResp, err := RPCWrapper().
-		SetHeader(defs.HeaderHost, fmt.Sprintf("%s%s", n.Name, n.UID)).
+		SetHeader(defs.HeaderHost, utils.NodeHost(n.Name, n.UID)).
 		SetBody(&entities.NotifyEventRequest{EventName: eventName, Extra: extra}).
 		Post(
 			fmt.Sprintf("http://%s:%d/api/agent/notify",

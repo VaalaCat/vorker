@@ -4,13 +4,11 @@ import (
 	"vorker/conf"
 	"vorker/defs"
 
-	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 func init() {
-	godotenv.Load()
 	switch conf.AppConfigInstance.DBType {
 	case defs.DBTypeSqlite:
 		initSqlite()

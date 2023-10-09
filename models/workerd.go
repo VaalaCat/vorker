@@ -9,8 +9,8 @@ import (
 	"vorker/defs"
 	"vorker/entities"
 	"vorker/rpc"
+	"vorker/tunnel"
 	"vorker/utils"
-
 	"vorker/utils/database"
 
 	"github.com/google/uuid"
@@ -47,6 +47,22 @@ func GetWorkerByUID(userID uint, uid string) (*Worker, error) {
 		&Worker{
 			Worker: &entities.Worker{
 				UID: uid,
+			},
+		},
+	).First(&worker).Error; err != nil {
+		return nil, err
+	}
+	return &worker, nil
+}
+
+func AdminGetWorkerByName(name string) (*Worker, error) {
+	var worker Worker
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	if err := db.Where(
+		&Worker{
+			Worker: &entities.Worker{
+				Name: name,
 			},
 		},
 	).First(&worker).Error; err != nil {
@@ -153,7 +169,7 @@ func Trans2Entities(workers []*Worker) []*entities.Worker {
 
 func (w *Worker) Create() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		AddGost(w.TunnelID, w.Name, w.Port)
+		tunnel.GetClient().Add(w.GetUID(), utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
 		err := w.UpdateFile()
 		if err != nil {
 			return err
@@ -179,8 +195,9 @@ func (w *Worker) Create() error {
 
 func (w *Worker) Update() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		DeleteGost(w.Name)
-		AddGost(w.TunnelID, w.Name, w.Port)
+		tunnel.GetClient().Delete(w.GetUID())
+		tunnel.GetClient().Add(w.GetUID(),
+			utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
 		err := w.UpdateFile()
 		if err != nil {
 			return err
@@ -193,7 +210,7 @@ func (w *Worker) Update() error {
 
 func (w *Worker) Delete() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		DeleteGost(w.Name)
+		tunnel.GetClient().Delete(w.GetUID())
 	} else {
 		n, err := GetNodeByNodeName(w.NodeName)
 		if err != nil {
@@ -261,10 +278,16 @@ func (w *Worker) UpdateFile() error {
 }
 
 func (w *Worker) Run() ([]byte, error) {
+	var addr string
+	if w.GetNodeName() == conf.AppConfigInstance.NodeName {
+		addr = fmt.Sprintf("http://%s:%d", w.GetHostName(), w.GetPort())
+	} else {
+		addr = fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost,
+			conf.AppConfigInstance.TunnelEntryPort)
+	}
 	resp, err := req.C().R().SetHeader(
 		defs.HeaderHost, fmt.Sprintf("%s%s", w.Name, conf.AppConfigInstance.WorkerURLSuffix),
-	).Get(fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost,
-		conf.AppConfigInstance.TunnelEntryPort))
+	).Get(addr)
 	if err != nil || resp == nil || resp.StatusCode >= 299 {
 		return nil, err
 	}
