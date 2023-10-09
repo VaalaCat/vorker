@@ -8,9 +8,9 @@ import (
 	"vorker/defs"
 	"vorker/models"
 	"vorker/rpc"
+	"vorker/utils"
 	"vorker/utils/request"
 
-	"github.com/VaalaCat/tunnel/forwarder"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -51,16 +51,16 @@ func UserGetNodesEndpoint(c *gin.Context) {
 	}
 	pingMap := map[string]int{}
 	for _, node := range nodes {
-		tun, err := forwarder.GetListener().GetTunnelInfo(node.UID)
-		if err != nil {
-			logrus.Errorf("failed to get tunnel info, err: %v", err)
-			pingMap[node.Name] = 9999
-			continue
+
+		var addr string
+		if node.Name == conf.AppConfigInstance.NodeName {
+			addr = fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost, conf.AppConfigInstance.APIPort)
+		} else {
+			addr = fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost, conf.AppConfigInstance.TunnelEntryPort)
 		}
 
 		pingMap[node.Name], err = request.Ping(
-			fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost, tun.GetPort()),
-			fmt.Sprintf("%s%s%s", node.Name, node.UID, conf.AppConfigInstance.WorkerURLSuffix))
+			addr, utils.NodeHost(node.Name, node.UID))
 		if err != nil {
 			logrus.Errorf("failed to ping node %s, err: %v", node.Name, err)
 			pingMap[node.Name] = 9999

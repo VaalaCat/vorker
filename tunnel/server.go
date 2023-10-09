@@ -1,11 +1,25 @@
 package tunnel
 
 import (
+	"context"
+	"strings"
 	"vorker/conf"
 
-	"github.com/VaalaCat/tunnel/server"
+	"github.com/fatedier/frp/pkg/config"
+	"github.com/fatedier/frp/server"
 )
 
 func Serve() {
-	server.RunServer(conf.AppConfigInstance.RPCPort)
+	go func() {
+		cfg := config.GetDefaultServerConf()
+		cfg.BindPort = int(conf.AppConfigInstance.TunnelAPIPort)
+		cfg.VhostHTTPPort = int(conf.AppConfigInstance.TunnelEntryPort)
+		cfg.SubDomainHost = strings.Trim(conf.AppConfigInstance.WorkerURLSuffix, ".")
+		cfg.Token = conf.AppConfigInstance.TunnelToken
+		svr, err := server.NewService(cfg)
+		if err != nil {
+			return
+		}
+		svr.Run(context.Background())
+	}()
 }

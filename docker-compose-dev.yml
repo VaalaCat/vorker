@@ -35,7 +35,7 @@ services:
     tty: true
     volumes:
       - /tmp/workerd-agent:/workerd # change to your own path
-      - ./tmp:/workspaces/vorker
+      - .:/workspaces/vorker
       - /tmp/workerd-agent-home:/home/dev
     environment:
       - WORKER_URL_SUFFIX=.example.com # worker url = SCHEME://WORKERNAME+WORKER_URL_SUFFIX eg: .example.com
@@ -43,5 +43,4 @@ services:
       - RUN_MODE=agent
       - MASTER_ENDPOINT=http://vorker-master:8888
       - NODE_NAME=agent-1
-      - RPC_HOST=vorker-master
-      - RPC_PORT=7788
+      - TUNNEL_HOST=vorker-master

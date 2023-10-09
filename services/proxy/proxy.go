@@ -9,7 +9,6 @@ import (
 	"vorker/conf"
 	"vorker/models"
 
-	"github.com/VaalaCat/tunnel/forwarder"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -38,15 +37,8 @@ func Endpoint(c *gin.Context) {
 			logrus.Panic(err)
 		}
 	} else {
-		tun, err := forwarder.GetListener().GetTunnelInfo(worker.GetTunnelID())
-		if err != nil {
-			logrus.Errorf("failed to get tunnel info, err: %v", err)
-			common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
-			return
-		}
-
-		remote, err = url.Parse(fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost,
-			tun.GetPort()))
+		remote, err = url.Parse(fmt.Sprintf("http://%s:%d",
+			conf.AppConfigInstance.TunnelHost, conf.AppConfigInstance.TunnelEntryPort))
 		if err != nil {
 			logrus.Panic(err)
 		}

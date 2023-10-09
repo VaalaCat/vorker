@@ -13,7 +13,6 @@ import (
 	"vorker/utils"
 	"vorker/utils/database"
 
-	"github.com/VaalaCat/tunnel/forwarder"
 	"github.com/google/uuid"
 	"github.com/imroc/req/v3"
 	"github.com/sirupsen/logrus"
@@ -170,7 +169,7 @@ func Trans2Entities(workers []*Worker) []*entities.Worker {
 
 func (w *Worker) Create() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		tunnel.Add(w.GetTunnelID(), w.GetHostName(), w.GetPort())
+		tunnel.GetClient().Add(w.GetUID(), utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
 		err := w.UpdateFile()
 		if err != nil {
 			return err
@@ -196,8 +195,9 @@ func (w *Worker) Create() error {
 
 func (w *Worker) Update() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		tunnel.Delete(w.GetTunnelID())
-		tunnel.Add(w.GetTunnelID(), w.GetHostName(), w.GetPort())
+		tunnel.GetClient().Delete(w.GetUID())
+		tunnel.GetClient().Add(w.GetUID(),
+			utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
 		err := w.UpdateFile()
 		if err != nil {
 			return err
@@ -210,7 +210,7 @@ func (w *Worker) Update() error {
 
 func (w *Worker) Delete() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		tunnel.Delete(w.GetTunnelID())
+		tunnel.GetClient().Delete(w.GetUID())
 	} else {
 		n, err := GetNodeByNodeName(w.NodeName)
 		if err != nil {
@@ -282,12 +282,8 @@ func (w *Worker) Run() ([]byte, error) {
 	if w.GetNodeName() == conf.AppConfigInstance.NodeName {
 		addr = fmt.Sprintf("http://%s:%d", w.GetHostName(), w.GetPort())
 	} else {
-		tun, err := forwarder.GetListener().GetTunnelInfo(w.GetTunnelID())
-		if err != nil {
-			return nil, err
-		}
 		addr = fmt.Sprintf("http://%s:%d", conf.AppConfigInstance.TunnelHost,
-			tun.GetPort())
+			conf.AppConfigInstance.TunnelEntryPort)
 	}
 	resp, err := req.C().R().SetHeader(
 		defs.HeaderHost, fmt.Sprintf("%s%s", w.Name, conf.AppConfigInstance.WorkerURLSuffix),

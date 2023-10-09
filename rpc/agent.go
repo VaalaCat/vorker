@@ -6,25 +6,20 @@ import (
 	"vorker/conf"
 	"vorker/defs"
 	"vorker/entities"
+	"vorker/utils"
 
-	"github.com/VaalaCat/tunnel/forwarder"
 	"github.com/imroc/req/v3"
 	"github.com/sirupsen/logrus"
 )
 
 func EventNotify(n *entities.Node, eventName string, extra map[string][]byte) error {
-	tun, err := forwarder.GetListener().GetTunnelInfo(n.GetUID())
-	if err != nil {
-		logrus.Errorf("failed to get tunnel info, err: %v", err)
-		return err
-	}
 	reqResp, err := RPCWrapper().
-		SetHeader(defs.HeaderHost, fmt.Sprintf("%s%s", n.Name, n.UID)).
+		SetHeader(defs.HeaderHost, utils.NodeHost(n.Name, n.UID)).
 		SetBody(&entities.NotifyEventRequest{EventName: eventName, Extra: extra}).
 		Post(
 			fmt.Sprintf("http://%s:%d/api/agent/notify",
 				conf.AppConfigInstance.TunnelHost,
-				tun.GetPort()))
+				conf.AppConfigInstance.TunnelEntryPort))
 
 	if err != nil || reqResp.StatusCode >= 299 {
 		logrus.Errorf("event notify error, err: %+v, resp: %+v", err, reqResp)

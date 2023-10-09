@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"io/fs"
@@ -8,7 +9,6 @@ import (
 	"time"
 	"vorker/authz"
 	"vorker/conf"
-	"vorker/models"
 	"vorker/rpc"
 	"vorker/services/agent"
 	"vorker/services/appconf"
@@ -82,36 +82,18 @@ func init() {
 }
 
 func Run(f embed.FS) {
-	go WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
+	WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
 	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
 
 	if conf.AppConfigInstance.RunMode == "master" {
-		go tunnel.Serve()
-		time.Sleep(1 * time.Second)
-		go TunnelAgentRun()
+		tunnel.Serve()
 		HandleStaticFile(f)
 	} else {
-		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
 		RegisterNodeToMaster()
+		tunnel.GetClient().Run(context.Background())
+		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
 	}
-
 	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
-}
-
-func TunnelAgentRun() {
-	workers, err := models.AdminGetWorkersByNodeName(conf.AppConfigInstance.NodeName)
-	if err != nil {
-		logrus.Fatalf("get workers failed: %v", err)
-	}
-	w := models.Trans2Entities(workers)
-
-	nodes, err := models.AdminGetAllNodes()
-	if err != nil {
-		logrus.Fatalf("get nodes failed: %v", err)
-	}
-	n := models.NodeModels2Entities(nodes)
-
-	tunnel.InitAgent(w, n)
 }
 
 func HandleStaticFile(f embed.FS) {
@@ -132,24 +114,37 @@ func HandleStaticFile(f embed.FS) {
 }
 
 func RegisterNodeToMaster() {
-	for {
-		logrus.Info("Registering node to master...")
-		self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)
-		if err != nil || self == nil {
-			err := rpc.AddNode(conf.AppConfigInstance.MasterEndpoint)
-			if err != nil {
-				logrus.WithError(err).Error("Add node failed.. retrying for 5 seconds")
-				time.Sleep(5 * time.Second)
-			} else {
-				logrus.Info("Node added successfully")
-			}
-			continue
-		} else {
-			logrus.Info("Node already exists")
-			conf.AppConfigInstance.NodeID = self.UID
-		}
-		tunnel.Add(conf.AppConfigInstance.NodeID, conf.AppConfigInstance.TunnelHost, int32(conf.AppConfigInstance.APIPort))
-		agent.SyncCall()
-		break
+	if conf.IsMaster() {
+		return
 	}
+	go func() {
+		for {
+			logrus.Info("Registering node to master...")
+			self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)
+			if err != nil || self == nil {
+				err := rpc.AddNode(conf.AppConfigInstance.MasterEndpoint)
+				if err != nil {
+					logrus.WithError(err).Error("Add node failed.. retrying for 5 seconds")
+					time.Sleep(5 * time.Second)
+				} else {
+					logrus.Info("Node added successfully")
+				}
+				continue
+			} else {
+				logrus.Info("Node already exists")
+				conf.AppConfigInstance.NodeID = self.UID
+			}
+			tun, err := tunnel.GetClient().Query(conf.AppConfigInstance.NodeID)
+			if err != nil || tun == nil {
+				logrus.Warnf("Query tunnel failed, err: %v, try to add tunnel", err)
+				tunnel.GetClient().Add(conf.AppConfigInstance.NodeID, utils.NodeHostPrefix(
+					conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
+					int(conf.AppConfigInstance.APIPort))
+			} else {
+				logrus.Info("Tunnel already exists, skip adding")
+			}
+			agent.SyncCall()
+			time.Sleep(30 * time.Second)
+		}
+	}()
 }

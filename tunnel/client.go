@@ -1,48 +1,108 @@
 package tunnel
 
 import (
+	"context"
 	"fmt"
+	"time"
 	"vorker/conf"
-	"vorker/defs"
-	"vorker/entities"
-	"vorker/utils"
 
-	"github.com/VaalaCat/tunnel/client"
+	"github.com/fatedier/frp/client"
+	"github.com/fatedier/frp/pkg/config"
 	"github.com/sirupsen/logrus"
 )
 
-func InitAgent(allWorkers []*entities.Worker, allNodes []*entities.Node) {
-	if conf.IsMaster() {
-		return
-	}
-	for _, worker := range allWorkers {
-		if worker.GetNodeName() == conf.AppConfigInstance.NodeName {
-			continue
-		}
-		Add(worker.GetTunnelID(), worker.GetHostName(), worker.GetPort())
-	}
-
-	for _, node := range allNodes {
-		Add(node.GetUID(), conf.AppConfigInstance.TunnelHost, int32(conf.AppConfigInstance.APIPort))
-	}
+type ClientHandler interface {
+	Run(ctx context.Context)
+	Add(clientID, routeHostname string, forwardPort int) error
+	Delete(clientID string) error
+	Query(clientID string) (config.ProxyConf, error)
 }
 
-func Add(clientID, forwardHostname string, forwardPort int32) {
-	if conf.IsMaster() {
-		return
-	}
-	freePort, err := utils.GetAvailablePort(defs.DefaultHostName)
+type Client struct {
+	proxyConf map[string]config.ProxyConf
+	cli       *client.Service
+}
+
+var (
+	cli ClientHandler
+)
+
+func NewClientHandler() *Client {
+	cfg := config.GetDefaultClientConf()
+	cfg.ServerAddr = conf.AppConfigInstance.TunnelHost
+	cfg.ServerPort = int(conf.AppConfigInstance.TunnelAPIPort)
+	cfg.Token = conf.AppConfigInstance.TunnelToken
+	proxyConf := map[string]config.ProxyConf{}
+	c, err := client.NewService(cfg,
+		proxyConf, nil, "")
 	if err != nil {
-		logrus.Errorf("tunnel add failed to get available port, err: %v", err)
+		logrus.WithError(err).Error("New client failed")
+		return nil
 	}
-	client.RunClient(conf.AppConfigInstance.RPCHost, conf.AppConfigInstance.RPCPort, int64(freePort),
-		fmt.Sprintf("%s:%d", forwardHostname, forwardPort), clientID,
-	)
+	return &Client{
+		proxyConf: proxyConf,
+		cli:       c,
+	}
 }
 
-func Delete(clientID string) {
-	if conf.IsMaster() {
-		return
+func GetClient() ClientHandler {
+	if cli == nil {
+		cli = NewClientHandler()
 	}
-	client.DeleteClient(conf.AppConfigInstance.RPCHost, conf.AppConfigInstance.RPCPort, clientID)
+	return cli
+}
+
+// Add implements ClientHandler.
+func (c *Client) Add(clientID, routeHostname string, forwardPort int) error {
+	newProxyConf := c.proxyConf
+	if _, ok := newProxyConf[clientID]; ok {
+		logger(context.Background(), "Client.Add").Errorf("client %s already exists", clientID)
+		return nil
+	}
+
+	newProxyConf[clientID] = &config.HTTPProxyConf{
+		BaseProxyConf: config.BaseProxyConf{
+			ProxyName: clientID,
+			ProxyType: "http",
+			LocalSvrConf: config.LocalSvrConf{
+				LocalIP:   "127.0.0.1",
+				LocalPort: int(forwardPort),
+			},
+		},
+		DomainConf: config.DomainConf{SubDomain: routeHostname},
+	}
+
+	return c.cli.ReloadConf(newProxyConf, nil)
+}
+
+// Delete implements ClientHandler.
+func (c *Client) Delete(clientID string) error {
+	newProxyConf := c.proxyConf
+	if _, ok := newProxyConf[clientID]; !ok {
+		logger(context.Background(), "Client.Delete").Errorf("client %s not exists", clientID)
+		return nil
+	}
+
+	delete(newProxyConf, clientID)
+	return c.cli.ReloadConf(newProxyConf, nil)
+}
+
+// Query implements ClientHandler.
+func (c *Client) Query(clientID string) (config.ProxyConf, error) {
+	if proxyConf, ok := c.proxyConf[clientID]; ok {
+		return proxyConf, nil
+	}
+	return nil, fmt.Errorf("client %s not exists", clientID)
+}
+
+// Run implements ClientHandler.
+func (c *Client) Run(ctx context.Context) {
+	go func() {
+		for {
+			if err := c.cli.Run(ctx); err != nil {
+				logger(ctx, "Client.Run").WithError(err).Error("client run failed, retrying for 5 seconds")
+				time.Sleep(5 * time.Second)
+			}
+		}
+	}()
 }
