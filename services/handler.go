@@ -36,7 +36,7 @@ func init() {
 	))
 	api := router.Group("/api")
 	{
-		if conf.AppConfigInstance.RunMode == "master" {
+		if conf.IsMaster() {
 			workerApi := api.Group("/worker", authz.JWTMiddleware())
 			{
 				workerApi.GET("/:uid", workerd.GetWorkerEndpoint)
@@ -68,7 +68,7 @@ func init() {
 		}
 		agentAPI := api.Group("/agent")
 		{
-			if conf.AppConfigInstance.RunMode == "master" {
+			if conf.IsMaster() {
 				agentAPI.POST("/sync", authz.AgentAuthz(), workerd.AgentSyncWorkers)
 				agentAPI.POST("/add", authz.AgentAuthz(), node.AddEndpoint)
 				agentAPI.GET("/nodeinfo", authz.AgentAuthz(), node.GetNodeInfoEndpoint)
@@ -85,7 +85,7 @@ func Run(f embed.FS) {
 	WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
 	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
 
-	if conf.AppConfigInstance.RunMode == "master" {
+	if conf.IsMaster() {
 		tunnel.Serve()
 		HandleStaticFile(f)
 	} else {

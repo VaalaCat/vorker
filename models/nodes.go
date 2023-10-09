@@ -19,7 +19,7 @@ type Node struct {
 func init() {
 	db := database.GetDB()
 	db.AutoMigrate(&Node{})
-	if conf.AppConfigInstance.RunMode != "master" {
+	if !conf.IsMaster() {
 		return
 	}
 	if err := db.FirstOrCreate(&Node{
