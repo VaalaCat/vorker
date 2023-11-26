@@ -10,35 +10,40 @@ var capfileTemplate = `using Workerd = import "/workerd/workerd.capnp";
 
 const config :Workerd.Config = (
   services = [
-{{range $i, $worker := .Workers}}    (name = "{{$worker.UID}}", worker = .v{{$worker.UID}}Worker),
-{{end}}  ],
+    (name = "{{.UID}}", worker = .v{{.UID}}Worker),
+  ],
 
-  sockets = [{{range $i, $worker := .Workers}}
+  sockets = [
     (
-      name = "{{$worker.UID}}",
-      address = "{{$worker.HostName}}:{{$worker.Port}}",
+      name = "{{.UID}}",
+      address = "{{.HostName}}:{{.Port}}",
       http=(),
-      service="{{$worker.UID}}"
-    ),{{end}}
+      service="{{.UID}}"
+    ),
   ]
 );
-{{range $i, $worker := .Workers}}
-const v{{$worker.UID}}Worker :Workerd.Worker = (
-  serviceWorkerScript = embed "workers/{{$worker.UID}}/{{$worker.Entry}}",
+
+const v{{.UID}}Worker :Workerd.Worker = (
+  serviceWorkerScript = embed "src/{{.Entry}}",
   compatibilityDate = "2023-04-03",
-);{{end}}
+);
 `
 
-func BuildCapfile(workers *entities.WorkerList) string {
-	writer := new(bytes.Buffer)
-	if len(workers.GetWorkers()) == 0 {
-		return ""
+func BuildCapfile(workers []*entities.Worker) map[string]string {
+	if len(workers) == 0 {
+		return map[string]string{}
 	}
-	capTemplate := template.New("capfile")
-	capTemplate, err := capTemplate.Parse(capfileTemplate)
-	if err != nil {
-		panic(err)
+
+	results := map[string]string{}
+	for _, worker := range workers {
+		writer := new(bytes.Buffer)
+		capTemplate := template.New("capfile")
+		capTemplate, err := capTemplate.Parse(capfileTemplate)
+		if err != nil {
+			panic(err)
+		}
+		capTemplate.Execute(writer, worker)
+		results[worker.GetUID()] = writer.String()
 	}
-	capTemplate.Execute(writer, workers)
-	return writer.String()
+	return results
 }

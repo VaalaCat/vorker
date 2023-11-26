@@ -2,10 +2,11 @@ package agent
 
 import (
 	"vorker/common"
+	"vorker/conf"
 	"vorker/defs"
 	"vorker/entities"
+	"vorker/exec"
 	"vorker/models"
-	"vorker/services/workerd"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -19,15 +20,13 @@ func DelWorkerEventHandler(c *gin.Context, req *entities.NotifyEventRequest) {
 		return
 	}
 
+	if worker.NodeName == conf.AppConfigInstance.NodeName {
+		exec.ExecManager.ExitCmd(worker.GetUID())
+	}
+
 	if err := (&models.Worker{Worker: worker}).Delete(); err != nil {
 		logrus.Errorf("delete worker error, err: %+v", err)
 		common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
-		return
-	}
-
-	if err := workerd.GenCapnpConfig(); err != nil {
-		logrus.WithError(err).Error("add worker event handler error")
-		common.RespErr(c, common.RespCodeInvalidRequest, common.RespMsgInvalidRequest, nil)
 		return
 	}
 

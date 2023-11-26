@@ -82,7 +82,6 @@ func init() {
 }
 
 func Run(f embed.FS) {
-	WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
 	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
 
 	if conf.IsMaster() {

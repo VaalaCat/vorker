@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"runtime/debug"
 	"vorker/common"
+	"vorker/conf"
+	"vorker/exec"
 	"vorker/models"
 
 	"github.com/gin-gonic/gin"
@@ -41,11 +43,10 @@ func Delete(userID uint, UID string) error {
 		return fmt.Errorf("worker not found")
 	}
 
-	if err = worker.Delete(); err != nil {
-		return err
+	if worker.NodeName == conf.AppConfigInstance.NodeName {
+		exec.ExecManager.ExitCmd(worker.GetUID())
 	}
-
-	if err = GenCapnpConfig(); err != nil {
+	if err = worker.Delete(); err != nil {
 		return err
 	}
 

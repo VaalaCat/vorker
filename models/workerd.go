@@ -261,7 +261,7 @@ func (w *Worker) DeleteFile() error {
 	return os.RemoveAll(
 		filepath.Join(
 			conf.AppConfigInstance.WorkerdDir,
-			defs.WorkerCodePath,
+			defs.WorkerInfoPath,
 			w.UID,
 		),
 	)
@@ -271,8 +271,9 @@ func (w *Worker) UpdateFile() error {
 	return utils.WriteFile(
 		filepath.Join(
 			conf.AppConfigInstance.WorkerdDir,
-			defs.WorkerCodePath,
+			defs.WorkerInfoPath,
 			w.UID,
+			defs.WorkerCodePath,
 			w.Entry),
 		string(w.Code))
 }

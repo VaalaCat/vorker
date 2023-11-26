@@ -1,6 +1,7 @@
 package workerd
 
 import (
+	"errors"
 	"path/filepath"
 	"vorker/conf"
 	"vorker/defs"
@@ -8,37 +9,29 @@ import (
 	"vorker/models"
 	"vorker/utils"
 
-	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
-func GetConfByNodeNameEndpoint(c *gin.Context) {
-	nodeName := c.GetString(defs.KeyNodeName)
-	node, err := models.GetNodeByNodeName(nodeName)
-	if err != nil || node == nil {
-		logrus.Errorf("failed to get node by node name, err: %v", err)
-		c.JSON(defs.CodeInternalError, gin.H{"message": err.Error()})
-		return
+func GenWorkerConfig(worker *entities.Worker) error {
+	if worker == nil || worker.GetUID() == "" {
+		return errors.New("error worker")
 	}
-
-	workerList, err := models.AdminGetWorkersByNodeName(nodeName)
-	if err != nil || len(workerList) == 0 {
-		logrus.Errorf("failed to get all workers, err: %v", err)
-		c.JSON(defs.CodeInternalError, gin.H{"message": err.Error()})
-		return
-	}
-
-	capnp := utils.BuildCapfile(&entities.WorkerList{
-		Workers: models.Trans2Entities(workerList),
+	fileMap := utils.BuildCapfile([]*entities.Worker{
+		worker,
 	})
 
-	if len(capnp) == 0 {
-		logrus.Errorf("failed to build capnp file")
-		c.JSON(defs.CodeInternalError, gin.H{"message": "failed to build capnp file"})
-		return
+	fileContent, ok := fileMap[worker.GetUID()]
+	if !ok {
+		return errors.New("BuildCapfile error")
 	}
 
-	c.JSON(defs.CodeSuccess, gin.H{"message": "success", "capnp": capnp})
+	return utils.WriteFile(
+		filepath.Join(
+			conf.AppConfigInstance.WorkerdDir,
+			defs.WorkerInfoPath,
+			worker.GetUID(),
+			defs.CapFileName,
+		), fileContent)
 }
 
 func GenCapnpConfig() error {
@@ -47,14 +40,27 @@ func GenCapnpConfig() error {
 		logrus.Errorf("failed to get all workers, err: %v", err)
 	}
 
-	workerList := &entities.WorkerList{
-		Workers: models.Trans2Entities(workerRecords),
+	workerList := models.Trans2Entities(workerRecords)
+	fileMap := utils.BuildCapfile(workerList)
+
+	var hasError bool
+	for _, worker := range workerList {
+		if fileContent, ok := fileMap[worker.GetUID()]; ok {
+			err := utils.WriteFile(
+				filepath.Join(
+					conf.AppConfigInstance.WorkerdDir,
+					defs.WorkerInfoPath,
+					worker.GetUID(),
+					defs.CapFileName,
+				), fileContent)
+			if err != nil {
+				hasError = true
+			}
+		}
 	}
 
-	return utils.WriteFile(
-		filepath.Join(
-			conf.AppConfigInstance.WorkerdDir,
-			defs.CapFileName,
-		),
-		utils.BuildCapfile(workerList))
+	if hasError {
+		return errors.New("GenCapnpConfig has error")
+	}
+	return nil
 }
