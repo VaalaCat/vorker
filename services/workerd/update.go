@@ -48,7 +48,6 @@ func Update(userID uint, UID string, worker *entities.Worker) error {
 		return err
 	}
 
-	worker.Version = worker.GetVersion() + 1
 	newWorker := &models.Worker{Worker: worker}
 	err = newWorker.Create()
 	if err != nil {

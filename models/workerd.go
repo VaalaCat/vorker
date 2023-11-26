@@ -15,7 +15,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/imroc/req/v3"
-	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"gorm.io/gorm"
@@ -110,16 +109,14 @@ func GetAllWorkers(userID uint) ([]*Worker, error) {
 	return workers, nil
 }
 
-func AdminGetAllWorkers() (map[string]*Worker, error) {
+func AdminGetAllWorkers() ([]*Worker, error) {
 	var workers []*Worker
 	db := database.GetDB()
 	defer database.CloseDB(db)
 	if err := db.Find(&workers).Error; err != nil {
 		return nil, err
 	}
-	return lo.Associate(workers, func(worker *Worker) (string, *Worker) {
-		return worker.GetUID(), worker
-	}), nil
+	return workers, nil
 }
 
 func AdminGetAllWorkersTunnelMap() (map[string]string, error) {
@@ -309,11 +306,6 @@ func SyncWorkers(workerList *entities.WorkerList) error {
 		modelWorker := &Worker{Worker: worker}
 		UIDs = append(UIDs, worker.UID)
 
-		// no need to update
-		if oldWorker, ok := oldWorkers[worker.UID]; ok && oldWorker.GetVersion() == modelWorker.GetVersion() {
-			continue
-		}
-
 		if err := modelWorker.Delete(); err != nil && err != gorm.ErrRecordNotFound {
 			logrus.WithError(err).Errorf("sync workers db delete error, worker is: %+v", worker)
 			partialFail = true
@@ -340,8 +332,8 @@ func SyncWorkers(workerList *entities.WorkerList) error {
 	}
 
 	// delete workers that not in workerList
-	for UID, worker := range oldWorkers {
-		if !lo.Contains(UIDs, UID) {
+	for _, worker := range oldWorkers {
+		if !utils.ContainsString(UIDs, worker.UID) {
 			if err := worker.Delete(); err != nil {
 				logrus.WithError(err).Errorf("sync workers delete worker error, worker is: %+v", worker)
 				partialFail = true
