@@ -9,6 +9,8 @@ import (
 	"time"
 	"vorker/authz"
 	"vorker/conf"
+	"vorker/exec"
+	"vorker/models"
 	"vorker/rpc"
 	"vorker/services/agent"
 	"vorker/services/appconf"
@@ -81,8 +83,18 @@ func init() {
 	proxy.Any("/*proxyPath", proxyService.Endpoint)
 }
 
+func NodeWorkersInit() {
+	workerRecords, err := models.AdminGetWorkersByNodeName(conf.AppConfigInstance.NodeName)
+	if err != nil {
+		logrus.Errorf("init failed to get all workers, err: %v", err)
+	}
+	for _, worker := range workerRecords {
+		exec.ExecManager.RunCmd(worker.GetUID(), []string{})
+	}
+}
+
 func Run(f embed.FS) {
-	WorkerdRun(conf.AppConfigInstance.WorkerdDir, []string{})
+	go NodeWorkersInit()
 	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
 
 	if conf.IsMaster() {

@@ -2,7 +2,8 @@ package defs
 
 const (
 	CapFileName    = "workerd.capnp"
-	WorkerCodePath = "workers"
+	WorkerInfoPath = "workers"
+	WorkerCodePath = "src"
 	DBTypeSqlite   = "sqlite"
 
 	DefaultHostName     = "localhost"

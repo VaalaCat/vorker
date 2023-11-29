@@ -2,8 +2,10 @@ package agent
 
 import (
 	"vorker/common"
+	"vorker/conf"
 	"vorker/defs"
 	"vorker/entities"
+	"vorker/exec"
 	"vorker/models"
 	"vorker/services/workerd"
 
@@ -25,10 +27,14 @@ func AddWorkerEventHandler(c *gin.Context, req *entities.NotifyEventRequest) {
 		return
 	}
 
-	if err := workerd.GenCapnpConfig(); err != nil {
-		logrus.WithError(err).Error("add worker event handler error")
-		common.RespErr(c, common.RespCodeInvalidRequest, common.RespMsgInvalidRequest, nil)
-		return
+	if worker.NodeName == conf.AppConfigInstance.NodeName {
+		err := workerd.GenWorkerConfig(worker)
+		if err != nil {
+			logrus.WithError(err).Error("add worker event handler error")
+			common.RespErr(c, common.RespCodeInvalidRequest, common.RespMsgInvalidRequest, nil)
+			return
+		}
+		exec.ExecManager.RunCmd(worker.GetUID(), []string{})
 	}
 
 	logrus.Info("add worker event handler success")

@@ -3,6 +3,7 @@ package workerd
 import (
 	"runtime/debug"
 	"vorker/common"
+	"vorker/conf"
 	"vorker/models"
 
 	"github.com/gin-gonic/gin"
@@ -67,5 +68,8 @@ func Flush(userID uint, UID string) error {
 	if err != nil {
 		return err
 	}
-	return GenCapnpConfig()
+	if worker.NodeName == conf.AppConfigInstance.NodeName {
+		GenWorkerConfig(worker.Worker)
+	}
+	return nil
 }

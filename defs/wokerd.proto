@@ -13,7 +13,6 @@ message Worker {
 	string Name = 8; // worker's name, also use at worker routing, must be unique, default is UID
 	string TunnelID = 9; // worker's tunnel id
 	uint64 UserID = 10; // worker's user id
-	uint64 Version = 11; // worker's version
 }
 
 // one WorkerList for one workerd instance

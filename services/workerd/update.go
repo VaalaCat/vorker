@@ -3,7 +3,9 @@ package workerd
 import (
 	"fmt"
 	"vorker/common"
+	"vorker/conf"
 	"vorker/entities"
+	"vorker/exec"
 	"vorker/models"
 
 	"github.com/gin-gonic/gin"
@@ -43,16 +45,29 @@ func Update(userID uint, UID string, worker *entities.Worker) error {
 		return fmt.Errorf("worker is nil")
 	}
 
+	curNodeName := conf.AppConfigInstance.NodeName
+
+	if workerRecord.NodeName == curNodeName && worker.NodeName != curNodeName {
+		exec.ExecManager.ExitCmd(workerRecord.GetUID())
+	}
+
 	err = workerRecord.Delete()
 	if err != nil {
 		return err
 	}
 
-	worker.Version = worker.GetVersion() + 1
 	newWorker := &models.Worker{Worker: worker}
 	err = newWorker.Create()
 	if err != nil {
 		return err
 	}
-	return GenCapnpConfig()
+
+	if worker.NodeName == curNodeName {
+		err := GenWorkerConfig(worker)
+		if err != nil {
+			return err
+		}
+		exec.ExecManager.RunCmd(worker.GetUID(), []string{})
+	}
+	return nil
 }
