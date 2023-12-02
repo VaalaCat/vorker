@@ -15,23 +15,20 @@ services:
       - AGENT_SECRET=123123
       - RUN_MODE=master
     ports:
-      - 7788:7788
-      - 8080:8080
-      - 8888:8888
-      - 10080:10080
-      - 18080:18080
+      - 8080:8080 # reverse proxy port
+      - 8888:8888 # admin webui port
+      - 10080:10080 # tunnel reverse proxy port
+      - 18080:18080 # tunnel relay port
     restart: unless-stopped
   vorker-agent:
     build: ./
     # image: vaalacat/vorker
-    ports:
-      - 7789:7788
     volumes:
       - /tmp/workerd-agent:/workerd # change to your own path
     environment:
       - WORKER_URL_SUFFIX=.example.com # worker url = SCHEME://WORKERNAME+WORKER_URL_SUFFIX eg: .example.com
-      - AGENT_SECRET=123123
+      - AGENT_SECRET=123123 # must be same as master
       - RUN_MODE=agent
       - MASTER_ENDPOINT=http://vorker-master:8888
       - TUNNEL_RELAY_ENDPOINT=vorker-master:18080
-      - NODE_NAME=agent-1
+      - NODE_NAME=agent-1 # must be different amone agents

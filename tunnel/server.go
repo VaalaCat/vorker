@@ -10,17 +10,15 @@ import (
 )
 
 func Serve() {
-	go func() {
-		cfg := config.GetDefaultServerConf()
-		cfg.BindPort = int(conf.AppConfigInstance.TunnelAPIPort)
-		cfg.VhostHTTPPort = int(conf.AppConfigInstance.TunnelEntryPort)
-		cfg.SubDomainHost = strings.Trim(conf.AppConfigInstance.WorkerURLSuffix, ".")
-		cfg.Token = conf.AppConfigInstance.TunnelToken
-		cfg.TLSOnly = true
-		svr, err := server.NewService(cfg)
-		if err != nil {
-			return
-		}
-		svr.Run(context.Background())
-	}()
+	cfg := config.GetDefaultServerConf()
+	cfg.BindPort = int(conf.AppConfigInstance.TunnelAPIPort)
+	cfg.VhostHTTPPort = int(conf.AppConfigInstance.TunnelEntryPort)
+	cfg.SubDomainHost = strings.Trim(conf.AppConfigInstance.WorkerURLSuffix, ".")
+	cfg.Token = conf.AppConfigInstance.TunnelToken
+	cfg.TLSOnly = true
+	svr, err := server.NewService(cfg)
+	if err != nil {
+		return
+	}
+	svr.Run(context.Background())
 }

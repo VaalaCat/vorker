@@ -1,0 +1,11 @@
+fuse:
+  dir: "/litefs"
+data:
+  dir: "/var/lib/litefs"
+lease:
+  type: "static"
+  advertise-url: $PRIMARY_URL
+  candidate: $IS_PRIMARY
+
+exec:
+  - cmd: "/app/vorker"

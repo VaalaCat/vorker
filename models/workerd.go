@@ -238,6 +238,19 @@ func (w *Worker) Delete() error {
 }
 
 func (w *Worker) Flush() error {
+	if w.NodeName != conf.AppConfigInstance.NodeName {
+		n, err := GetNodeByNodeName(w.NodeName)
+		if err != nil {
+			return err
+		}
+		wp, err := proto.Marshal(w)
+		if err != nil {
+			return err
+		}
+		return rpc.EventNotify(n.Node, defs.EventFlushWorker, map[string][]byte{
+			defs.KeyWorkerProto: wp,
+		})
+	}
 	port, err := utils.GetAvailablePort(defs.DefaultHostName)
 	if err != nil {
 		return err

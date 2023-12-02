@@ -72,4 +72,5 @@ const (
 	EventSyncWorkers  = "sync-workers"
 	EventAddWorker    = "add-worker"
 	EventDeleteWorker = "delete-worker"
+	EventFlushWorker  = "flush-worker"
 )
