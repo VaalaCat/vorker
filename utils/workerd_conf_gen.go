@@ -3,31 +3,9 @@ package utils
 import (
 	"bytes"
 	"html/template"
+	"vorker/defs"
 	"vorker/entities"
 )
-
-var capfileTemplate = `using Workerd = import "/workerd/workerd.capnp";
-
-const config :Workerd.Config = (
-  services = [
-    (name = "{{.UID}}", worker = .v{{.UID}}Worker),
-  ],
-
-  sockets = [
-    (
-      name = "{{.UID}}",
-      address = "{{.HostName}}:{{.Port}}",
-      http=(),
-      service="{{.UID}}"
-    ),
-  ]
-);
-
-const v{{.UID}}Worker :Workerd.Worker = (
-  serviceWorkerScript = embed "src/{{.Entry}}",
-  compatibilityDate = "2023-04-03",
-);
-`
 
 func BuildCapfile(workers []*entities.Worker) map[string]string {
 	if len(workers) == 0 {
@@ -38,7 +16,12 @@ func BuildCapfile(workers []*entities.Worker) map[string]string {
 	for _, worker := range workers {
 		writer := new(bytes.Buffer)
 		capTemplate := template.New("capfile")
-		capTemplate, err := capTemplate.Parse(capfileTemplate)
+		workerTemplate := worker.GetTemplate()
+		if workerTemplate == "" {
+			workerTemplate = defs.DefaultTemplate
+		}
+
+		capTemplate, err := capTemplate.Parse(workerTemplate)
 		if err != nil {
 			panic(err)
 		}

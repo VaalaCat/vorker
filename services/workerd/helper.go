@@ -46,6 +46,9 @@ func FillWorkerValue(worker *entities.Worker, keepUID bool, UID string, UserID u
 	if len(worker.Entry) == 0 {
 		worker.Entry = defs.DefaultEntry
 	}
+	if len(worker.Template) == 0 {
+		worker.Template = defs.DefaultTemplate
+	}
 	// if the worker name is not unique, use the uid as the name
 	if wl, err :=
 		models.AdminGetWorkersByNames([]string{worker.Name}); len(wl) > 0 ||
