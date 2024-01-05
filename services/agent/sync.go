@@ -37,5 +37,5 @@ func SyncCall() error {
 	if err := models.SyncWorkers(workerList); err != nil {
 		return err
 	}
-	return workerd.GenCapnpConfig()
+	return nil
 }

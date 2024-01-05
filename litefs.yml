@@ -6,5 +6,7 @@ lease:
   type: "static"
   advertise-url: http://127.0.0.1:20202
   candidate: $LITEFS_IS_MASTER
+http:
+  addr: $LITEFS_LISTEN_ADDR
 # exec:
 #   - cmd: "/bin/sh"

@@ -16,6 +16,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/imroc/req/v3"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"gorm.io/gorm"
@@ -224,7 +225,7 @@ func (w *Worker) Update() error {
 		w.Port = int32(port)
 		tunnel.GetClient().Delete(w.GetUID())
 		tunnel.GetClient().Add(w.GetUID(),
-			utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
+			utils.WorkerHostPrefix(w.GetName()), port)
 		err = w.UpdateFile()
 		if err != nil {
 			return err
@@ -285,20 +286,15 @@ func (w *Worker) Flush() error {
 			defs.KeyWorkerProto: wp,
 		})
 	}
-	port, err := utils.GetAvailablePort(defs.DefaultHostName)
-	if err != nil {
-		return err
-	}
 	if len(w.TunnelID) == 0 {
 		w.TunnelID = uuid.New().String()
 	}
 
-	if err = w.DeleteFile(); err != nil {
+	if err := w.DeleteFile(); err != nil {
 		return err
 	}
 
-	w.Port = int32(port)
-	if err = w.Update(); err != nil {
+	if err := w.Update(); err != nil {
 		return err
 	}
 	return nil
@@ -350,9 +346,14 @@ func SyncWorkers(workerList *entities.WorkerList) error {
 		return err
 	}
 
+	oldWorkerUIDMap := lo.SliceToMap(oldWorkers, func(w *Worker) (string, bool) { return w.UID, true })
+
 	for _, worker := range workerList.Workers {
 		modelWorker := &Worker{Worker: worker}
 		UIDs = append(UIDs, worker.UID)
+		if _, ok := oldWorkerUIDMap[worker.UID]; ok {
+			continue
+		}
 
 		if err := modelWorker.Delete(); err != nil && err != gorm.ErrRecordNotFound {
 			logrus.WithError(err).Errorf("sync workers db delete error, worker is: %+v", worker)
@@ -374,6 +375,11 @@ func SyncWorkers(workerList *entities.WorkerList) error {
 
 		if err := modelWorker.UpdateFile(); err != nil {
 			logrus.WithError(err).Errorf("sync workers update file error, worker is: %+v", worker)
+			partialFail = true
+			continue
+		}
+		if err := utils.GenWorkerConfig(modelWorker.Worker); err != nil {
+			logrus.WithError(err).Errorf("sync workers gen config error, worker is: %+v", worker)
 			partialFail = true
 			continue
 		}

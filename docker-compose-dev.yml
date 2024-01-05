@@ -24,6 +24,7 @@ services:
       - AGENT_SECRET=123123
       - RUN_MODE=master
       - LITEFS_IS_MASTER=true
+      - LITEFS_LISTEN_ADDR=:20202
     ports:
       - 8080:8080
       - 8888:8888
@@ -52,3 +53,4 @@ services:
       - NODE_NAME=agent-1
       - TUNNEL_HOST=vorker-master
       - LITEFS_IS_MASTER=false
+      - LITEFS_LISTEN_ADDR=:20202

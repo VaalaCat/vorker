@@ -57,6 +57,12 @@ func FlushAllEndpoint(c *gin.Context) {
 		return
 	}
 
+	if err := GenCapnpConfig(); err != nil {
+		common.RespErr(c, common.RespCodeInternalError, err.Error(), nil)
+		logrus.WithError(err).Error("gen capnp config error")
+		return
+	}
+
 	common.RespOK(c, "flush worker success", nil)
 }
 

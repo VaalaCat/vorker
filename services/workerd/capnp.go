@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"vorker/conf"
 	"vorker/defs"
+	"vorker/entities"
 	"vorker/models"
 	"vorker/utils"
 
@@ -18,10 +19,17 @@ func GenCapnpConfig() error {
 	}
 
 	workerList := models.Trans2Entities(workerRecords)
-	fileMap := utils.BuildCapfile(workerList)
 
 	var hasError bool
 	for _, worker := range workerList {
+		w := &models.Worker{Worker: worker}
+		if err := w.Flush(); err != nil {
+			logrus.WithError(err).Errorf("failed to flush worker, worker is: %+v", worker)
+			hasError = true
+			continue
+		}
+		fileMap := utils.BuildCapfile([]*entities.Worker{w.Worker})
+
 		if fileContent, ok := fileMap[worker.GetUID()]; ok {
 			err := utils.WriteFile(
 				filepath.Join(

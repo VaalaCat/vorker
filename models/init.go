@@ -15,8 +15,12 @@ func NodeWorkersInit() {
 	}
 	logrus.Infof("this node will init %d workers", len(workerRecords))
 	for _, worker := range workerRecords {
-		worker.Flush()
-		utils.GenWorkerConfig(worker.Worker)
+		if err := worker.Flush(); err != nil {
+			logrus.WithError(err).Errorf("init failed to flush worker, worker is: [%+v]", worker.Worker)
+		}
+		if err := utils.GenWorkerConfig(worker.Worker); err != nil {
+			logrus.WithError(err).Errorf("init failed to gen worker config, worker is: [%+v]", worker.Worker)
+		}
 		exec.ExecManager.RunCmd(worker.GetUID(), []string{})
 	}
 }
