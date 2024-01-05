@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func init() {
+func InitDB() {
 	switch conf.AppConfigInstance.DBType {
 	case defs.DBTypeSqlite:
 		initSqlite()

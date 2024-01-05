@@ -9,8 +9,6 @@ import (
 	"time"
 	"vorker/authz"
 	"vorker/conf"
-	"vorker/exec"
-	"vorker/models"
 	"vorker/rpc"
 	"vorker/services/agent"
 	"vorker/services/appconf"
@@ -21,6 +19,7 @@ import (
 	"vorker/services/workerd"
 	"vorker/tunnel"
 	"vorker/utils"
+	"vorker/utils/database"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -84,30 +83,29 @@ func init() {
 	proxy.Any("/*proxyPath", proxyService.Endpoint)
 }
 
-func NodeWorkersInit() {
-	workerRecords, err := models.AdminGetWorkersByNodeName(conf.AppConfigInstance.NodeName)
-	if err != nil {
-		logrus.Errorf("init failed to get all workers, err: %v", err)
-	}
-	for _, worker := range workerRecords {
-		exec.ExecManager.RunCmd(worker.GetUID(), []string{})
-	}
-}
-
-func Run(f embed.FS) {
-	go NodeWorkersInit()
-	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
-
+func InitTunnel() {
 	if conf.IsMaster() {
 		go tunnel.Serve()
 		go tunnel.GetClient().Run(context.Background())
-		HandleStaticFile(f)
 	} else {
 		go RegisterNodeToMaster()
 		go tunnel.GetClient().Run(context.Background())
-		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
 	}
 	go litefs.InitTunnel()
+	go litefs.RunService()
+}
+
+func Run(f embed.FS) {
+	InitTunnel()
+	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
+	go database.InitDB()
+
+	if conf.IsMaster() {
+		HandleStaticFile(f)
+	} else {
+		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
+	}
+
 	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
 }
 
@@ -132,6 +130,7 @@ func RegisterNodeToMaster() {
 	if conf.IsMaster() {
 		return
 	}
+	utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
 	for {
 		logrus.Info("Registering node to master...")
 		self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)

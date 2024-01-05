@@ -2,12 +2,15 @@ package models
 
 import (
 	"math/rand"
+	"time"
 	"vorker/conf"
 	"vorker/defs"
 	"vorker/entities"
+	"vorker/utils"
 	"vorker/utils/database"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -17,26 +20,34 @@ type Node struct {
 }
 
 func init() {
-	db := database.GetDB()
-	db.AutoMigrate(&Node{})
-	if !conf.IsMaster() {
-		return
-	}
-	if err := db.FirstOrCreate(&Node{
-		Node: &entities.Node{
-			UID:  uuid.New().String(),
-			Name: defs.DefaultNodeName,
-		},
-	}).Error; err != nil {
-		panic(err)
-	}
-	database.CloseDB(db)
+	go func() {
+		if !conf.IsMaster() {
+			return
+		}
+		utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+		db := database.GetDB()
 
-	if self, err := GetNodeByNodeName(defs.DefaultNodeName); err != nil {
-		panic(err)
-	} else {
-		conf.AppConfigInstance.NodeID = self.UID
-	}
+		for err := db.AutoMigrate(&Node{}); err != nil; err = db.AutoMigrate(&Node{}) {
+			logrus.WithError(err).Errorf("auto migrate node error, sleep 5s and retry")
+			time.Sleep(5 * time.Second)
+		}
+
+		if err := db.FirstOrCreate(&Node{
+			Node: &entities.Node{
+				UID:  uuid.New().String(),
+				Name: defs.DefaultNodeName,
+			},
+		}).Error; err != nil {
+			panic(err)
+		}
+		database.CloseDB(db)
+
+		if self, err := GetNodeByNodeName(defs.DefaultNodeName); err != nil {
+			panic(err)
+		} else {
+			conf.AppConfigInstance.NodeID = self.UID
+		}
+	}()
 }
 
 func (Node) TableName() string {

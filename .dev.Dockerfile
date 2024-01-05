@@ -41,6 +41,8 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y\
 	software-properties-common \
 	systemd \
 	systemd-sysv \
+	fuse3 \
+	sqlite \
 	--no-install-recommends 
 
 RUN wget https://mirrors.ustc.edu.cn/golang/go1.21.1.linux-arm64.tar.gz && \
@@ -60,6 +62,8 @@ USER dev
 RUN pip config set global.index-url http://pypi.douban.com/simple/ && \
 	pip config set install.trusted-host pypi.douban.com && \
 	npm config set registry https://registry.npm.taobao.org/
+
+COPY --from=flyio/litefs:0.5 /usr/local/bin/litefs /usr/local/bin/litefs
 
 ENV GOPROXY https://proxy.golang.com.cn,direct
 ENV PATH /usr/local/go/bin:$PATH

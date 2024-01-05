@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 	"vorker/conf"
 	"vorker/defs"
 	"vorker/entities"
@@ -26,9 +27,19 @@ type Worker struct {
 }
 
 func init() {
-	db := database.GetDB()
-	defer database.CloseDB(db)
-	db.AutoMigrate(&Worker{})
+	go func() {
+		if !conf.IsMaster() {
+			return
+		}
+		utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+		db := database.GetDB()
+		defer database.CloseDB(db)
+		for err := db.AutoMigrate(&Worker{}); err != nil; err = db.AutoMigrate(&Worker{}) {
+			logrus.WithError(err).Errorf("auto migrate worker error, sleep 5s and retry")
+			time.Sleep(5 * time.Second)
+		}
+		NodeWorkersInit()
+	}()
 }
 
 func (w *Worker) TableName() string {

@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -33,4 +34,18 @@ func IsPortAvailable(port int, addr string) bool {
 
 	defer listener.Close()
 	return true
+}
+
+func WaitForPort(host string, port int) {
+	for {
+		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", host, port))
+		if err == nil {
+			conn.Close()
+			break
+		}
+
+		fmt.Printf("Target port %s:%d is not open yet, waiting...\n", host, port)
+		time.Sleep(time.Second * 5)
+	}
+	time.Sleep(time.Second * 10)
 }

@@ -4,8 +4,7 @@ data:
   dir: "/var/lib/litefs"
 lease:
   type: "static"
-  advertise-url: $PRIMARY_URL
-  candidate: $IS_PRIMARY
-
-exec:
-  - cmd: "/app/vorker"
+  advertise-url: http://127.0.0.1:20202
+  candidate: $LITEFS_IS_MASTER
+# exec:
+#   - cmd: "/bin/sh"

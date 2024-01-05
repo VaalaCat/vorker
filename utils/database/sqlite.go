@@ -3,6 +3,7 @@ package database
 import (
 	"vorker/conf"
 	"vorker/defs"
+	"vorker/utils"
 
 	"github.com/glebarez/sqlite"
 	"github.com/joho/godotenv"
@@ -11,7 +12,7 @@ import (
 )
 
 func initSqlite() {
-	var err error
+	utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
 	godotenv.Load()
 	if conf.AppConfigInstance.DBType != defs.DBTypeSqlite {
 		return
@@ -20,7 +21,7 @@ func initSqlite() {
 	dbPath := conf.AppConfigInstance.DBPath
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
-		logrus.Panic(err, "Initializing DB Error")
+		logrus.Error(err, "Initializing DB Error")
 	}
 	CloseDB(db)
 }

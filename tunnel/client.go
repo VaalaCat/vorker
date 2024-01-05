@@ -91,7 +91,7 @@ func (c *Client) AddService(serviceName string, servicePort int) error {
 
 	newSerivceConf[serviceName] = &config.STCPProxyConf{
 		BaseProxyConf: config.BaseProxyConf{
-			ProxyName:     fmt.Sprintf("%s-serivce", serviceName),
+			ProxyName:     serviceName,
 			ProxyType:     "stcp",
 			UseEncryption: true,
 			LocalSvrConf: config.LocalSvrConf{
