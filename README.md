@@ -14,12 +14,12 @@ Fearues and Issues are welcome!
 - [x] Woker CRUD Management
 - [x] Web UI & Online Editor
 - [x] Multi Node
+- [x] HA support
 - [ ] Log
 - [ ] Metrics
 - [ ] Worker version control
 - [ ] Worker Debugging
 - [ ] Support KV storage
-- [ ] HA support
 
 ## Screenshots
 
@@ -58,7 +58,6 @@ docker run -dit --name=vorker \
 	-e ENABLE_REGISTER=false \
 	-e COOKIE_NAME=authorization \
 	-e JWT_SECRET=xxxxxxx \
-	-e JWT_EXPIRETIME=6 \
 	-e AGENT_SECRET=xxxxxxx \
 	-p 8080:8080 \
 	-p 8888:8888 \
