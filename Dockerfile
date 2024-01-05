@@ -4,6 +4,12 @@ RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list &
 	sed -i s@/security.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list && \
 	sed -i 's/ports.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
 
+RUN apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y \
+	apt-transport-https \
+	ca-certificates \
+	fuse3 \
+	sqlite3
+
 COPY litefs.yml /etc/litefs.yml
 COPY --from=flyio/litefs:0.5 /usr/local/bin/litefs /usr/local/bin/litefs
 

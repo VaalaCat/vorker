@@ -299,7 +299,7 @@ func (w *Worker) Flush() error {
 	if err := w.DeleteFile(); err != nil {
 		return err
 	}
-
+	logrus.Infof("flush worker %s", w.Name)
 	if err := w.Update(); err != nil {
 		return err
 	}
@@ -360,6 +360,9 @@ func SyncWorkers(workerList *entities.WorkerList) error {
 		if _, ok := oldWorkerUIDMap[worker.UID]; ok {
 			continue
 		}
+		logrus.Infof("sync workers db create, new worker is: %+v", entities.Worker{
+			UID: worker.GetUID(), Name: worker.GetName(), NodeName: worker.GetNodeName(),
+		})
 
 		if err := modelWorker.Delete(); err != nil && err != gorm.ErrRecordNotFound {
 			logrus.WithError(err).Errorf("sync workers db delete error, worker is: %+v", worker)
@@ -404,6 +407,7 @@ func SyncWorkers(workerList *entities.WorkerList) error {
 				partialFail = true
 				continue
 			}
+			logrus.Infof("sync workers delete worker, worker is: %+v", worker)
 		}
 	}
 
