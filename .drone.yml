@@ -17,11 +17,8 @@ steps:
     image: m.daocloud.io/docker.io/ubuntu:22.04
     commands:
       - apt update
-      - apt install -y wget
-      - wget 'https://ghproxy.com/https://github.com/go-gost/gost/releases/download/v3.0.0-rc8/gost_3.0.0-rc8_linux_amd64.tar.gz'
-      - wget 'https://ghproxy.com/https://github.com/cloudflare/workerd/releases/download/v1.20230518.0/workerd-linux-64.gz'
-      - tar -xvf gost_3.0.0-rc8_linux_amd64.tar.gz
-      - mv gost bin/gost
+      - apt install -y curl
+      - curl -fSL -O 'https://mirror.ghproxy.com/https://github.com/cloudflare/workerd/releases/download/v1.20231218.0/workerd-linux-64.gz'
       - gzip -d workerd-linux-64.gz
       - mv workerd-linux-64 bin/workerd
   - name: pull and cache image
