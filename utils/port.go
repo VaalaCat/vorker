@@ -44,8 +44,9 @@ func WaitForPort(host string, port int) {
 			break
 		}
 
-		fmt.Printf("Target port %s:%d is not open yet, waiting...\n", host, port)
+		logrus.Warnf("Target port %s:%d is not open yet, waiting...\n", host, port)
 		time.Sleep(time.Second * 5)
 	}
-	time.Sleep(time.Second * 10)
+	logrus.Infof("Target port %s:%d is open", host, port)
+	time.Sleep(time.Second * 1)
 }

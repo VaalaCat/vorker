@@ -5,7 +5,8 @@ USER root
 LABEL maintainer me@vaala.cat
 
 RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list && \
-	sed -i s@/security.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+	sed -i s@/security.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list && \
+	sed -i 's/ports.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
 
 RUN apt-get update && \
 	DEBIAN_FRONTEND=noninteractive apt-get install -qy libc++1
@@ -42,7 +43,7 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y\
 	systemd \
 	systemd-sysv \
 	fuse3 \
-	sqlite \
+	sqlite3 \
 	--no-install-recommends 
 
 RUN wget https://mirrors.ustc.edu.cn/golang/go1.21.1.linux-arm64.tar.gz && \
@@ -50,14 +51,14 @@ RUN wget https://mirrors.ustc.edu.cn/golang/go1.21.1.linux-arm64.tar.gz && \
 
 WORKDIR /app
 
-RUN useradd dev \
-	--create-home \
-	--shell=/usr/bin/fish \
-	--uid=1000 \
-	--user-group && \
-	echo "dev ALL=(ALL) NOPASSWD:ALL" >>/etc/sudoers.d/nopasswd
+# RUN useradd dev \
+# 	--create-home \
+# 	--shell=/usr/bin/fish \
+# 	--uid=1000 \
+# 	--user-group && \
+# 	echo "dev ALL=(ALL) NOPASSWD:ALL" >>/etc/sudoers.d/nopasswd
 
-USER dev
+# USER dev
 
 RUN pip config set global.index-url http://pypi.douban.com/simple/ && \
 	pip config set install.trusted-host pypi.douban.com && \

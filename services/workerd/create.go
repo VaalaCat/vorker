@@ -8,6 +8,7 @@ import (
 	"vorker/entities"
 	"vorker/exec"
 	"vorker/models"
+	"vorker/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -51,7 +52,7 @@ func Create(userID uint, worker *entities.Worker) error {
 	}
 
 	if worker.NodeName == conf.AppConfigInstance.NodeName {
-		err := GenWorkerConfig(worker)
+		err := utils.GenWorkerConfig(worker)
 		if err != nil {
 			return errors.New("failed to create worker")
 		}

@@ -38,6 +38,9 @@ func init() {
 			logrus.WithError(err).Errorf("auto migrate worker error, sleep 5s and retry")
 			time.Sleep(5 * time.Second)
 		}
+	}()
+	go func() {
+		utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
 		NodeWorkersInit()
 	}()
 }
@@ -180,10 +183,18 @@ func Trans2Entities(workers []*Worker) []*entities.Worker {
 
 func (w *Worker) Create() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		tunnel.GetClient().Add(w.GetUID(), utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
-		err := w.UpdateFile()
+		port, err := utils.GetAvailablePort(defs.DefaultHostName)
 		if err != nil {
 			return err
+		}
+		w.Port = int32(port)
+		tunnel.GetClient().Add(w.GetUID(), utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
+		err = w.UpdateFile()
+		if err != nil {
+			return err
+		}
+		if !conf.IsMaster() {
+			return nil
 		}
 	} else {
 		n, err := GetNodeByNodeName(w.NodeName)
@@ -206,13 +217,21 @@ func (w *Worker) Create() error {
 
 func (w *Worker) Update() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		tunnel.GetClient().Delete(w.GetUID())
-		tunnel.GetClient().Add(w.GetUID(),
-			utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
-		err := w.UpdateFile()
+		port, err := utils.GetAvailablePort(defs.DefaultHostName)
 		if err != nil {
 			return err
 		}
+		w.Port = int32(port)
+		tunnel.GetClient().Delete(w.GetUID())
+		tunnel.GetClient().Add(w.GetUID(),
+			utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
+		err = w.UpdateFile()
+		if err != nil {
+			return err
+		}
+	}
+	if !conf.IsMaster() {
+		return nil
 	}
 	db := database.GetDB()
 	defer database.CloseDB(db)
@@ -235,17 +254,21 @@ func (w *Worker) Delete() error {
 			defs.KeyWorkerProto: wp,
 		})
 	}
-	db := database.GetDB()
-	defer database.CloseDB(db)
-	if err := db.Where(&Worker{
-		Worker: &entities.Worker{
-			UID: w.UID,
-		},
-	}).Unscoped().Delete(w).Error; err != nil {
+	if err := w.DeleteFile(); err != nil {
 		return err
 	}
 
-	return w.DeleteFile()
+	if !conf.IsMaster() {
+		return nil
+	}
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	return db.Where(&Worker{
+		Worker: &entities.Worker{
+			UID: w.UID,
+		},
+	}).Unscoped().Delete(w).Error
+
 }
 
 func (w *Worker) Flush() error {
@@ -322,7 +345,7 @@ func (w *Worker) Run() ([]byte, error) {
 func SyncWorkers(workerList *entities.WorkerList) error {
 	partialFail := false
 	UIDs := []string{}
-	oldWorkers, err := AdminGetAllWorkers()
+	oldWorkers, err := AdminGetWorkersByNodeName(conf.AppConfigInstance.NodeName)
 	if err != nil {
 		return err
 	}

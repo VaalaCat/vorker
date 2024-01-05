@@ -23,7 +23,7 @@ func InitTunnel() {
 			logrus.WithError(err).Errorf("init tunnel for agent litefs visitor failed")
 			return
 		}
-		logrus.WithError(err).Errorf("init tunnel for agent litefs visitor success")
+		logrus.Info("init tunnel for agent litefs visitor success")
 		return
 	}
 }

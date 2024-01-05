@@ -5,6 +5,7 @@ import (
 	"vorker/common"
 	"vorker/conf"
 	"vorker/models"
+	"vorker/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -69,7 +70,7 @@ func Flush(userID uint, UID string) error {
 		return err
 	}
 	if worker.NodeName == conf.AppConfigInstance.NodeName {
-		GenWorkerConfig(worker.Worker)
+		utils.GenWorkerConfig(worker.Worker)
 	}
 	return nil
 }

@@ -5,34 +5,11 @@ import (
 	"path/filepath"
 	"vorker/conf"
 	"vorker/defs"
-	"vorker/entities"
 	"vorker/models"
 	"vorker/utils"
 
 	"github.com/sirupsen/logrus"
 )
-
-func GenWorkerConfig(worker *entities.Worker) error {
-	if worker == nil || worker.GetUID() == "" {
-		return errors.New("error worker")
-	}
-	fileMap := utils.BuildCapfile([]*entities.Worker{
-		worker,
-	})
-
-	fileContent, ok := fileMap[worker.GetUID()]
-	if !ok {
-		return errors.New("BuildCapfile error")
-	}
-
-	return utils.WriteFile(
-		filepath.Join(
-			conf.AppConfigInstance.WorkerdDir,
-			defs.WorkerInfoPath,
-			worker.GetUID(),
-			defs.CapFileName,
-		), fileContent)
-}
 
 func GenCapnpConfig() error {
 	workerRecords, err := models.AdminGetWorkersByNodeName(conf.AppConfigInstance.NodeName)

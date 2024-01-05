@@ -11,7 +11,8 @@ services:
     volumes:
       - /tmp/workerd-master:/workerd # change to your own path
       - .:/workspaces/vorker
-      - /tmp/workerd-master-home:/home/dev
+      # - /tmp/workerd-master-home:/home/dev
+      - /tmp/workerd-master-home:/root
     stdin_open: true
     tty: true
     environment:
@@ -41,7 +42,8 @@ services:
     volumes:
       - /tmp/workerd-agent:/workerd # change to your own path
       - .:/workspaces/vorker
-      - /tmp/workerd-agent-home:/home/dev
+      # - /tmp/workerd-agent-home:/home/dev
+      - /tmp/workerd-agent-home:/root
     environment:
       - WORKER_URL_SUFFIX=.example.com # worker url = SCHEME://WORKERNAME+WORKER_URL_SUFFIX eg: .example.com
       - AGENT_SECRET=123123

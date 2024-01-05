@@ -78,7 +78,14 @@ func (c *Client) Add(clientID, routeHostname string, forwardPort int) error {
 	}
 	c.proxyConf = newProxyConf
 
-	return c.cli.ReloadConf(newProxyConf, c.visitorConf)
+	err := c.cli.ReloadConf(newProxyConf, c.visitorConf)
+	if err != nil {
+		logger(context.Background(), "Client.Add").WithError(err).
+			Errorf("reload conf failed, config is: %+v", newProxyConf[clientID])
+		return err
+	}
+	logger(context.Background(), "Client.Add").Infof("client %s added successfully", clientID)
+	return nil
 }
 
 // AddService implements ClientHandler.
@@ -105,7 +112,14 @@ func (c *Client) AddService(serviceName string, servicePort int) error {
 	}
 
 	c.proxyConf = newSerivceConf
-	return c.cli.ReloadConf(c.proxyConf, c.visitorConf)
+	err := c.cli.ReloadConf(c.proxyConf, c.visitorConf)
+	if err != nil {
+		logger(context.Background(), "Client.AddService").WithError(err).
+			Errorf("reload conf failed, config is: %+v", newSerivceConf[serviceName])
+		return err
+	}
+	logger(context.Background(), "Client.AddService").Infof("service %s added successfully", serviceName)
+	return nil
 }
 
 // AddVisitor implements ClientHandler.
@@ -129,7 +143,14 @@ func (c *Client) AddVisitor(serviceName string, lcoalPort int) error {
 	}
 
 	c.visitorConf = newVisitorConf
-	return c.cli.ReloadConf(c.proxyConf, c.visitorConf)
+	err := c.cli.ReloadConf(c.proxyConf, c.visitorConf)
+	if err != nil {
+		logger(context.Background(), "Client.AddVisitor").WithError(err).
+			Errorf("reload conf failed, config is: %+v", newVisitorConf[serviceName])
+		return err
+	}
+	logger(context.Background(), "Client.AddVisitor").Infof("visitor for service %s added successfully", serviceName)
+	return nil
 }
 
 // Delete implements ClientHandler.
@@ -142,7 +163,14 @@ func (c *Client) Delete(clientID string) error {
 
 	delete(newProxyConf, clientID)
 	c.proxyConf = newProxyConf
-	return c.cli.ReloadConf(c.proxyConf, c.visitorConf)
+	err := c.cli.ReloadConf(c.proxyConf, c.visitorConf)
+	if err != nil {
+		logger(context.Background(), "Client.Delete").WithError(err).
+			Errorf("reload conf failed, config is: %+v", newProxyConf[clientID])
+		return err
+	}
+	logger(context.Background(), "Client.Delete").Infof("client %s deleted successfully", clientID)
+	return nil
 }
 
 // Query implements ClientHandler.
@@ -150,6 +178,7 @@ func (c *Client) Query(clientID string) (config.ProxyConf, error) {
 	if proxyConf, ok := c.proxyConf[clientID]; ok {
 		return proxyConf, nil
 	}
+	logger(context.Background(), "Client.Query").Errorf("client %s not exists", clientID)
 	return nil, fmt.Errorf("client %s not exists", clientID)
 }
 

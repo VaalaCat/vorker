@@ -87,6 +87,7 @@ func InitTunnel() {
 	if conf.IsMaster() {
 		go tunnel.Serve()
 		go tunnel.GetClient().Run(context.Background())
+		go tunnel.InitSelfCliet()
 	} else {
 		go RegisterNodeToMaster()
 		go tunnel.GetClient().Run(context.Background())
