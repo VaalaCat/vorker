@@ -7,6 +7,7 @@ import (
 	"vorker/entities"
 	"vorker/exec"
 	"vorker/models"
+	"vorker/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -63,7 +64,7 @@ func Update(userID uint, UID string, worker *entities.Worker) error {
 	}
 
 	if worker.NodeName == curNodeName {
-		err := GenWorkerConfig(worker)
+		err := utils.GenWorkerConfig(worker)
 		if err != nil {
 			return err
 		}

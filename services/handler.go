@@ -9,17 +9,17 @@ import (
 	"time"
 	"vorker/authz"
 	"vorker/conf"
-	"vorker/exec"
-	"vorker/models"
 	"vorker/rpc"
 	"vorker/services/agent"
 	"vorker/services/appconf"
 	"vorker/services/auth"
+	"vorker/services/litefs"
 	"vorker/services/node"
 	proxyService "vorker/services/proxy"
 	"vorker/services/workerd"
 	"vorker/tunnel"
 	"vorker/utils"
+	"vorker/utils/database"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -83,28 +83,30 @@ func init() {
 	proxy.Any("/*proxyPath", proxyService.Endpoint)
 }
 
-func NodeWorkersInit() {
-	workerRecords, err := models.AdminGetWorkersByNodeName(conf.AppConfigInstance.NodeName)
-	if err != nil {
-		logrus.Errorf("init failed to get all workers, err: %v", err)
+func InitTunnel() {
+	if conf.IsMaster() {
+		go tunnel.Serve()
+		go tunnel.GetClient().Run(context.Background())
+		go tunnel.InitSelfCliet()
+	} else {
+		go RegisterNodeToMaster()
+		go tunnel.GetClient().Run(context.Background())
 	}
-	for _, worker := range workerRecords {
-		exec.ExecManager.RunCmd(worker.GetUID(), []string{})
-	}
+	go litefs.InitTunnel()
+	go litefs.RunService()
 }
 
 func Run(f embed.FS) {
-	go NodeWorkersInit()
+	InitTunnel()
 	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
+	go database.InitDB()
 
 	if conf.IsMaster() {
-		tunnel.Serve()
 		HandleStaticFile(f)
 	} else {
-		RegisterNodeToMaster()
-		tunnel.GetClient().Run(context.Background())
 		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
 	}
+
 	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
 }
 
@@ -129,34 +131,35 @@ func RegisterNodeToMaster() {
 	if conf.IsMaster() {
 		return
 	}
-	go func() {
-		for {
-			logrus.Info("Registering node to master...")
-			self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)
-			if err != nil || self == nil {
-				err := rpc.AddNode(conf.AppConfigInstance.MasterEndpoint)
-				if err != nil {
-					logrus.WithError(err).Error("Add node failed.. retrying for 5 seconds")
-					time.Sleep(5 * time.Second)
-				} else {
-					logrus.Info("Node added successfully")
-				}
-				continue
+	if conf.AppConfigInstance.LitefsEnabled {
+		utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+	}
+	for {
+		logrus.Info("Registering node to master...")
+		self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)
+		if err != nil || self == nil {
+			err := rpc.AddNode(conf.AppConfigInstance.MasterEndpoint)
+			if err != nil {
+				logrus.WithError(err).Error("Add node failed.. retrying for 5 seconds")
+				time.Sleep(5 * time.Second)
 			} else {
-				logrus.Info("Node already exists")
-				conf.AppConfigInstance.NodeID = self.UID
+				logrus.Info("Node added successfully")
 			}
-			tun, err := tunnel.GetClient().Query(conf.AppConfigInstance.NodeID)
-			if err != nil || tun == nil {
-				logrus.Warnf("Query tunnel failed, err: %v, try to add tunnel", err)
-				tunnel.GetClient().Add(conf.AppConfigInstance.NodeID, utils.NodeHostPrefix(
-					conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
-					int(conf.AppConfigInstance.APIPort))
-			} else {
-				logrus.Info("Tunnel already exists, skip adding")
-			}
-			agent.SyncCall()
-			time.Sleep(30 * time.Second)
+			continue
+		} else {
+			logrus.Info("Node already exists")
+			conf.AppConfigInstance.NodeID = self.UID
 		}
-	}()
+		tun, err := tunnel.GetClient().Query(conf.AppConfigInstance.NodeID)
+		if err != nil || tun == nil {
+			logrus.Warnf("Query tunnel failed, err: %v, try to add tunnel", err)
+			tunnel.GetClient().Add(conf.AppConfigInstance.NodeID, utils.NodeHostPrefix(
+				conf.AppConfigInstance.NodeName, conf.AppConfigInstance.NodeID),
+				int(conf.AppConfigInstance.APIPort))
+		} else {
+			logrus.Info("Tunnel already exists, skip adding")
+		}
+		agent.SyncCall()
+		time.Sleep(30 * time.Second)
+	}
 }

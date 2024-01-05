@@ -33,6 +33,10 @@ type AppConfig struct {
 	TunnelHost        string `env:"TUNNEL_HOST" env-default:"127.0.0.1"` // for master usually 127.0.0.1, for agent usually master public ip
 	TunnelAPIPort     int    `env:"TUNNEL_API_PORT" env-default:"18080"`
 	DefaultWorkerHost string `env:"DEFAULT_WORKER_HOST" env-default:"localhost"`
+	LitefsPrimaryPort int    `env:"LITEFS_PRIMARY_PORT" env-default:"20202"`
+	LitefsBinPath     string `env:"LITEFS_BIN_PATH" env-default:"/usr/local/bin/litefs"`
+	LitefsDirPath     string `env:"LITEFS_DIR_PATH" env-default:"/app"`
+	LitefsEnabled     bool   `env:"LITEFS_ENABLED" env-default:"false"`
 	TunnelUsername    string
 	TunnelPassword    string
 	TunnelToken       string

@@ -19,7 +19,7 @@ func SyncEventHandler(c *gin.Context, req *entities.NotifyEventRequest) {
 		common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
 		return
 	}
-	if err := workerd.GenCapnpConfig(); err != nil {
+	if err := workerd.GenCapnpConfig(); err != nil && !conf.AppConfigInstance.LitefsEnabled {
 		logrus.WithError(err).Error("sync event handler gen capnp config error")
 		common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
 		return
@@ -37,5 +37,5 @@ func SyncCall() error {
 	if err := models.SyncWorkers(workerList); err != nil {
 		return err
 	}
-	return workerd.GenCapnpConfig()
+	return nil
 }

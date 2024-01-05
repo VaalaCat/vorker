@@ -12,7 +12,8 @@ import (
 var fs embed.FS
 
 func main() {
-	defer exec.ExecManager.ExitAllCmd()
+	logrus.SetReportCaller(true)
 	logrus.SetLevel(logrus.DebugLevel)
+	defer exec.ExecManager.ExitAllCmd()
 	services.Run(fs)
 }

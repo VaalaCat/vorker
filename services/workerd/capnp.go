@@ -9,30 +9,9 @@ import (
 	"vorker/models"
 	"vorker/utils"
 
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 )
-
-func GenWorkerConfig(worker *entities.Worker) error {
-	if worker == nil || worker.GetUID() == "" {
-		return errors.New("error worker")
-	}
-	fileMap := utils.BuildCapfile([]*entities.Worker{
-		worker,
-	})
-
-	fileContent, ok := fileMap[worker.GetUID()]
-	if !ok {
-		return errors.New("BuildCapfile error")
-	}
-
-	return utils.WriteFile(
-		filepath.Join(
-			conf.AppConfigInstance.WorkerdDir,
-			defs.WorkerInfoPath,
-			worker.GetUID(),
-			defs.CapFileName,
-		), fileContent)
-}
 
 func GenCapnpConfig() error {
 	workerRecords, err := models.AdminGetWorkersByNodeName(conf.AppConfigInstance.NodeName)
@@ -41,10 +20,17 @@ func GenCapnpConfig() error {
 	}
 
 	workerList := models.Trans2Entities(workerRecords)
-	fileMap := utils.BuildCapfile(workerList)
 
 	var hasError bool
 	for _, worker := range workerList {
+		w := &models.Worker{Worker: worker}
+		if err := w.Flush(); err != nil {
+			logrus.WithError(err).Errorf("failed to flush worker, worker is: %+v", worker)
+			hasError = true
+			continue
+		}
+		fileMap := utils.BuildCapfile([]*entities.Worker{w.Worker})
+
 		if fileContent, ok := fileMap[worker.GetUID()]; ok {
 			err := utils.WriteFile(
 				filepath.Join(
@@ -58,6 +44,9 @@ func GenCapnpConfig() error {
 			}
 		}
 	}
+
+	logrus.Infof("GenCapnpConfig has error: %v, workerList: %+v", hasError,
+		lo.SliceToMap(workerList, func(w *entities.Worker) (string, bool) { return w.GetUID(), true }))
 
 	if hasError {
 		return errors.New("GenCapnpConfig has error")

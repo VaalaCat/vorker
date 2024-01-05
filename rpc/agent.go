@@ -9,6 +9,7 @@ import (
 	"vorker/utils"
 
 	"github.com/imroc/req/v3"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,7 +23,7 @@ func EventNotify(n *entities.Node, eventName string, extra map[string][]byte) er
 				conf.AppConfigInstance.TunnelEntryPort))
 
 	if err != nil || reqResp.StatusCode >= 299 {
-		logrus.Errorf("event notify error, err: %+v, resp: %+v", err, reqResp)
+		logrus.Errorf("event notify error, err: %+v, resp: %+v, eventName: %s, requestExtraKeys: %+v", err, reqResp, eventName, lo.Keys(extra))
 		return errors.New("error")
 	}
 	return nil

@@ -51,3 +51,7 @@ const (
 	ErrMsgDBErr             = "db err"
 	ErrMsgMethodNotAllowed  = "method not allowed"
 )
+
+const (
+	ServiceLitefs = "litefs"
+)

@@ -15,6 +15,7 @@ func init() {
 	EventRouterImplInstance.RegisteHandler(defs.EventSyncWorkers, SyncEventHandler)
 	EventRouterImplInstance.RegisteHandler(defs.EventAddWorker, AddWorkerEventHandler)
 	EventRouterImplInstance.RegisteHandler(defs.EventDeleteWorker, DelWorkerEventHandler)
+	EventRouterImplInstance.RegisteHandler(defs.EventFlushWorker, FlushWorkerEventHandler)
 }
 
 func NotifyEndpoint(c *gin.Context) {

@@ -2,14 +2,17 @@ version: '3'
 
 services:
   vorker-master:
-    build:
-      context: .
-      dockerfile: .dev.Dockerfile
+    image: vorker-dev
+    # build:
+    #   context: .
+    #   dockerfile: .dev.Dockerfile
     # image: vaalacat/vorker
+    privileged: true
     volumes:
       - /tmp/workerd-master:/workerd # change to your own path
       - .:/workspaces/vorker
-      - /tmp/workerd-master-home:/home/dev
+      # - /tmp/workerd-master-home:/home/dev
+      - /tmp/workerd-master-home:/root
     stdin_open: true
     tty: true
     environment:
@@ -20,6 +23,8 @@ services:
       - JWT_SECRET=123123
       - AGENT_SECRET=123123
       - RUN_MODE=master
+      - LITEFS_IS_MASTER=true
+      - LITEFS_LISTEN_ADDR=:20202
     ports:
       - 8080:8080
       - 8888:8888
@@ -27,16 +32,19 @@ services:
       - 18080:18080
     restart: unless-stopped
   vorker-agent:
-    build:
-      context: .
-      dockerfile: .dev.Dockerfile
+    image: vorker-dev
+    # build:
+    #   context: .
+    #   dockerfile: .dev.Dockerfile
     # image: vaalacat/vorker
     stdin_open: true
+    privileged: true
     tty: true
     volumes:
       - /tmp/workerd-agent:/workerd # change to your own path
       - .:/workspaces/vorker
-      - /tmp/workerd-agent-home:/home/dev
+      # - /tmp/workerd-agent-home:/home/dev
+      - /tmp/workerd-agent-home:/root
     environment:
       - WORKER_URL_SUFFIX=.example.com # worker url = SCHEME://WORKERNAME+WORKER_URL_SUFFIX eg: .example.com
       - AGENT_SECRET=123123
@@ -44,3 +52,5 @@ services:
       - MASTER_ENDPOINT=http://vorker-master:8888
       - NODE_NAME=agent-1
       - TUNNEL_HOST=vorker-master
+      - LITEFS_IS_MASTER=false
+      - LITEFS_LISTEN_ADDR=:20202

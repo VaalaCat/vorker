@@ -5,6 +5,7 @@ import (
 	"vorker/common"
 	"vorker/conf"
 	"vorker/models"
+	"vorker/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -56,6 +57,12 @@ func FlushAllEndpoint(c *gin.Context) {
 		return
 	}
 
+	if err := GenCapnpConfig(); err != nil {
+		common.RespErr(c, common.RespCodeInternalError, err.Error(), nil)
+		logrus.WithError(err).Error("gen capnp config error")
+		return
+	}
+
 	common.RespOK(c, "flush worker success", nil)
 }
 
@@ -69,7 +76,7 @@ func Flush(userID uint, UID string) error {
 		return err
 	}
 	if worker.NodeName == conf.AppConfigInstance.NodeName {
-		GenWorkerConfig(worker.Worker)
+		utils.GenWorkerConfig(worker.Worker)
 	}
 	return nil
 }

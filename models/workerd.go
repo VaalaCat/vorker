@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 	"vorker/conf"
 	"vorker/defs"
 	"vorker/entities"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/imroc/req/v3"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"gorm.io/gorm"
@@ -26,9 +28,26 @@ type Worker struct {
 }
 
 func init() {
-	db := database.GetDB()
-	defer database.CloseDB(db)
-	db.AutoMigrate(&Worker{})
+	go func() {
+		if conf.AppConfigInstance.LitefsEnabled {
+			if !conf.IsMaster() {
+				return
+			}
+			utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+		}
+		db := database.GetDB()
+		defer database.CloseDB(db)
+		for err := db.AutoMigrate(&Worker{}); err != nil; err = db.AutoMigrate(&Worker{}) {
+			logrus.WithError(err).Errorf("auto migrate worker error, sleep 5s and retry")
+			time.Sleep(5 * time.Second)
+		}
+	}()
+	go func() {
+		if conf.AppConfigInstance.LitefsEnabled {
+			utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+		}
+		NodeWorkersInit()
+	}()
 }
 
 func (w *Worker) TableName() string {
@@ -169,10 +188,18 @@ func Trans2Entities(workers []*Worker) []*entities.Worker {
 
 func (w *Worker) Create() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		tunnel.GetClient().Add(w.GetUID(), utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
-		err := w.UpdateFile()
+		port, err := utils.GetAvailablePort(defs.DefaultHostName)
 		if err != nil {
 			return err
+		}
+		w.Port = int32(port)
+		tunnel.GetClient().Add(w.GetUID(), utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
+		err = w.UpdateFile()
+		if err != nil {
+			return err
+		}
+		if !conf.IsMaster() && conf.AppConfigInstance.LitefsEnabled {
+			return nil
 		}
 	} else {
 		n, err := GetNodeByNodeName(w.NodeName)
@@ -195,17 +222,29 @@ func (w *Worker) Create() error {
 
 func (w *Worker) Update() error {
 	if w.NodeName == conf.AppConfigInstance.NodeName {
+		port, err := utils.GetAvailablePort(defs.DefaultHostName)
+		if err != nil {
+			return err
+		}
+		w.Port = int32(port)
 		tunnel.GetClient().Delete(w.GetUID())
 		tunnel.GetClient().Add(w.GetUID(),
-			utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
-		err := w.UpdateFile()
+			utils.WorkerHostPrefix(w.GetName()), port)
+		err = w.UpdateFile()
 		if err != nil {
 			return err
 		}
 	}
+	if !conf.IsMaster() && conf.AppConfigInstance.LitefsEnabled {
+		return nil
+	}
 	db := database.GetDB()
 	defer database.CloseDB(db)
-	return db.Save(w).Error
+	return db.Where(&Worker{
+		Worker: &entities.Worker{
+			UID: w.UID,
+		},
+	}).Save(w).Error
 }
 
 func (w *Worker) Delete() error {
@@ -224,34 +263,44 @@ func (w *Worker) Delete() error {
 			defs.KeyWorkerProto: wp,
 		})
 	}
-	db := database.GetDB()
-	defer database.CloseDB(db)
-	if err := db.Where(&Worker{
-		Worker: &entities.Worker{
-			UID: w.UID,
-		},
-	}).Unscoped().Delete(w).Error; err != nil {
+	if err := w.DeleteFile(); err != nil {
 		return err
 	}
 
-	return w.DeleteFile()
+	if !conf.IsMaster() && conf.AppConfigInstance.LitefsEnabled {
+		return nil
+	}
+	db := database.GetDB()
+	defer database.CloseDB(db)
+	return db.Unscoped().Where(
+		&Worker{Worker: &entities.Worker{
+			UID: w.UID,
+		}}).Delete(&Worker{}).Error
 }
 
 func (w *Worker) Flush() error {
-	port, err := utils.GetAvailablePort(defs.DefaultHostName)
-	if err != nil {
-		return err
+	if w.NodeName != conf.AppConfigInstance.NodeName {
+		n, err := GetNodeByNodeName(w.NodeName)
+		if err != nil {
+			return err
+		}
+		wp, err := proto.Marshal(w)
+		if err != nil {
+			return err
+		}
+		return rpc.EventNotify(n.Node, defs.EventFlushWorker, map[string][]byte{
+			defs.KeyWorkerProto: wp,
+		})
 	}
 	if len(w.TunnelID) == 0 {
 		w.TunnelID = uuid.New().String()
 	}
 
-	if err = w.DeleteFile(); err != nil {
+	if err := w.DeleteFile(); err != nil {
 		return err
 	}
-
-	w.Port = int32(port)
-	if err = w.Update(); err != nil {
+	logrus.Infof("flush worker %s", w.Name)
+	if err := w.Update(); err != nil {
 		return err
 	}
 	return nil
@@ -298,14 +347,22 @@ func (w *Worker) Run() ([]byte, error) {
 func SyncWorkers(workerList *entities.WorkerList) error {
 	partialFail := false
 	UIDs := []string{}
-	oldWorkers, err := AdminGetAllWorkers()
+	oldWorkers, err := AdminGetWorkersByNodeName(conf.AppConfigInstance.NodeName)
 	if err != nil {
 		return err
 	}
 
+	oldWorkerUIDMap := lo.SliceToMap(oldWorkers, func(w *Worker) (string, bool) { return w.UID, true })
+
 	for _, worker := range workerList.Workers {
 		modelWorker := &Worker{Worker: worker}
 		UIDs = append(UIDs, worker.UID)
+		if _, ok := oldWorkerUIDMap[worker.UID]; ok {
+			continue
+		}
+		logrus.Infof("sync workers db create, new worker is: %+v", entities.Worker{
+			UID: worker.GetUID(), Name: worker.GetName(), NodeName: worker.GetNodeName(),
+		})
 
 		if err := modelWorker.Delete(); err != nil && err != gorm.ErrRecordNotFound {
 			logrus.WithError(err).Errorf("sync workers db delete error, worker is: %+v", worker)
@@ -330,6 +387,11 @@ func SyncWorkers(workerList *entities.WorkerList) error {
 			partialFail = true
 			continue
 		}
+		if err := utils.GenWorkerConfig(modelWorker.Worker); err != nil {
+			logrus.WithError(err).Errorf("sync workers gen config error, worker is: %+v", worker)
+			partialFail = true
+			continue
+		}
 	}
 
 	// delete workers that not in workerList
@@ -345,6 +407,7 @@ func SyncWorkers(workerList *entities.WorkerList) error {
 				partialFail = true
 				continue
 			}
+			logrus.Infof("sync workers delete worker, worker is: %+v", worker)
 		}
 	}
 

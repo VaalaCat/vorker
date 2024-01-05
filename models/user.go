@@ -1,6 +1,9 @@
 package models
 
 import (
+	"time"
+	"vorker/conf"
+	"vorker/utils"
 	"vorker/utils/database"
 	"vorker/utils/secret"
 
@@ -22,11 +25,20 @@ type User struct {
 }
 
 func init() {
-	db := database.GetDB()
-	if err := db.AutoMigrate(&User{}); err != nil {
-		logrus.Panic(err)
-	}
-	database.CloseDB(db)
+	go func() {
+		if conf.AppConfigInstance.LitefsEnabled {
+			if !conf.IsMaster() {
+				return
+			}
+			utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+		}
+		db := database.GetDB()
+		for err := db.AutoMigrate(&User{}); err != nil; err = db.AutoMigrate(&User{}) {
+			logrus.WithError(err).Errorf("auto migrate user error, sleep 5s and retry")
+			time.Sleep(5 * time.Second)
+		}
+		database.CloseDB(db)
+	}()
 }
 
 func (u *User) TableName() string {
