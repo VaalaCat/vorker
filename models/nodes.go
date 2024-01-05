@@ -21,10 +21,12 @@ type Node struct {
 
 func init() {
 	go func() {
-		if !conf.IsMaster() {
-			return
+		if conf.AppConfigInstance.LitefsEnabled {
+			if !conf.IsMaster() {
+				return
+			}
+			utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
 		}
-		utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
 		db := database.GetDB()
 
 		for err := db.AutoMigrate(&Node{}); err != nil; err = db.AutoMigrate(&Node{}) {

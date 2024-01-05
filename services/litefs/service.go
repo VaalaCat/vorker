@@ -11,6 +11,9 @@ import (
 )
 
 func RunService() {
+	if !conf.AppConfigInstance.LitefsEnabled {
+		return
+	}
 	for {
 		ctx := context.Background()
 		args := []string{"mount"}

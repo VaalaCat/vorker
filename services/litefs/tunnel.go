@@ -9,6 +9,9 @@ import (
 )
 
 func InitTunnel() {
+	if !conf.AppConfigInstance.LitefsEnabled {
+		return
+	}
 	if conf.IsMaster() {
 		err := tunnel.GetClient().AddService(common.ServiceLitefs, conf.AppConfigInstance.LitefsPrimaryPort)
 		if err != nil {

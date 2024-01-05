@@ -131,7 +131,9 @@ func RegisterNodeToMaster() {
 	if conf.IsMaster() {
 		return
 	}
-	utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+	if conf.AppConfigInstance.LitefsEnabled {
+		utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+	}
 	for {
 		logrus.Info("Registering node to master...")
 		self, err := rpc.GetNode(conf.AppConfigInstance.MasterEndpoint)

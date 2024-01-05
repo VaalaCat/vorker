@@ -12,7 +12,9 @@ import (
 )
 
 func initSqlite() {
-	utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+	if conf.AppConfigInstance.LitefsEnabled {
+		utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+	}
 	godotenv.Load()
 	if conf.AppConfigInstance.DBType != defs.DBTypeSqlite {
 		return

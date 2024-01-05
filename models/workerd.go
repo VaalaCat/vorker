@@ -29,10 +29,12 @@ type Worker struct {
 
 func init() {
 	go func() {
-		if !conf.IsMaster() {
-			return
+		if conf.AppConfigInstance.LitefsEnabled {
+			if !conf.IsMaster() {
+				return
+			}
+			utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
 		}
-		utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
 		db := database.GetDB()
 		defer database.CloseDB(db)
 		for err := db.AutoMigrate(&Worker{}); err != nil; err = db.AutoMigrate(&Worker{}) {
@@ -41,7 +43,9 @@ func init() {
 		}
 	}()
 	go func() {
-		utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+		if conf.AppConfigInstance.LitefsEnabled {
+			utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+		}
 		NodeWorkersInit()
 	}()
 }
@@ -194,7 +198,7 @@ func (w *Worker) Create() error {
 		if err != nil {
 			return err
 		}
-		if !conf.IsMaster() {
+		if !conf.IsMaster() && conf.AppConfigInstance.LitefsEnabled {
 			return nil
 		}
 	} else {
@@ -231,12 +235,16 @@ func (w *Worker) Update() error {
 			return err
 		}
 	}
-	if !conf.IsMaster() {
+	if !conf.IsMaster() && conf.AppConfigInstance.LitefsEnabled {
 		return nil
 	}
 	db := database.GetDB()
 	defer database.CloseDB(db)
-	return db.Save(w).Error
+	return db.Where(&Worker{
+		Worker: &entities.Worker{
+			UID: w.UID,
+		},
+	}).Save(w).Error
 }
 
 func (w *Worker) Delete() error {
@@ -259,17 +267,15 @@ func (w *Worker) Delete() error {
 		return err
 	}
 
-	if !conf.IsMaster() {
+	if !conf.IsMaster() && conf.AppConfigInstance.LitefsEnabled {
 		return nil
 	}
 	db := database.GetDB()
 	defer database.CloseDB(db)
-	return db.Where(&Worker{
-		Worker: &entities.Worker{
+	return db.Unscoped().Where(
+		&Worker{Worker: &entities.Worker{
 			UID: w.UID,
-		},
-	}).Unscoped().Delete(w).Error
-
+		}}).Delete(&Worker{}).Error
 }
 
 func (w *Worker) Flush() error {

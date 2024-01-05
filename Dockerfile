@@ -1,7 +1,8 @@
 FROM ubuntu:22.04
 
 RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list && \
-	sed -i s@/security.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+	sed -i s@/security.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list && \
+	sed -i 's/ports.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
 
 COPY litefs.yml /etc/litefs.yml
 COPY --from=flyio/litefs:0.5 /usr/local/bin/litefs /usr/local/bin/litefs

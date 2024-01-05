@@ -26,10 +26,12 @@ type User struct {
 
 func init() {
 	go func() {
-		if !conf.IsMaster() {
-			return
+		if conf.AppConfigInstance.LitefsEnabled {
+			if !conf.IsMaster() {
+				return
+			}
+			utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
 		}
-		utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
 		db := database.GetDB()
 		for err := db.AutoMigrate(&User{}); err != nil; err = db.AutoMigrate(&User{}) {
 			logrus.WithError(err).Errorf("auto migrate user error, sleep 5s and retry")

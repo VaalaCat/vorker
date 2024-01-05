@@ -28,7 +28,9 @@ func Serve() {
 }
 
 func InitSelfCliet() {
-	utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+	if conf.AppConfigInstance.LitefsEnabled {
+		utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
+	}
 	for {
 		if len(conf.AppConfigInstance.NodeID) == 0 {
 			logger(context.Background(), "InitSelfCliet").Error("node is not initialized, retrying after 5 seconds")
