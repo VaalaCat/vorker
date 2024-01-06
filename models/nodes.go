@@ -42,7 +42,6 @@ func init() {
 		}).Error; err != nil {
 			panic(err)
 		}
-		database.CloseDB(db)
 
 		if self, err := GetNodeByNodeName(defs.DefaultNodeName); err != nil {
 			panic(err)
@@ -58,13 +57,13 @@ func (Node) TableName() string {
 
 func (n *Node) Create() error {
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	return db.Create(n).Error
 }
 
 func (n *Node) Update(uid string) error {
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	return db.Model(&Node{}).Where(
 		&Node{
 			Node: &entities.Node{
@@ -81,20 +80,26 @@ func (n *Node) Update(uid string) error {
 	).Error
 }
 
-func (n *Node) Delete(uid string) error {
+func (n *Node) Delete() error {
 	db := database.GetDB()
-	defer database.CloseDB(db)
-	return db.Delete(&Node{
-		Node: &entities.Node{
-			UID: uid,
-		},
-	}).Error
+
+	return db.Where(&Node{
+		Node: &entities.Node{UID: n.UID},
+	}).Unscoped().Delete(&Node{}).Error
+}
+
+func AdminDeleteNode(uid string) error {
+	db := database.GetDB()
+
+	return db.Where(&Node{
+		Node: &entities.Node{UID: uid},
+	}).Unscoped().Delete(&Node{}).Error
 }
 
 func AdminGetAllNodes() ([]*Node, error) {
 	var nodes []*Node
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Find(&nodes).Error; err != nil {
 		return nil, err
 	}
@@ -117,7 +122,7 @@ func AdminGetAllNodesMap() (map[string]string, error) {
 func GetNodeByNodeName(nodeName string) (*Node, error) {
 	node := Node{}
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(
 		&Node{
 			Node: &entities.Node{

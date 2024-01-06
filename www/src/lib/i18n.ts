@@ -18,12 +18,15 @@ const zh = {
   open: '打开',
   refresh: '刷新',
   deleteWorker: '删除函数',
+  deleteNode: '删除节点',
 
   workerConfirmDelete: '确认删除函数',
   workerDeleteSuccess: '删除成功',
   workerCreateSuccess: '创建成功',
   workerSaveSuccess: '保存成功',
   workerSyncSuccess: '同步成功',
+  nodeDeleteSuccess: '删除成功',
+  nodeSyncSuccess: '同步成功',
   backToList: '返回列表',
   noWorkerPrompt: '空空如也',
 
@@ -53,12 +56,15 @@ const en = {
   open: 'Open',
   refresh: 'Refresh',
   deleteWorker: 'Delete worker',
+  deleteNode: 'Delete Node',
 
   workerConfirmDelete: 'Confirm delete worker',
   workerDeleteSuccess: 'Delete worker success',
   workerCreateSuccess: 'Create worker success',
   workerSaveSuccess: 'Save worker success',
   workerSyncSuccess: 'Sync worker success',
+  nodeDeleteSuccess: 'Delete node success',
+  nodeSyncSuccess: 'Sync node success',
   backToList: 'Back',
   noWorkerPrompt: 'No workers here.',
 

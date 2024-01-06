@@ -37,7 +37,6 @@ func init() {
 			logrus.WithError(err).Errorf("auto migrate user error, sleep 5s and retry")
 			time.Sleep(5 * time.Second)
 		}
-		database.CloseDB(db)
 	}()
 }
 
@@ -58,7 +57,7 @@ func CreateUser(user *User) error {
 func AdminGetUserNumber() (int64, error) {
 	var count int64
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Model(&User{}).Count(&count).Error; err != nil {
 		return 0, err
 	}
@@ -68,7 +67,7 @@ func AdminGetUserNumber() (int64, error) {
 func GetUserByUserID(userID uint) (*User, error) {
 	var user User
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(&User{
 		Model: gorm.Model{ID: userID},
 	}).First(&user).Error; err != nil {
@@ -80,7 +79,7 @@ func GetUserByUserID(userID uint) (*User, error) {
 func GetUserByUserName(userName string) (*User, error) {
 	var user User
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(&User{
 		UserName: userName,
 	}).First(&user).Error; err != nil {
@@ -92,7 +91,7 @@ func GetUserByUserName(userName string) (*User, error) {
 func GetUserByEmail(email string) (*User, error) {
 	var user User
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(&User{
 		Email: email,
 	}).First(&user).Error; err != nil {
@@ -108,7 +107,7 @@ func UpdateUser(userID uint, user *User) error {
 		user.Password = hashedPass
 	}
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	return db.Model(&User{
 		Model: gorm.Model{ID: userID},
 	}).Updates(user).Error
@@ -116,7 +115,7 @@ func UpdateUser(userID uint, user *User) error {
 
 func DeleteUser(userID uint) error {
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	return db.Delete(&User{
 		Model: gorm.Model{ID: userID},
 	}).Error
@@ -125,7 +124,7 @@ func DeleteUser(userID uint) error {
 func ListUsers(page, pageSize int) ([]*User, error) {
 	var users []*User
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Offset((page - 1) * pageSize).Limit(pageSize).Find(&users).Error; err != nil {
 		return nil, err
 	}
@@ -135,7 +134,7 @@ func ListUsers(page, pageSize int) ([]*User, error) {
 func CountUsers() (int64, error) {
 	var count int64
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Model(&User{}).Count(&count).Error; err != nil {
 		return 0, err
 	}
@@ -145,7 +144,7 @@ func CountUsers() (int64, error) {
 func GetUserByUserNameAndPassword(userName, password string) (*User, error) {
 	var user User
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(&User{
 		UserName: userName,
 		Password: password,
@@ -158,7 +157,7 @@ func GetUserByUserNameAndPassword(userName, password string) (*User, error) {
 func CheckUserPassword(userNameOrEmail, password string) (bool, error) {
 	var user User
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(&User{
 		UserName: userNameOrEmail,
 	}).Or(&User{
@@ -171,7 +170,7 @@ func CheckUserPassword(userNameOrEmail, password string) (bool, error) {
 func CheckUserNameAndEmail(userName, email string) error {
 	var user User
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(&User{
 		UserName: userName,
 	}).Or(&User{

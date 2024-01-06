@@ -8,3 +8,7 @@ export const getNodes = () => {
 export const syncNodes = (nodeName: string) => {
 	return api.get<Node>(`/api/node/sync/${nodeName}`).then((res) => res.data)
 }
+
+export const deleteNode = (nodeName: string) => {
+	return api.delete<Node>(`/api/node/${nodeName}`).then((res) => res.data)
+}

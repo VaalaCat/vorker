@@ -5,10 +5,15 @@ import {
   PingMapList,
   Tracker as TrackerType,
 } from '@/types/nodes'
+import { t } from '@/lib/i18n'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
-import { Card, Title, Tracker, Flex, Text, Color } from '@tremor/react'
-import { Button } from '@douyinfe/semi-ui'
+import { useCallback, useEffect, useState } from 'react'
+import { Card, Title, Tracker, Flex, Text } from '@tremor/react'
+import {
+  Button,
+  Modal,
+  Toast,
+} from '@douyinfe/semi-ui'
 import * as nodesApi from '@/api/nodes'
 import { useStore } from '@nanostores/react'
 import { $nodeStatus } from '@/store/nodes'
@@ -24,7 +29,7 @@ export function NodesComponent() {
       return res
     },
     {
-      refetchInterval: 5000,
+      refetchInterval: 10000,
     }
   )
   const nodeStatus = useStore($nodeStatus)
@@ -61,6 +66,34 @@ export function NodeComponent({ node, ping }: { node: Node; ping: number[] }) {
     await nodesApi.syncNodes(nodeName)
   })
 
+  const deleteNode = useMutation(async (nodeName: string) => {
+    await nodesApi.deleteNode(nodeName)
+  })
+
+  const handleDeleteNode = useCallback(
+    (nodename: string) => {
+      Modal.warning({
+        title: t.deleteNode,
+        content: (
+          <span className="break-all">
+            确定要删除 {nodename} 吗
+          </span>
+        ),
+        centered: true,
+        onOk: async () => {
+          deleteNode.mutate(nodename)
+          Toast.info(t.nodeDeleteSuccess)
+          function sleep(ms: number) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+          }
+          await sleep(2000);
+          window.location.reload()
+        },
+      })
+    },
+    [deleteNode]
+  )
+
   const data = ping.map((v, i) => {
     if (v >= 1000) {
       return { color: 'rose', tooltip: `${v}ms` }
@@ -87,14 +120,27 @@ export function NodeComponent({ node, ping }: { node: Node; ping: number[] }) {
       <Card>
         <div className="flex flex-row justify-between">
           <Title>{node.Name}</Title>
-          <Button
-            theme="borderless"
-            className="justify-end"
-            onClick={() => syncNodes.mutate(node.Name)}
-          >
-            {' '}
-            Sync{' '}
-          </Button>
+          <div className="flex flex-row justify-end">
+            <Button
+              theme="borderless"
+              className="justify-end"
+              onClick={() => {
+                syncNodes.mutate(node.Name)
+                Toast.info(t.nodeSyncSuccess)
+              }}
+            >
+              {' '}
+              Sync{' '}
+            </Button>
+            <Button
+              theme="borderless"
+              className="justify-end"
+              onClick={() => handleDeleteNode(node.Name)}
+            >
+              {' '}
+              Delete{' '}
+            </Button>
+          </div>
         </div>
         <Text>ID {node.UID}</Text>
         <Flex justifyContent="end" className="mt-4">

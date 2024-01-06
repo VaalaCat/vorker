@@ -36,7 +36,7 @@ func init() {
 			utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
 		}
 		db := database.GetDB()
-		defer database.CloseDB(db)
+
 		for err := db.AutoMigrate(&Worker{}); err != nil; err = db.AutoMigrate(&Worker{}) {
 			logrus.WithError(err).Errorf("auto migrate worker error, sleep 5s and retry")
 			time.Sleep(5 * time.Second)
@@ -57,7 +57,7 @@ func (w *Worker) TableName() string {
 func GetWorkerByUID(userID uint, uid string) (*Worker, error) {
 	var worker Worker
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(&Worker{
 		Worker: &entities.Worker{
 			UserID: uint64(userID),
@@ -77,7 +77,7 @@ func GetWorkerByUID(userID uint, uid string) (*Worker, error) {
 func AdminGetWorkerByName(name string) (*Worker, error) {
 	var worker Worker
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(
 		&Worker{
 			Worker: &entities.Worker{
@@ -93,7 +93,7 @@ func AdminGetWorkerByName(name string) (*Worker, error) {
 func GetWorkersByNames(userID uint, names []string) ([]*Worker, error) {
 	var workers []*Worker
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(&Worker{
 		Worker: &entities.Worker{
 			UserID: uint64(userID),
@@ -107,7 +107,7 @@ func GetWorkersByNames(userID uint, names []string) ([]*Worker, error) {
 func AdminGetWorkersByNames(names []string) ([]*Worker, error) {
 	var workers []*Worker
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where("name in (?)", names).Find(&workers).Error; err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func AdminGetWorkersByNames(names []string) ([]*Worker, error) {
 func GetAllWorkers(userID uint) ([]*Worker, error) {
 	var workers []*Worker
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(&Worker{
 		Worker: &entities.Worker{
 			UserID: uint64(userID),
@@ -131,7 +131,7 @@ func GetAllWorkers(userID uint) ([]*Worker, error) {
 func AdminGetAllWorkers() ([]*Worker, error) {
 	var workers []*Worker
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Find(&workers).Error; err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func AdminGetAllWorkersTunnelMap() (map[string]string, error) {
 func AdminGetWorkersByNodeName(nodeName string) ([]*Worker, error) {
 	var workers []*Worker
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(&Worker{
 		Worker: &entities.Worker{
 			NodeName: nodeName,
@@ -167,7 +167,7 @@ func AdminGetWorkersByNodeName(nodeName string) ([]*Worker, error) {
 func GetWorkers(userID uint, offset, limit int) ([]*Worker, error) {
 	var workers []*Worker
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	if err := db.Where(&Worker{
 		Worker: &entities.Worker{
 			UserID: uint64(userID),
@@ -216,7 +216,7 @@ func (w *Worker) Create() error {
 	}
 
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	return db.Create(w).Error
 }
 
@@ -239,7 +239,7 @@ func (w *Worker) Update() error {
 		return nil
 	}
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	return db.Where(&Worker{
 		Worker: &entities.Worker{
 			UID: w.UID,
@@ -271,7 +271,7 @@ func (w *Worker) Delete() error {
 		return nil
 	}
 	db := database.GetDB()
-	defer database.CloseDB(db)
+
 	return db.Unscoped().Where(
 		&Worker{Worker: &entities.Worker{
 			UID: w.UID,

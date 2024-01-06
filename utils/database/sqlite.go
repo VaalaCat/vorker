@@ -25,14 +25,15 @@ func initSqlite() {
 	if err != nil {
 		logrus.Error(err, "Initializing DB Error")
 	}
-	CloseDB(db)
+
+	GetManager().SetDB(defs.DBTypeSqlite, db)
 }
 
-func GetSqlite() *gorm.DB {
-	dbPath := conf.AppConfigInstance.DBPath
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
-	if err != nil {
-		return nil
-	}
-	return db
-}
+// func GetSqlite() *gorm.DB {
+// 	dbPath := conf.AppConfigInstance.DBPath
+// 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+// 	if err != nil {
+// 		return nil
+// 	}
+// 	return db
+// }

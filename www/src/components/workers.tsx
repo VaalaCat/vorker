@@ -120,8 +120,8 @@ export function WorkersComponent() {
               {run_resp.length > 100
                 ? run_resp.slice(0, 100) + '......'
                 : run_resp.length == 0
-                ? 'data is undefined, raw resp: ' + raw_resp
-                : run_resp}
+                  ? 'data is undefined, raw resp: ' + raw_resp
+                  : run_resp}
             </code>
           </Paragraph>
           <div className="flex flex-row justify-end">
@@ -170,7 +170,7 @@ export function WorkersComponent() {
         </Breadcrumb>
         <ButtonGroup>
           <Button onClick={() => reloadWorkers()}>{t.refresh}</Button>
-          <Button onClick={() => reloadWorkers()}>{t.sync}</Button>
+          <Button onClick={() => flushAllWorkers.mutate()}>{t.sync}</Button>
           <Button onClick={() => createWorker.mutate()}>{t.create}</Button>
         </ButtonGroup>
       </div>
@@ -221,7 +221,7 @@ export function WorkersComponent() {
                     // onClick={() => handleOpenWorker(item)}
                     onClick={() => runWorker.mutate(item.UID)}
                   >
-                    Run
+                    {t.run}
                   </Button>
                   <Button
                     icon={<IconLink />}

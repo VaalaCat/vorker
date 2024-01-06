@@ -61,6 +61,7 @@ func init() {
 			{
 				nodeAPI.GET("/all", authz.JWTMiddleware(), node.UserGetNodesEndpoint)
 				nodeAPI.GET("/sync/:nodename", authz.JWTMiddleware(), node.SyncNodeEndpoint)
+				nodeAPI.DELETE("/:nodename", authz.JWTMiddleware(), node.LeaveEndpoint)
 			}
 			api.GET("/allworkers", authz.JWTMiddleware(), workerd.GetAllWorkersEndpoint)
 			api.GET("/vorker/config", appconf.GetEndpoint)
