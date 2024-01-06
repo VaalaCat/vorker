@@ -35,6 +35,12 @@ func LeaveEndpoint(c *gin.Context) {
 		return
 	}
 
+	if nodename == defs.DefaultNodeName {
+		logrus.WithContext(c).Errorf("you cannot leave the default node")
+		common.RespOK(c, "you cannot leave the default node", nil)
+		return
+	}
+
 	if err := models.AdminDeleteNode(node.Node.UID); err != nil {
 		logrus.WithContext(c).Errorf("delete node failed, err: %v", err)
 		common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)

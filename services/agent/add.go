@@ -21,15 +21,16 @@ func AddWorkerEventHandler(c *gin.Context, req *entities.NotifyEventRequest) {
 		return
 	}
 
-	if err := (&models.Worker{Worker: worker}).Create(); err != nil {
+	w := &models.Worker{Worker: worker}
+
+	if err := w.Create(); err != nil {
 		logrus.WithError(err).Error("add worker event handler error")
 		common.RespErr(c, common.RespCodeInvalidRequest, common.RespMsgInvalidRequest, nil)
 		return
 	}
 
 	if worker.NodeName == conf.AppConfigInstance.NodeName {
-		err := utils.GenWorkerConfig(worker)
-		if err != nil {
+		if err := utils.GenWorkerConfig(w.Worker); err != nil {
 			logrus.WithError(err).Error("add worker event handler error")
 			common.RespErr(c, common.RespCodeInvalidRequest, common.RespMsgInvalidRequest, nil)
 			return

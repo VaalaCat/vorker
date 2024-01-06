@@ -132,14 +132,14 @@ export function NodeComponent({ node, ping }: { node: Node; ping: number[] }) {
               {' '}
               Sync{' '}
             </Button>
-            <Button
+            {node.Name !== 'default' && <Button
               theme="borderless"
               className="justify-end"
               onClick={() => handleDeleteNode(node.Name)}
             >
               {' '}
               Delete{' '}
-            </Button>
+            </Button>}
           </div>
         </div>
         <Text>ID {node.UID}</Text>
