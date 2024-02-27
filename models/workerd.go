@@ -253,15 +253,16 @@ func (w *Worker) Delete() error {
 	} else {
 		n, err := GetNodeByNodeName(w.NodeName)
 		if err != nil {
-			return err
+			logrus.WithError(err).Warnf("delete worker %s error, node %s not found, will remove it from db", w.UID, w.NodeName)
+		} else {
+			wp, err := proto.Marshal(w)
+			if err != nil {
+				return err
+			}
+			go rpc.EventNotify(n.Node, defs.EventDeleteWorker, map[string][]byte{
+				defs.KeyWorkerProto: wp,
+			})
 		}
-		wp, err := proto.Marshal(w)
-		if err != nil {
-			return err
-		}
-		go rpc.EventNotify(n.Node, defs.EventDeleteWorker, map[string][]byte{
-			defs.KeyWorkerProto: wp,
-		})
 	}
 	if err := w.DeleteFile(); err != nil {
 		return err

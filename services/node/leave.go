@@ -41,12 +41,6 @@ func LeaveEndpoint(c *gin.Context) {
 		return
 	}
 
-	if err := models.AdminDeleteNode(node.Node.UID); err != nil {
-		logrus.WithContext(c).Errorf("delete node failed, err: %v", err)
-		common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
-		return
-	}
-
 	oldWorkers, err := models.AdminGetWorkersByNodeName(nodename)
 	if err != nil {
 		logrus.WithContext(c).Errorf("get workers failed, err: %v", err)
@@ -72,6 +66,12 @@ func LeaveEndpoint(c *gin.Context) {
 	for tNodeName, tNode := range nodeMap {
 		logrus.Infof("call sync to tNodeName: %s, tNode: %+v", tNodeName, tNode)
 		go rpc.EventNotify(tNode, defs.EventSyncWorkers, nil)
+	}
+
+	if err := models.AdminDeleteNode(node.Node.UID); err != nil {
+		logrus.WithContext(c).Errorf("delete node failed, err: %v", err)
+		common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
+		return
 	}
 
 	common.RespOK(c, common.RespMsgOK, nil)

@@ -9,7 +9,8 @@ import (
 
 func Ping(endpoint, host string) (t int, err error) {
 	t1 := time.Now()
-	resp, err := req.C().R().SetHeader(
+	c := req.C().SetTimeout(10 * time.Second)
+	resp, err := c.R().SetHeader(
 		"Host", host,
 	).Get(endpoint)
 	if err != nil || resp.StatusCode != http.StatusOK {
