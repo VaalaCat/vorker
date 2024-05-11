@@ -160,7 +160,9 @@ func RegisterNodeToMaster() {
 		} else {
 			logrus.Info("Tunnel already exists, skip adding")
 		}
-		agent.SyncCall()
+		if conf.AppConfigInstance.EnableAutoSync {
+			agent.SyncCall()
+		}
 		time.Sleep(30 * time.Second)
 	}
 }
