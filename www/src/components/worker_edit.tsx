@@ -22,6 +22,7 @@ import { IconArticle, IconHome } from '@douyinfe/semi-icons'
 import { getNodes } from '@/api/nodes'
 import dynamic from 'next/dynamic'
 import { i18n } from '@/lib/i18n'
+import { TemplateEditor } from './template_editor'
 
 const MonacoEditor = dynamic(
   import('./editor').then((m) => m.MonacoEditor),
@@ -32,6 +33,8 @@ export const WorkerEditComponent = () => {
   const router = useRouter()
   const { UID } = router.query
   const [editItem, setEditItem] = useState(DEFAUTL_WORKER_ITEM)
+  const [templateContent, setTemplateContent] = useState('')
+
   const appConf = useStore($vorkerSettings)
   const code = useStore($code)
   const { Paragraph, Text, Numeral, Title } = Typography
@@ -43,7 +46,7 @@ export const WorkerEditComponent = () => {
 
   const updateWorker = useMutation(async () => {
     await api.updateWorker(UID as string, editItem)
-    Toast.info(i18n('workerCreateSuccess'))
+    Toast.info(i18n('workerSaveSuccess'))
   })
 
   const runWorker = useMutation(async (UID: string) => {
@@ -59,8 +62,8 @@ export const WorkerEditComponent = () => {
               {run_resp.length > 100
                 ? run_resp.slice(0, 100) + '......'
                 : run_resp.length == 0
-                ? 'data is undefined, raw resp: ' + raw_resp
-                : run_resp}
+                  ? 'data is undefined, raw resp: ' + raw_resp
+                  : run_resp}
             </code>
           </Paragraph>
           <div className="flex flex-row justify-end">
@@ -86,6 +89,8 @@ export const WorkerEditComponent = () => {
     if (worker) {
       setEditItem(worker)
       $code.set(Buffer.from(worker.Code, 'base64').toString('utf8'))
+      if (worker.Template) setTemplateContent(worker.Template)
+      else { setTemplateContent(DEFAUTL_WORKER_ITEM.Template) }
     }
   }, [worker])
 
@@ -93,9 +98,10 @@ export const WorkerEditComponent = () => {
     if (code && editItem)
       setEditItem((item) => ({
         ...item,
+        Template: templateContent,
         Code: Buffer.from(code).toString('base64'),
       }))
-  }, [code, editItem])
+  }, [code, editItem, templateContent])
 
   useEffect(() => {
     worker?.Code
@@ -120,7 +126,6 @@ export const WorkerEditComponent = () => {
         </div>
         <div className="flex flex-col">
           <ButtonGroup>
-            <Button onClick={() => updateWorker.mutate()}>Save</Button>
             <Button
               onClick={() => {
                 window.location.assign('/admin')
@@ -128,6 +133,7 @@ export const WorkerEditComponent = () => {
             >
               Back
             </Button>
+            <Button onClick={() => updateWorker.mutate()}>Save</Button>
           </ButtonGroup>
         </div>
       </div>
@@ -218,6 +224,13 @@ export const WorkerEditComponent = () => {
               ></Select>
             </div>
           </div>
+        </TabPane>
+        <TabPane
+          itemKey="template"
+          style={{ overflow: 'initial' }}
+          tab={<span>Template</span>}
+        >
+          <TemplateEditor content={templateContent} setContent={setTemplateContent} />
         </TabPane>
       </Tabs>
     </div>

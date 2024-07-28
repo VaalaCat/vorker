@@ -18,7 +18,7 @@ steps:
     commands:
       - apt update
       - apt install -y curl
-      - curl -fSL -O 'https://mirror.ghproxy.com/https://github.com/cloudflare/workerd/releases/download/v1.20231218.0/workerd-linux-64.gz'
+      - curl -fSL -O 'https://mirror.ghproxy.com/https://github.com/cloudflare/workerd/releases/download/v1.20240725.0/workerd-linux-64.gz'
       - gzip -d workerd-linux-64.gz
       - mv workerd-linux-64 bin/workerd
   - name: pull and cache image
@@ -93,8 +93,15 @@ services:
   - name: docker
     image: docker:dind
     privileged: true
+    environment:
+      DOCKER_MIRROR:
+        from_secret: DOCKER_MIRROR
+      HTTPS_PROXY:
+        from_secret: HTTPS_PROXY
+      HTTP_PROXY:
+        from_secret: HTTP_PROXY
     commands:
-      - dockerd --host=unix:///var/run/docker.sock --registry-mirror https://dockerproxy.com
+      - dockerd --host=unix:///var/run/docker.sock --registry-mirror $DOCKER_MIRROR
     volumes:
       - name: dockersock
         path: /var/run

@@ -7,6 +7,7 @@ export interface WorkerItem {
   Entry?: string
   Code: string
   Name: string
+  Template: string
 }
 
 export interface WorkerItemProperties {
@@ -29,6 +30,27 @@ async function handler(event) {
 		return new Response(e.stack, { status: 500 })
 	}
 }`),
+  Template: `using Workerd = import "/workerd/workerd.capnp";
+
+const config :Workerd.Config = (
+  services = [
+    (name = "{{.UID}}", worker = .v{{.UID}}Worker),
+  ],
+
+  sockets = [
+    (
+      name = "{{.UID}}",
+      address = "{{.HostName}}:{{.Port}}",
+      http=(),
+      service="{{.UID}}"
+    ),
+  ]
+);
+
+const v{{.UID}}Worker :Workerd.Worker = (
+  serviceWorkerScript = embed "src/{{.Entry}}",
+  compatibilityDate = "2023-04-03",
+);`
 }
 
 export interface WorkerEditorProperties {

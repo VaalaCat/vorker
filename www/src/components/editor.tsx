@@ -2,7 +2,6 @@ import React, { useLayoutEffect } from 'react'
 import Editor, { loader } from '@monaco-editor/react'
 import { useStore } from '@nanostores/react'
 import { $code } from '@/store/workers'
-import dynamic from 'next/dynamic'
 
 loader.config({
   paths: {

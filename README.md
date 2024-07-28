@@ -1,6 +1,6 @@
 # Vorker
 
-Vorker is a simple self host cloudflare worker alternative which built with cloudflare's [workerd](https://github.com/cloudflare/workerd).
+Vorker is a simple and powerful self host cloudflare worker alternative which built with cloudflare's [workerd](https://github.com/cloudflare/workerd).
 
 Fearues and Issues are welcome!
 
@@ -15,33 +15,12 @@ Fearues and Issues are welcome!
 - [x] Web UI & Online Editor
 - [x] Multi Node
 - [x] HA support
+- [x] Cloudflare Durable Objects (experimental)
 - [ ] Log
 - [ ] Metrics
 - [ ] Worker version control
 - [ ] Worker Debugging
 - [ ] Support KV storage
-
-## Screenshots
-
-- Admin Page
-
-![](./images/worker-admin.png)
-
-- Worker Editor
-
-![](./images/worker-edit.png)
-
-- Worker Config
-
-![](./images/worker-config.png)
-
-- Agent Status
-
-![](./images/status.png)
-
-- Worker Execution
-
-![](https://vaala.cat/images/vorkerexec.png)
 
 ## Usage
 
@@ -56,7 +35,6 @@ docker run -dit --name=vorker \
 	-e WORKER_URL_SUFFIX=.example.com \
 	-e COOKIE_DOMAIN=example.com \
 	-e ENABLE_REGISTER=false \
-	-e COOKIE_NAME=authorization \
 	-e JWT_SECRET=xxxxxxx \
 	-e AGENT_SECRET=xxxxxxx \
 	-p 8080:8080 \
@@ -79,3 +57,125 @@ curl localhost:8080 -H "Host: workername" # replace workername with your worker 
 ```
 
 4. enjoy your untimate self hosted worker!
+
+## Examples
+
+### Request Proxy Service
+
+This is an example of request proxy service.
+
+You can use it like this:
+
+```
+curl https://worker.example.com/https://google.com
+```
+
+- Code
+
+```js
+addEventListener("fetch", (event) => {
+	event.respondWith(handler(event));
+});
+
+async function handler(event) {
+	try {
+		const url = new URL((event.request.url).replace('http','https'));
+		const param = url.pathname.substring(1)
+		if (param.length==0) {
+			return new Response("{\"error\": \"proxy addr nil\"}")
+		}
+		const newHost = new URL(param);
+		
+		url.host = newHost.hostname;
+		return fetch(new Request(newHost, event.request))
+	} catch(e) {
+		return new Response(e.stack, { status: 500 })
+	}
+}
+```
+
+### Cloudflare Durable Objects
+
+> Note: Currently, vorker can use workerd durable objects config, but worked is not ready yet for on disk object, so this is not really durable, when a worker is restarted or migrated, the durable objects will be lost.
+
+- Template
+
+```capnp
+using Workerd = import "/workerd/workerd.capnp";
+
+const config :Workerd.Config = (
+  services = [
+    (name = "{{.UID}}", worker = .v{{.UID}}Worker),
+  ],
+
+  sockets = [
+    (
+      name = "{{.UID}}",
+      address = "{{.HostName}}:{{.Port}}",
+      http=(),
+      service="{{.UID}}"
+    ),
+  ]
+);
+
+const v{{.UID}}Worker :Workerd.Worker = (
+  modules = [
+    (name = "{{.Entry}}", esModule = embed "src/{{.Entry}}"),
+  ],
+  compatibilityDate = "2023-04-03",
+  durableObjectNamespaces = [
+    (className = "counter", uniqueKey = "xxxxxxx", preventEviction = true),
+  ],
+  durableObjectStorage = (inMemory = void),
+  bindings = [
+    (name = "tests", durableObjectNamespace = "counter"),
+  ],
+);
+```
+
+- Code
+
+```js
+export default {
+  async fetch(request, env) {
+    let ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || request.ip
+    let id = env.tests.idFromName(ip);
+
+    let test = env.tests.get(id);
+    return test.fetch(request)
+  }
+}
+
+export class counter {
+  constructor(controller, env) {
+    this.cnt = 0;
+  }
+
+  async fetch(request) {
+    this.cnt = this.cnt + 1
+    return new Response(this.cnt);
+  }
+}
+```
+
+## Screenshots
+
+- Admin Page
+
+![](./images/worker-admin.png)
+
+- Worker Editor
+
+![](./images/worker-edit.png)
+
+- Worker Config
+
+![](./images/worker-config.png)
+
+- Agent Status
+
+![](./images/status.png)
+
+- Worker Execution
+
+![](https://vaala.cat/images/vorkerexec.png)

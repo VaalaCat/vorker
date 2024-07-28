@@ -122,7 +122,7 @@ func GetAllWorkers(userID uint) ([]*Worker, error) {
 		Worker: &entities.Worker{
 			UserID: uint64(userID),
 		},
-	}).Find(&workers).Error; err != nil {
+	}).Order("updated_at desc").Find(&workers).Error; err != nil {
 		return nil, err
 	}
 	return workers, nil
@@ -172,7 +172,7 @@ func GetWorkers(userID uint, offset, limit int) ([]*Worker, error) {
 		Worker: &entities.Worker{
 			UserID: uint64(userID),
 		},
-	}).Offset(offset).Limit(limit).Find(&workers).Error; err != nil {
+	}).Order("updated_at desc").Offset(offset).Limit(limit).Find(&workers).Error; err != nil {
 		return nil, err
 	}
 	return workers, nil
