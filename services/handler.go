@@ -9,10 +9,12 @@ import (
 	"time"
 	"vorker/authz"
 	"vorker/conf"
+	"vorker/models"
 	"vorker/rpc"
 	"vorker/services/agent"
 	"vorker/services/appconf"
 	"vorker/services/auth"
+	"vorker/services/files"
 	"vorker/services/litefs"
 	"vorker/services/node"
 	proxyService "vorker/services/proxy"
@@ -23,6 +25,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/sourcegraph/conc"
 )
 
 var (
@@ -32,10 +35,16 @@ var (
 
 func init() {
 	router = gin.Default()
+	router.MaxMultipartMemory = 8 << 20 // 8 MiB
+
 	proxy = gin.Default()
 	router.Use(utils.CORSMiddlewaire(
 		fmt.Sprintf("%v://%v", conf.AppConfigInstance.Scheme, conf.AppConfigInstance.CookieDomain),
 	))
+	if !conf.IsMaster() {
+		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
+	}
+
 	api := router.Group("/api")
 	{
 		if conf.IsMaster() {
@@ -45,6 +54,7 @@ func init() {
 				workerApi.GET("/flush/:uid", workerd.FlushEndpoint)
 				workerApi.GET("/run/:uid", workerd.RunWorkerEndpoint)
 				workerApi.POST("/create", workerd.CreateEndpoint)
+				workerApi.POST("/version/:workerId/:fileId", workerd.NewVersionEndpoint)
 				workerApi.PATCH("/:uid", workerd.UpdateEndpoint)
 				workerApi.DELETE("/:uid", workerd.DeleteEndpoint)
 			}
@@ -62,6 +72,11 @@ func init() {
 				nodeAPI.GET("/all", authz.JWTMiddleware(), node.UserGetNodesEndpoint)
 				nodeAPI.GET("/sync/:nodename", authz.JWTMiddleware(), node.SyncNodeEndpoint)
 				nodeAPI.DELETE("/:nodename", authz.JWTMiddleware(), node.LeaveEndpoint)
+			}
+			fileAPI := api.Group("/file", authz.JWTMiddleware())
+			{
+				fileAPI.POST("/upload", files.UploadFileEndpoint)
+				fileAPI.GET("/get/:fileId", files.GetFileEndpoint)
 			}
 			api.GET("/allworkers", authz.JWTMiddleware(), workerd.GetAllWorkersEndpoint)
 			api.GET("/vorker/config", appconf.GetEndpoint)
@@ -84,31 +99,36 @@ func init() {
 	proxy.Any("/*proxyPath", proxyService.Endpoint)
 }
 
-func InitTunnel() {
+func InitTunnel(wg *conc.WaitGroup) {
 	if conf.IsMaster() {
-		go tunnel.Serve()
-		go tunnel.GetClient().Run(context.Background())
-		go tunnel.InitSelfCliet()
+		wg.Go(tunnel.Serve)
+		wg.Go(tunnel.InitSelfCliet)
+
+		wg.Go(func() { tunnel.GetClient().Run(context.Background()) })
 	} else {
-		go RegisterNodeToMaster()
-		go tunnel.GetClient().Run(context.Background())
+		wg.Go(RegisterNodeToMaster)
+		wg.Go(func() { tunnel.GetClient().Run(context.Background()) })
 	}
-	go litefs.InitTunnel()
-	go litefs.RunService()
+	wg.Go(litefs.InitTunnel)
+	wg.Go(litefs.RunService)
 }
 
 func Run(f embed.FS) {
-	InitTunnel()
-	go proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
-	go database.InitDB()
+	wg := conc.NewWaitGroup()
+	defer wg.Wait()
 
+	InitTunnel(wg)
+	wg.Go(func() {
+		proxy.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.WorkerPort))
+	})
+	wg.Go(database.InitDB)
+	wg.Go(models.MigrateNormalModel)
 	if conf.IsMaster() {
 		HandleStaticFile(f)
-	} else {
-		router.GET("/", func(c *gin.Context) { c.JSON(200, gin.H{"code": 0, "msg": "ok"}) })
 	}
-
-	router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
+	wg.Go(func() {
+		router.Run(fmt.Sprintf("%v:%d", conf.AppConfigInstance.ListenAddr, conf.AppConfigInstance.APIPort))
+	})
 }
 
 func HandleStaticFile(f embed.FS) {

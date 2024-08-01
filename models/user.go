@@ -1,13 +1,9 @@
 package models
 
 import (
-	"time"
-	"vorker/conf"
-	"vorker/utils"
 	"vorker/utils/database"
 	"vorker/utils/secret"
 
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -22,22 +18,6 @@ type User struct {
 	Email    string `json:"email" gorm:"unique"`
 	Status   int    `json:"status"`
 	Role     string `json:"role"`
-}
-
-func init() {
-	go func() {
-		if conf.AppConfigInstance.LitefsEnabled {
-			if !conf.IsMaster() {
-				return
-			}
-			utils.WaitForPort("localhost", conf.AppConfigInstance.LitefsPrimaryPort)
-		}
-		db := database.GetDB()
-		for err := db.AutoMigrate(&User{}); err != nil; err = db.AutoMigrate(&User{}) {
-			logrus.WithError(err).Errorf("auto migrate user error, sleep 5s and retry")
-			time.Sleep(5 * time.Second)
-		}
-	}()
 }
 
 func (u *User) TableName() string {

@@ -4,21 +4,17 @@ kind: pipeline
 type: docker
 
 steps:
-  - name: cache node modules
-    image: node:18-alpine
-    commands:
-      - cd www
-      - npm config set registry https://registry.npmmirror.com
-      - npm install
-    volumes:
-      - name: nodecache
-        path: /drone/src/www/node_modules
   - name: get bin
     image: m.daocloud.io/docker.io/ubuntu:22.04
+    environment:
+      HTTPS_PROXY:
+        from_secret: HTTPS_PROXY
+      HTTP_PROXY:
+        from_secret: HTTP_PROXY
     commands:
       - apt update
       - apt install -y curl
-      - curl -fSL -O 'https://mirror.ghproxy.com/https://github.com/cloudflare/workerd/releases/download/v1.20240725.0/workerd-linux-64.gz'
+      - curl -fSL -O 'https://github.com/cloudflare/workerd/releases/download/v1.20240725.0/workerd-linux-64.gz'
       - gzip -d workerd-linux-64.gz
       - mv workerd-linux-64 bin/workerd
   - name: pull and cache image
@@ -47,18 +43,28 @@ steps:
         path: /go/pkg/mod
 
   - name: build frontend
-    image: node:18-alpine
+    image: node:20-alpine
+    environment:
+      HTTPS_PROXY:
+        from_secret: HTTPS_PROXY
+      HTTP_PROXY:
+        from_secret: HTTP_PROXY
     commands:
       - cd www
-      - npm config set registry https://registry.npmmirror.com
-      - npm install
-      - npm run build
-      - npx next export
+      - sed -i 's/dl-cdn.alpinelinux.org/mirrors.cernet.edu.cn/g' /etc/apk/repositories
+      - apk update --no-cache && apk add --no-cache tzdata git openssh curl
+      - mkdir -p ~/.ssh
+
+      - corepack enable
+      - corepack prepare pnpm@latest-9 --activate
+      - pnpm config set store-dir /root/.pnpm-store
+
+      - pnpm install --no-frozen-lockfile
+      - pnpm build
+      - pnpm export
     volumes:
       - name: nodecache
         path: /drone/src/www/node_modules
-    depends_on:
-      - cache node modules
 
   - name: build backend
     image: golang:1.20
@@ -119,4 +125,4 @@ volumes:
       path: /tmp/dronecahe
   - name: nodecache
     host:
-      path: /tmp/dronenodecahe
+      path: /tmp/drone/vorker/nodecache

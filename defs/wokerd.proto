@@ -9,11 +9,12 @@ message Worker {
 	string NodeName = 4; // for future HA feature, default is 'default'
 	int32 Port = 5; // worker's port, platfrom will obtain free port while init worker
 	string Entry = 6; // worker's entry file, default is 'entry.js'
-	bytes Code = 7; // worker's code
+	bytes Code = 7; // worker's code, will be ignored if ActiveVersionID is not null
 	string Name = 8; // worker's name, also use at worker routing, must be unique, default is UID
 	string TunnelID = 9; // worker's tunnel id
 	uint64 UserID = 10; // worker's user id
 	string Template = 11; // worker's template
+	string ActiveVersionID = 12; // worker's version id, if this field is not null, the worker's code will be ignored
 }
 
 // one WorkerList for one workerd instance

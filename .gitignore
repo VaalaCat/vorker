@@ -11,3 +11,4 @@ gost.yaml
 
 node_modules
 tmp
+bin/test.zip

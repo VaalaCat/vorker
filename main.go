@@ -15,5 +15,6 @@ func main() {
 	logrus.SetReportCaller(true)
 	logrus.SetLevel(logrus.DebugLevel)
 	defer exec.ExecManager.ExitAllCmd()
+
 	services.Run(fs)
 }

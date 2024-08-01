@@ -1,6 +1,8 @@
 package models
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -13,6 +15,8 @@ import (
 	"vorker/tunnel"
 	"vorker/utils"
 	"vorker/utils/database"
+
+	"github.com/codeclysm/extract/v3"
 
 	"github.com/google/uuid"
 	"github.com/imroc/req/v3"
@@ -318,14 +322,27 @@ func (w *Worker) DeleteFile() error {
 }
 
 func (w *Worker) UpdateFile() error {
-	return utils.WriteFile(
-		filepath.Join(
-			conf.AppConfigInstance.WorkerdDir,
-			defs.WorkerInfoPath,
-			w.UID,
-			defs.WorkerCodePath,
-			w.Entry),
-		string(w.Code))
+	if len(w.ActiveVersionID) == 0 {
+		return utils.WriteFile(
+			filepath.Join(
+				conf.AppConfigInstance.WorkerdDir,
+				defs.WorkerInfoPath,
+				w.UID,
+				defs.WorkerCodePath,
+				w.Entry),
+			string(w.Code))
+	}
+
+	c := context.Background()
+
+	file, err := GetFileByVersionUID(c, w.ActiveVersionID)
+	if err != nil {
+		return err
+	}
+
+	return extract.Tar(c, bytes.NewReader(file.Data), filepath.Join(
+		conf.AppConfigInstance.WorkerdDir, defs.WorkerInfoPath,
+		w.UID, defs.WorkerCodePath), nil)
 }
 
 func (w *Worker) Run() ([]byte, error) {

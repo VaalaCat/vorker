@@ -27,7 +27,7 @@ func UpdateEndpoint(c *gin.Context) {
 
 	userID := c.GetUint(common.UIDKey)
 
-	if err := Update(userID, UID, worker); err != nil {
+	if err := UpdateWorker(userID, UID, worker); err != nil {
 		common.RespErr(c, common.RespCodeInternalError, err.Error(), nil)
 		return
 	}
@@ -35,7 +35,7 @@ func UpdateEndpoint(c *gin.Context) {
 	common.RespOK(c, "update worker success", nil)
 }
 
-func Update(userID uint, UID string, worker *entities.Worker) error {
+func UpdateWorker(userID uint, UID string, worker *entities.Worker) error {
 	FillWorkerValue(worker, true, UID, userID)
 
 	workerRecord, err := models.GetWorkerByUID(userID, UID)

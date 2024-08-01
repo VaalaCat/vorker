@@ -18,18 +18,16 @@ export interface WorkerItemProperties {
 // @ts-expect-error
 export const DEFAUTL_WORKER_ITEM: WorkerItem = {
   UID: 'worker',
-  Code: btoa(`addEventListener("fetch", (event) => {
-	event.respondWith(handler(event));
-});
-
-async function handler(event) {
-	try {
-		let resp = new Response("worker: " + event.request.url + " is online! -- " + new Date())
+  Code: btoa(`export default {
+  async fetch(req, env) {
+    try {
+		let resp = new Response("worker: " + req.url + " is online! -- " + new Date())
 		return resp
 	} catch(e) {
 		return new Response(e.stack, { status: 500 })
 	}
-}`),
+  }
+};`),
   Template: `using Workerd = import "/workerd/workerd.capnp";
 
 const config :Workerd.Config = (
@@ -48,7 +46,9 @@ const config :Workerd.Config = (
 );
 
 const v{{.UID}}Worker :Workerd.Worker = (
-  serviceWorkerScript = embed "src/{{.Entry}}",
+  modules = [
+    (name = "{{.Entry}}", esModule = embed "src/{{.Entry}}"),
+  ],
   compatibilityDate = "2023-04-03",
 );`
 }

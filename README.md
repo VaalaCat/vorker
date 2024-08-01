@@ -158,6 +158,47 @@ export class counter {
 }
 ```
 
+### Use Cloudflare `wrangler` to build
+
+Run those command in your wrangler project:
+
+```bash
+wrangler deploy --dry-run --outdir dist
+```
+
+and copy the `dist/index.js` file content to vorker's editor
+
+modify the template to:
+
+```capnp
+using Workerd = import "/workerd/workerd.capnp";
+
+const config :Workerd.Config = (
+  services = [
+    (name = "{{.UID}}", worker = .v{{.UID}}Worker),
+  ],
+
+  sockets = [
+    (
+      name = "{{.UID}}",
+      address = "{{.HostName}}:{{.Port}}",
+      http=(),
+      service="{{.UID}}"
+    ),
+  ]
+);
+
+const v{{.UID}}Worker :Workerd.Worker = (
+  modules = [
+    (name = "{{.Entry}}", esModule = embed "src/{{.Entry}}"),
+  ],
+  compatibilityDate = "2023-04-03",
+);
+```
+
+and click Save, all is done.
+
+
 ## Screenshots
 
 - Admin Page
