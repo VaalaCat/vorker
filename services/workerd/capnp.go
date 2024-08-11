@@ -24,12 +24,7 @@ func GenCapnpConfig() error {
 	var hasError bool
 	for _, worker := range workerList {
 		w := &models.Worker{Worker: worker}
-		if err := w.Flush(); err != nil {
-			logrus.WithError(err).Errorf("failed to flush worker, worker is: %+v", worker)
-			hasError = true
-			continue
-		}
-		fileMap := utils.BuildCapfile([]*entities.Worker{w.Worker})
+		fileMap := utils.BuildCapfile([]*entities.Worker{w.ToEntity()})
 
 		if fileContent, ok := fileMap[worker.GetUID()]; ok {
 			err := utils.WriteFile(
@@ -40,6 +35,7 @@ func GenCapnpConfig() error {
 					defs.CapFileName,
 				), fileContent)
 			if err != nil {
+				logrus.WithError(err).Errorf("failed to write file, worker is: %+v", worker.Name)
 				hasError = true
 			}
 		}

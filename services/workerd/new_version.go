@@ -47,7 +47,7 @@ func NewVersionEndpoint(c *gin.Context) {
 
 	worker.ActiveVersionID = versionID
 
-	if err := UpdateWorker(userID, workerID, worker.Worker); err != nil {
+	if err := UpdateWorker(userID, workerID, worker.ToEntity()); err != nil {
 		common.RespErr(c, common.RespCodeInternalError, "update worker error", nil)
 		return
 	}

@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"time"
 	"vorker/conf"
+	"vorker/utils"
 
 	"github.com/fatedier/frp/client"
-	"github.com/fatedier/frp/pkg/config"
+	v1 "github.com/fatedier/frp/pkg/config/v1"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 )
 
@@ -17,12 +19,13 @@ type ClientHandler interface {
 	AddService(serviceName string, servicePort int) error
 	AddVisitor(servicename string, lcoalPort int) error
 	Delete(clientID string) error
-	Query(clientID string) (config.ProxyConf, error)
+	Query(clientID string) (v1.ProxyConfigurer, error)
 }
 
 type Client struct {
-	proxyConf   map[string]config.ProxyConf
-	visitorConf map[string]config.VisitorConf
+	proxyConf   *utils.SyncMap[string, v1.ProxyConfigurer]
+	visitorConf *utils.SyncMap[string, v1.VisitorConfigurer]
+	common      *v1.ClientCommonConfig
 	cli         *client.Service
 }
 
@@ -31,22 +34,29 @@ var (
 )
 
 func NewClientHandler() *Client {
-	cfg := config.GetDefaultClientConf()
-	cfg.ServerAddr = conf.AppConfigInstance.TunnelHost
-	cfg.ServerPort = int(conf.AppConfigInstance.TunnelAPIPort)
-	cfg.Token = conf.AppConfigInstance.TunnelToken
-	proxyConf := map[string]config.ProxyConf{}
-	visitorConf := map[string]config.VisitorConf{}
-	c, err := client.NewService(cfg,
-		proxyConf, visitorConf, "")
+	cfg := v1.ClientCommonConfig{
+		Auth: v1.AuthClientConfig{
+			Method: "token",
+			Token:  conf.AppConfigInstance.TunnelToken,
+		},
+		ServerAddr:    conf.AppConfigInstance.TunnelHost,
+		ServerPort:    int(conf.AppConfigInstance.TunnelAPIPort),
+		LoginFailExit: lo.ToPtr(false),
+	}
+
+	c, err := client.NewService(client.ServiceOptions{
+		Common: &cfg,
+	})
 	if err != nil {
 		logrus.WithError(err).Error("New client failed")
 		return nil
 	}
+
 	return &Client{
-		proxyConf:   proxyConf,
-		visitorConf: visitorConf,
+		proxyConf:   &utils.SyncMap[string, v1.ProxyConfigurer]{},
+		visitorConf: &utils.SyncMap[string, v1.VisitorConfigurer]{},
 		cli:         c,
+		common:      &cfg,
 	}
 }
 
@@ -59,29 +69,29 @@ func GetClient() ClientHandler {
 
 // Add implements ClientHandler.
 func (c *Client) Add(clientID, routeHostname string, forwardPort int) error {
-	newProxyConf := c.proxyConf
-	if _, ok := newProxyConf[clientID]; ok {
-		logger(context.Background(), "Client.Add").Errorf("client %s already exists", clientID)
-		return nil
-	}
-
-	newProxyConf[clientID] = &config.HTTPProxyConf{
-		BaseProxyConf: config.BaseProxyConf{
-			ProxyName: clientID,
-			ProxyType: "http",
-			LocalSvrConf: config.LocalSvrConf{
+	var newCfg v1.ProxyConfigurer = &v1.HTTPProxyConfig{
+		ProxyBaseConfig: v1.ProxyBaseConfig{
+			Name: clientID,
+			Type: "http",
+			ProxyBackend: v1.ProxyBackend{
 				LocalIP:   "127.0.0.1",
 				LocalPort: forwardPort,
 			},
 		},
-		DomainConf: config.DomainConf{SubDomain: routeHostname},
+		DomainConfig: v1.DomainConfig{
+			SubDomain: routeHostname,
+		},
 	}
-	c.proxyConf = newProxyConf
+	newCfg.Complete("")
+	if _, ok := c.proxyConf.LoadOrStore(clientID, newCfg); ok {
+		logger(context.Background(), "Client.Add").Errorf("client %s already exists", clientID)
+		return nil
+	}
 
-	err := c.cli.ReloadConf(newProxyConf, c.visitorConf)
+	err := c.cli.UpdateAllConfigurer(lo.Values(c.proxyConf.ToMap()), lo.Values(c.visitorConf.ToMap()))
 	if err != nil {
 		logger(context.Background(), "Client.Add").WithError(err).
-			Errorf("reload conf failed, config is: %+v", newProxyConf[clientID])
+			Errorf("reload conf failed, config is: %+v", c.proxyConf.ToMap())
 		return err
 	}
 	logger(context.Background(), "Client.Add").Infof("client %s added successfully", clientID)
@@ -90,32 +100,31 @@ func (c *Client) Add(clientID, routeHostname string, forwardPort int) error {
 
 // AddService implements ClientHandler.
 func (c *Client) AddService(serviceName string, servicePort int) error {
-	newSerivceConf := c.proxyConf
-	if _, ok := newSerivceConf[serviceName]; ok {
-		logger(context.Background(), "Client.AddService").Errorf("service %s already exists", serviceName)
-		return nil
-	}
-
-	newSerivceConf[serviceName] = &config.STCPProxyConf{
-		BaseProxyConf: config.BaseProxyConf{
-			ProxyName:     serviceName,
-			ProxyType:     "stcp",
-			UseEncryption: true,
-			LocalSvrConf: config.LocalSvrConf{
+	var newCfg v1.ProxyConfigurer = &v1.STCPProxyConfig{
+		ProxyBaseConfig: v1.ProxyBaseConfig{
+			Name: serviceName,
+			Type: "stcp",
+			Transport: v1.ProxyTransport{
+				UseEncryption: true,
+			},
+			ProxyBackend: v1.ProxyBackend{
 				LocalIP:   "127.0.0.1",
 				LocalPort: servicePort,
 			},
 		},
-		RoleServerCommonConf: config.RoleServerCommonConf{
-			Sk: conf.AppConfigInstance.TunnelToken,
-		},
+		Secretkey: conf.AppConfigInstance.TunnelToken,
+	}
+	newCfg.Complete("")
+
+	if _, ok := c.proxyConf.LoadOrStore(serviceName, newCfg); ok {
+		logger(context.Background(), "Client.AddService").Errorf("service %s already exists", serviceName)
+		return nil
 	}
 
-	c.proxyConf = newSerivceConf
-	err := c.cli.ReloadConf(c.proxyConf, c.visitorConf)
+	err := c.cli.UpdateAllConfigurer(lo.Values(c.proxyConf.ToMap()), lo.Values(c.visitorConf.ToMap()))
 	if err != nil {
 		logger(context.Background(), "Client.AddService").WithError(err).
-			Errorf("reload conf failed, config is: %+v", newSerivceConf[serviceName])
+			Errorf("reload conf failed, config is: %+v", c.proxyConf.ToMap())
 		return err
 	}
 	logger(context.Background(), "Client.AddService").Infof("service %s added successfully", serviceName)
@@ -124,29 +133,30 @@ func (c *Client) AddService(serviceName string, servicePort int) error {
 
 // AddVisitor implements ClientHandler.
 func (c *Client) AddVisitor(serviceName string, lcoalPort int) error {
-	newVisitorConf := c.visitorConf
-	if _, ok := newVisitorConf[serviceName]; ok {
+	var newCfg v1.VisitorConfigurer = &v1.STCPVisitorConfig{
+		VisitorBaseConfig: v1.VisitorBaseConfig{
+			Name: fmt.Sprintf("%s-visitor", serviceName),
+			Type: "stcp",
+			Transport: v1.VisitorTransport{
+				UseEncryption: true,
+			},
+			BindAddr:   "127.0.0.1",
+			BindPort:   lcoalPort,
+			ServerName: serviceName,
+			SecretKey:  conf.AppConfigInstance.TunnelToken,
+		},
+	}
+	newCfg.Complete(c.common)
+
+	if _, ok := c.visitorConf.LoadOrStore(serviceName, newCfg); ok {
 		logger(context.Background(), "Client.AddVisitor").Errorf("visitor for serivce %s already exists", serviceName)
 		return nil
 	}
 
-	newVisitorConf[serviceName] = &config.STCPVisitorConf{
-		BaseVisitorConf: config.BaseVisitorConf{
-			ProxyName:     fmt.Sprintf("%s-visitor", serviceName),
-			ProxyType:     "stcp",
-			UseEncryption: true,
-			BindAddr:      "127.0.0.1",
-			BindPort:      lcoalPort,
-			ServerName:    serviceName,
-			Sk:            conf.AppConfigInstance.TunnelToken,
-		},
-	}
-
-	c.visitorConf = newVisitorConf
-	err := c.cli.ReloadConf(c.proxyConf, c.visitorConf)
+	err := c.cli.UpdateAllConfigurer(lo.Values(c.proxyConf.ToMap()), lo.Values(c.visitorConf.ToMap()))
 	if err != nil {
 		logger(context.Background(), "Client.AddVisitor").WithError(err).
-			Errorf("reload conf failed, config is: %+v", newVisitorConf[serviceName])
+			Errorf("reload conf failed, config is: %+v", c.visitorConf.ToMap())
 		return err
 	}
 	logger(context.Background(), "Client.AddVisitor").Infof("visitor for service %s added successfully", serviceName)
@@ -155,18 +165,16 @@ func (c *Client) AddVisitor(serviceName string, lcoalPort int) error {
 
 // Delete implements ClientHandler.
 func (c *Client) Delete(clientID string) error {
-	newProxyConf := c.proxyConf
-	if _, ok := newProxyConf[clientID]; !ok {
+	if _, ok := c.proxyConf.Load(clientID); !ok {
 		logger(context.Background(), "Client.Delete").Errorf("client %s not exists", clientID)
 		return nil
 	}
 
-	delete(newProxyConf, clientID)
-	c.proxyConf = newProxyConf
-	err := c.cli.ReloadConf(c.proxyConf, c.visitorConf)
+	c.proxyConf.Delete(clientID)
+	err := c.cli.UpdateAllConfigurer(lo.Values(c.proxyConf.ToMap()), lo.Values(c.visitorConf.ToMap()))
 	if err != nil {
 		logger(context.Background(), "Client.Delete").WithError(err).
-			Errorf("reload conf failed, config is: %+v", newProxyConf[clientID])
+			Errorf("reload conf failed, config is: %+v", c.proxyConf.ToMap())
 		return err
 	}
 	logger(context.Background(), "Client.Delete").Infof("client %s deleted successfully", clientID)
@@ -174,8 +182,8 @@ func (c *Client) Delete(clientID string) error {
 }
 
 // Query implements ClientHandler.
-func (c *Client) Query(clientID string) (config.ProxyConf, error) {
-	if proxyConf, ok := c.proxyConf[clientID]; ok {
+func (c *Client) Query(clientID string) (v1.ProxyConfigurer, error) {
+	if proxyConf, ok := c.proxyConf.Load(clientID); ok {
 		return proxyConf, nil
 	}
 	logger(context.Background(), "Client.Query").Errorf("client %s not exists", clientID)

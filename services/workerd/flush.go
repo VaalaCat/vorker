@@ -76,7 +76,7 @@ func Flush(userID uint, UID string) error {
 		return err
 	}
 	if worker.NodeName == conf.AppConfigInstance.NodeName {
-		utils.GenWorkerConfig(worker.Worker)
+		utils.GenWorkerConfig(worker.ToEntity())
 	}
 	return nil
 }

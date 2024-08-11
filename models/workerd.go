@@ -185,21 +185,17 @@ func GetWorkers(userID uint, offset, limit int) ([]*Worker, error) {
 func Trans2Entities(workers []*Worker) []*entities.Worker {
 	var entities []*entities.Worker
 	for _, worker := range workers {
-		entities = append(entities, worker.Worker)
+		entities = append(entities, worker.ToEntity())
 	}
 	return entities
 }
 
 func (w *Worker) Create() error {
+	c := context.Background()
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		port, err := utils.GetAvailablePort(defs.DefaultHostName)
-		if err != nil {
-			return err
-		}
-		w.Port = int32(port)
+		tunnel.GetPortManager().ClaimWorkerPort(c, w.GetUID())
 		tunnel.GetClient().Add(w.GetUID(), utils.WorkerHostPrefix(w.GetName()), int(w.GetPort()))
-		err = w.UpdateFile()
-		if err != nil {
+		if err := w.UpdateFile(); err != nil {
 			return err
 		}
 		if !conf.IsMaster() && conf.AppConfigInstance.LitefsEnabled {
@@ -225,17 +221,18 @@ func (w *Worker) Create() error {
 }
 
 func (w *Worker) Update() error {
+	c := context.Background()
+	if w.ID == 0 {
+		return errors.New("worker has no id")
+	}
+
 	if w.NodeName == conf.AppConfigInstance.NodeName {
-		port, err := utils.GetAvailablePort(defs.DefaultHostName)
-		if err != nil {
-			return err
-		}
-		w.Port = int32(port)
+		port := tunnel.GetPortManager().ClaimWorkerPort(c, w.GetUID())
+		w.Port = port
 		tunnel.GetClient().Delete(w.GetUID())
 		tunnel.GetClient().Add(w.GetUID(),
-			utils.WorkerHostPrefix(w.GetName()), port)
-		err = w.UpdateFile()
-		if err != nil {
+			utils.WorkerHostPrefix(w.GetName()), int(port))
+		if err := w.UpdateFile(); err != nil {
 			return err
 		}
 	}
@@ -244,11 +241,7 @@ func (w *Worker) Update() error {
 	}
 	db := database.GetDB()
 
-	return db.Where(&Worker{
-		Worker: &entities.Worker{
-			UID: w.UID,
-		},
-	}).Save(w).Error
+	return db.Save(w).Error
 }
 
 func (w *Worker) Delete() error {
@@ -311,6 +304,12 @@ func (w *Worker) Flush() error {
 	return nil
 }
 
+func (w *Worker) ToEntity() *entities.Worker {
+	ans := w.Worker
+	ans.Port = int32(w.GetPort())
+	return ans
+}
+
 func (w *Worker) DeleteFile() error {
 	return os.RemoveAll(
 		filepath.Join(
@@ -362,6 +361,15 @@ func (w *Worker) Run() ([]byte, error) {
 	return resp.Bytes(), nil
 }
 
+func (w *Worker) GetPort() int {
+	c := context.Background()
+	workerPort, ok := tunnel.GetPortManager().GetWorkerPort(c, w.GetUID())
+	if !ok {
+		return 0
+	}
+	return int(workerPort)
+}
+
 func SyncWorkers(workerList *entities.WorkerList) error {
 	partialFail := false
 	UIDs := []string{}
@@ -405,7 +413,7 @@ func SyncWorkers(workerList *entities.WorkerList) error {
 			partialFail = true
 			continue
 		}
-		if err := utils.GenWorkerConfig(modelWorker.Worker); err != nil {
+		if err := utils.GenWorkerConfig(modelWorker.ToEntity()); err != nil {
 			logrus.WithError(err).Errorf("sync workers gen config error, worker is: %+v", worker)
 			partialFail = true
 			continue

@@ -8,6 +8,7 @@ import (
 	"vorker/common"
 	"vorker/conf"
 	"vorker/models"
+	"vorker/tunnel"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -32,7 +33,12 @@ func Endpoint(c *gin.Context) {
 
 	var remote *url.URL
 	if worker.GetNodeName() == conf.AppConfigInstance.NodeName {
-		remote, err = url.Parse(fmt.Sprintf("http://%s:%d", worker.GetHostName(), worker.GetPort()))
+		workerPort, ok := tunnel.GetPortManager().GetWorkerPort(c, worker.GetUID())
+		if !ok {
+			common.RespErr(c, common.RespCodeInternalError, common.RespMsgInternalError, nil)
+			return
+		}
+		remote, err = url.Parse(fmt.Sprintf("http://%s:%d", worker.GetHostName(), workerPort))
 		if err != nil {
 			logrus.Panic(err)
 		}

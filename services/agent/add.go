@@ -30,7 +30,7 @@ func AddWorkerEventHandler(c *gin.Context, req *entities.NotifyEventRequest) {
 	}
 
 	if worker.NodeName == conf.AppConfigInstance.NodeName {
-		if err := utils.GenWorkerConfig(w.Worker); err != nil {
+		if err := utils.GenWorkerConfig(w.ToEntity()); err != nil {
 			logrus.WithError(err).Error("add worker event handler error")
 			common.RespErr(c, common.RespCodeInvalidRequest, common.RespMsgInvalidRequest, nil)
 			return

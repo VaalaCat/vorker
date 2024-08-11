@@ -34,11 +34,6 @@ func FillWorkerValue(worker *entities.Worker, keepUID bool, UID string, UserID u
 	}
 
 	worker.ExternalPath = defs.DefaultExternalPath
-	port, err := utils.GetAvailablePort(defs.DefaultHostName)
-	if err != nil {
-		logrus.Panic("get available port failed", err)
-	}
-	worker.Port = int32(port)
 
 	if len(worker.Code) == 0 {
 		worker.Code = []byte(defs.DefaultCode)

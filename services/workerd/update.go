@@ -64,7 +64,7 @@ func UpdateWorker(userID uint, UID string, worker *entities.Worker) error {
 	}
 
 	if worker.NodeName == curNodeName {
-		err := utils.GenWorkerConfig(worker)
+		err := utils.GenWorkerConfig(newWorker.ToEntity())
 		if err != nil {
 			return err
 		}

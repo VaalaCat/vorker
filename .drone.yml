@@ -11,6 +11,8 @@ steps:
         from_secret: HTTPS_PROXY
       HTTP_PROXY:
         from_secret: HTTP_PROXY
+      NO_PROXY:
+        from_secret: NO_PROXY
     commands:
       - apt update
       - apt install -y curl
@@ -35,7 +37,7 @@ steps:
       - docker info
       - docker build -t vaalacat/vorker .
   - name: cahce go package
-    image: golang:1.20
+    image: golang:1.22
     commands:
       - CGO_ENABLED=0 GOPROXY=https://goproxy.cn,direct go get
     volumes:
@@ -49,6 +51,8 @@ steps:
         from_secret: HTTPS_PROXY
       HTTP_PROXY:
         from_secret: HTTP_PROXY
+      NO_PROXY:
+        from_secret: NO_PROXY
     commands:
       - cd www
       - sed -i 's/dl-cdn.alpinelinux.org/mirrors.cernet.edu.cn/g' /etc/apk/repositories
@@ -67,7 +71,7 @@ steps:
         path: /drone/src/www/node_modules
 
   - name: build backend
-    image: golang:1.20
+    image: golang:1.22
     commands:
       - CGO_ENABLED=0 GOPROXY=https://goproxy.cn,direct go build -o vorker
     depends_on:
@@ -76,7 +80,7 @@ steps:
       - name: gocache
         path: /go/pkg/mod
 
-  - name: build and push image
+  - name: build and push version specific image
     image: docker:dind
     environment:
       DOCKER_PASSWORD:
@@ -89,11 +93,34 @@ steps:
     commands:
       - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
       - docker info
-      - docker build -t vaalacat/vorker .
-      - docker push vaalacat/vorker
+      - docker build -t vaalacat/vorker:v0.${DRONE_BUILD_NUMBER} .
+      - docker push vaalacat/vorker:v0.${DRONE_BUILD_NUMBER}
     depends_on:
       - build backend
       - pull and cache image
+      
+  - name: push latest image
+    image: docker:dind
+    environment:
+      DOCKER_PASSWORD:
+        from_secret: docker_password
+      DOCKER_USERNAME:
+        from_secret: docker_username
+    volumes:
+      - name: dockersock
+        path: /var/run
+    commands:
+      - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
+      - docker tag vaalacat/vorker:v0.${DRONE_BUILD_NUMBER} vaalacat/vorker:latest
+      - docker push vaalacat/vorker:latest
+    depends_on:
+      - build and push version specific image
+    when:
+      event:
+        - promote
+      target:
+        - production
+    
 
 services:
   - name: docker
@@ -106,6 +133,8 @@ services:
         from_secret: HTTPS_PROXY
       HTTP_PROXY:
         from_secret: HTTP_PROXY
+      NO_PROXY:
+        from_secret: NO_PROXY
     commands:
       - dockerd --host=unix:///var/run/docker.sock --registry-mirror $DOCKER_MIRROR
     volumes:

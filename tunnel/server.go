@@ -7,23 +7,31 @@ import (
 	"vorker/conf"
 	"vorker/utils"
 
-	"github.com/fatedier/frp/pkg/config"
+	v1 "github.com/fatedier/frp/pkg/config/v1"
 	"github.com/fatedier/frp/server"
 	"github.com/sirupsen/logrus"
 )
 
 func Serve() {
-	cfg := config.GetDefaultServerConf()
-	cfg.BindPort = int(conf.AppConfigInstance.TunnelAPIPort)
-	cfg.VhostHTTPPort = int(conf.AppConfigInstance.TunnelEntryPort)
-	cfg.SubDomainHost = strings.Trim(conf.AppConfigInstance.WorkerURLSuffix, ".")
-	cfg.Token = conf.AppConfigInstance.TunnelToken
-	cfg.TLSOnly = true
-	svr, err := server.NewService(cfg)
-	logrus.Infof("tunnel server listen on %v", conf.AppConfigInstance.TunnelAPIPort)
+	cfg := v1.ServerConfig{
+		BindPort:      int(conf.AppConfigInstance.TunnelAPIPort),
+		VhostHTTPPort: int(conf.AppConfigInstance.TunnelEntryPort),
+		SubDomainHost: strings.Trim(conf.AppConfigInstance.WorkerURLSuffix, "."),
+		Transport: v1.ServerTransportConfig{
+			TLS: v1.TLSServerConfig{Force: true},
+		},
+		Auth: v1.AuthServerConfig{
+			Method: "token", Token: conf.AppConfigInstance.TunnelToken,
+		},
+	}
+	cfg.Complete()
+
+	svr, err := server.NewService(&cfg)
 	if err != nil {
+		logrus.WithError(err).Error("new tunnel listen failed")
 		return
 	}
+	logrus.Infof("tunnel server listen on %v", conf.AppConfigInstance.TunnelAPIPort)
 	svr.Run(context.Background())
 }
 
