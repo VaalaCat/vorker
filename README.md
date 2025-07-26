@@ -1,3 +1,10 @@
+> **⚠️ Notice**
+> 
+> The ongoing development of this project has moved to [frp-panel](https://github.com/VaalaCat/frp-panel).  
+> All future features and updates will be iterated there!  
+> 
+> frp-panel includes and enhances all the functionality of vorker. Feel free to explore, contribute, and enjoy the improvements!
+
 # Vorker
 
 Vorker is a simple and powerful self host cloudflare worker alternative which built with cloudflare's [workerd](https://github.com/cloudflare/workerd).
@@ -5,6 +12,15 @@ Vorker is a simple and powerful self host cloudflare worker alternative which bu
 Fearues and Issues are welcome!
 
 ![](./images/arch.png)
+
+
+## Sponsors
+
+本项目 CDN 加速及安全防护由 Tencent EdgeOne 赞助
+
+[亚洲最佳CDN、边缘和安全解决方案 - Tencent EdgeOne](https://edgeone.ai/zh?from=github)
+
+![](https://edgeone.ai/media/34fe3a45-492d-4ea4-ae5d-ea1087ca7b4b.png)
 
 ## Features
 
